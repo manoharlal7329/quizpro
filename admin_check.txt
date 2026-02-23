@@ -1,0 +1,39 @@
+﻿
+            align-items: flex-start;
+                        <div 
+class="grid-2" style="gap:20px; 
+align-items:start;">
+          <td><span class="badge 
+badge-${s.status === 'open' ? 'blue' : 
+s.status === 'confirmed' ? 'green' : 
+s.status === 'live' ? 'red' : 
+'violet'}">${s.status === 'live' ? 
+'STARTED' : 
+s.status.toUpperCase()}</span></td>
+               <button class="btn 
+btn-gold" style="padding:4px 8px; 
+font-size:.7rem;" 
+onclick="forceStart(${s.id})" title="Start 
+Quiz Now">StartðŸš€</button>
+              <button class="btn 
+btn-outline" style="padding:4px 8px; 
+font-size:.7rem;" onclick="resetSeats(${s.i
+d})">Reset</button>
+              <button class="btn 
+btn-danger" style="padding:4px 8px; 
+font-size:.7rem;" 
+onclick="cancelSession(${s.id})">X</button>
+        async function forceStart(id) { 
+await api(`/api/admin/sessions/${id}/force-
+start`, 'POST'); toast('Quiz Started 
+Successfully! ðŸš€'); loadSessions(); }
+        async function cancelSession(id) { 
+if (confirm('Cancel?')) { await 
+api(`/api/admin/sessions/${id}/cancel`, 
+'POST'); loadSessions(); } }
+        async function resetSeats(id) { if 
+(confirm('Reset all seats?')) { await api(`
+/api/admin/sessions/${id}/reset-seats`, 
+'POST'); loadSessions(); } }
+
+

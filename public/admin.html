@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel — QuizPro</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .sidebar-nav {
+            width: 220px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: rgba(14, 165, 233, .1);
+            color: var(--text);
+        }
+
+        .admin-layout {
+            display: flex;
+            gap: 24px;
+            padding: 30px 0;
+        }
+
+        .admin-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .stat-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .q-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 14px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .q-row-text {
+            flex: 1;
+            font-size: .88rem;
+        }
+
+        .add-q-form {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .correct-sel {
+            display: flex;
+            gap: 8px;
+        }
+
+        .correct-sel label {
+            flex: 1;
+        }
+
+        .correct-sel input[type=radio] {
+            margin-right: 4px;
+        }
+
+        .upload-box {
+            border: 2px dashed var(--border);
+            padding: 30px;
+            text-align: center;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, .02);
+            transition: all .2s;
+            margin-bottom: 20px;
+        }
+
+        .upload-box:hover {
+            border-color: var(--blue);
+            background: rgba(14, 165, 233, .05);
+        }
+
+        table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <span class="logo">⚡ QuizPro Admin <span
+                style="font-size:.7rem; color:var(--gold); border:1px solid var(--gold); padding:2px 4px; border-radius:4px; margin-left:6px;">FULL
+                POWER</span></span>
+        <div class="nav-links">
+            <a href="/dashboard.html" style="color:var(--muted); font-size:.88rem; text-decoration:none;">User View</a>
+            <button class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;"
+                onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="container">
+            <div class="admin-layout">
+                <!-- Sidebar -->
+                <div class="sidebar-nav">
+                    <a href="#" class="active" onclick="showPanel('dashboard',this)">📊 Dashboard</a>
+                    <a href="#" onclick="showPanel('sessions',this)">🗂️ Sessions</a>
+                    <a href="#" onclick="showPanel('create',this)">➕ Create Session</a>
+                    <a href="#" onclick="showPanel('categories',this)">📁 Categories</a>
+                    <a href="#" onclick="showPanel('questions',this)">📝 Add Questions</a>
+                    <a href="#" onclick="showPanel('users',this)">👤 Users</a>
+                    <a href="#" onclick="showPanel('wallets',this)">💰 Wallets</a>
+                    <a href="#" onclick="showPanel('rewards',this)">🎁 Rewards</a>
+                </div>
+
+                <!-- Content -->
+                <div class="admin-content">
+
+                    <!-- Dashboard -->
+                    <div class="panel active" id="panel-dashboard">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>📊 Dashboard</h1>
+                        </div>
+                        <div class="stat-bar" id="statsBar">
+                            <div class="spinner"></div>
+                        </div>
+                        <h3 style="margin-bottom:14px;">Recent Sessions</h3>
+                        <div id="recentSessions"></div>
+                        <!-- OWNER EARNINGS TRACKER -->
+                        <div style="margin-top:28px;">
+                            <h3 style="margin-bottom:14px;">💰 Owner Earnings (25% Platform Cut)</h3>
+                            <div id="ownerEarnings"
+                                style="background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.25); border-radius:14px; padding:20px;">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sessions List -->
+                    <div class="panel" id="panel-sessions">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>🗂️ All Sessions</h1>
+                        </div>
+                        <div id="sessionsList"></div>
+                    </div>
+
+                    <!-- Create Session -->
+                    <div class="panel" id="panel-create">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>➕ Create Session</h1>
+                        </div>
+                        <div class="card" style="max-width:520px;">
+                            <div id="createAlert"></div>
+                            <div class="form-group">
+                                <label>Session Title</label>
+                                <input type="text" id="newTitle" placeholder="e.g. GK Challenge #12" />
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="newCat">
+                                    <option value="1">🟢 Beginner</option>
+                                    <option value="2">🟡 Skill Builder</option>
+                                    <option value="3">🔴 Pro Speed</option>
+                                </select>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Seat Limit</label>
+                                    <select id="newSeats">
+                                        <option value="20">20 Users</option>
+                                        <option value="50">50 Users</option>
+                                        <option value="70">70 Users</option>
+                                        <option value="100">100 Users</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Entry Fee (₹)</label>
+                                    <input type="number" id="newFee" value="100" min="1" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>⏱️ Quiz Delay After Full (minutes)</label>
+                                <select id="newDelay">
+                                    <option value="30">30 minutes — Study time thoda kam</option>
+                                    <option value="60" selected>60 minutes — Default (1 ghanta)</option>
+                                    <option value="90">90 minutes — Zyada study time</option>
+                                    <option value="120">120 minutes — 2 ghante baad quiz</option>
+                                </select>
+                                <small style="color:var(--muted); font-size:.75rem; display:block; margin-top:4px;">
+                                    ⚡ Jab sabhi seats full honge → automatically quiz <strong id="delayPreview">60
+                                        min</strong> baad shuru hoga<br>
+                                    📘 PDF <strong>30 min pehle</strong> khul jayega
+                                </small>
+                            </div>
+                            <button class="btn btn-primary btn-full" onclick="createSession()">Create Session</button>
+                        </div>
+                    </div>
+
+
+                    <!-- Add Questions -->
+                    <div class="panel" id="panel-questions">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>📝 Add Questions</h1>
+                        </div>
+
+                        <div class="grid-2" style="gap:20px; align-items:start;">
+                            <div>
+                                <div class="form-group">
+                                    <label>Select Session</label>
+                                    <select id="qSessionSelect" onchange="loadSessionQuestions()">
+                                        <option value="">-- Select Session --</option>
+                                    </select>
+                                </div>
+
+                                <div class="card" style="margin-bottom:20px;">
+                                    <h3 style="margin-bottom:14px;">📤 Bulk Excel Upload</h3>
+                                    <div class="upload-box" id="dropZone">
+                                        <div style="font-size:2rem; margin-bottom:8px;">📄</div>
+                                        <p style="font-size:.85rem; color:var(--muted);">Drag & Drop Excel or Click to
+                                            Select</p>
+                                        <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;"
+                                            onchange="uploadExcel()">
+                                        <button class="btn btn-outline" style="margin-top:12px; padding:6px 16px;"
+                                            onclick="document.getElementById('excelInput').click()">Select File</button>
+                                        <div style="margin-top:14px; font-size:.78rem;">
+                                            <a href="/Sample_Quiz_Questions.xlsx" download
+                                                style="color:var(--blue); text-decoration:none;">📥 Download Sample
+                                                Excel Template</a>
+                                        </div>
+                                    </div>
+                                    <p style="font-size:.75rem; color:var(--muted); text-align:center;">
+                                        Required Columns: <strong>question, a, b, c, d, correct, explanation</strong>
+                                    </p>
+                                </div>
+
+                                <div id="existingQuestions"></div>
+                            </div>
+
+                            <div>
+                                <div class="add-q-form">
+                                    <h3 style="margin-bottom:16px;">➕ Add Single Question</h3>
+                                    <div id="qAlert"></div>
+                                    <div class="form-group">
+                                        <label>Question Text</label>
+                                        <textarea id="qText" rows="2" placeholder="Enter question..."></textarea>
+                                    </div>
+                                    <div class="grid-2">
+                                        <div class="form-group"><label>Option A</label><input type="text" id="qA" />
+                                        </div>
+                                        <div class="form-group"><label>Option B</label><input type="text" id="qB" />
+                                        </div>
+                                        <div class="form-group"><label>Option C</label><input type="text" id="qC" />
+                                        </div>
+                                        <div class="form-group"><label>Option D</label><input type="text" id="qD" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Correct Answer</label>
+                                        <div class="correct-sel">
+                                            <label><input type="radio" name="correct" value="a"> A</label>
+                                            <label><input type="radio" name="correct" value="b"> B</label>
+                                            <label><input type="radio" name="correct" value="c"> C</label>
+                                            <label><input type="radio" name="correct" value="d"> D</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Explanation (optional)</label>
+                                        <input type="text" id="qExpl" placeholder="Brief explanation..." />
+                                    </div>
+                                    <button class="btn btn-success" onclick="addQuestion()">Add Question ✅</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users -->
+                    <div class="panel" id="panel-users">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>👤 Users Management</h1>
+                        </div>
+                        <div id="usersList"></div>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="panel" id="panel-categories">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>📁 Manage Categories</h1>
+                        </div>
+                        <div class="grid-2">
+                            <div class="card">
+                                <h3>➕ Create Category</h3>
+                                <div class="form-group" style="margin-top:16px;">
+                                    <label>Category Name</label>
+                                    <input type="text" id="catName" placeholder="e.g. Science Pro">
+                                </div>
+                                <div class="form-group">
+                                    <label>Icon (Emoji)</label>
+                                    <input type="text" id="catIcon" placeholder="e.g. 🧬">
+                                </div>
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <input type="text" id="catDesc" placeholder="e.g. Advanced science quiz">
+                                </div>
+                                <button class="btn btn-primary btn-full" onclick="createCategory()">Add
+                                    Category</button>
+                            </div>
+                            <div id="categoriesList"></div>
+                        </div>
+                    </div>
+
+                    <!-- Rewards -->
+                    <div class="panel" id="panel-rewards">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>🎁 Assign Monthly Rewards</h1>
+                        </div>
+                        <div class="card" style="max-width:500px;">
+                            <p style="color:var(--muted); margin-bottom:20px;">Reward the top performers of the month
+                                with cash or special gifts.</p>
+                            <div class="form-group">
+                                <label>User (Mobile)</label>
+                                <input type="text" id="rewardMobile" placeholder="e.g. 9876543210">
+                            </div>
+                            <div class="form-group">
+                                <label>Reward Type</label>
+                                <select id="rewardType">
+                                    <option value="Cash">💰 Cash (Sent to UPI)</option>
+                                    <option value="Gift">📦 Physical Gift</option>
+                                    <option value="Entry">🎟️ Free Quiz Entry</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Amount/Detail</label>
+                                <input type="text" id="rewardDetail" placeholder="e.g. ₹500 or Smartwatch">
+                            </div>
+                            <button class="btn btn-gold btn-full" onclick="assignReward()">Give Reward 🏆</button>
+                        </div>
+                        <div id="rewardsList" style="margin-top:30px;"></div>
+                    </div>
+
+                    <!-- ══ WALLET MANAGER ═════════════════════════════════════════ -->
+                    <div class="panel" id="panel-wallets">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>💰 Wallet Manager</h1>
+                            <p>Users ke demo / real wallet manage karo</p>
+                        </div>
+
+                        <!-- Topup Form -->
+                        <div class="card" style="max-width:500px;margin-bottom:28px;">
+                            <h3 style="margin-bottom:16px;">➕ Add Money to User Wallet</h3>
+                            <div id="topupAlert"></div>
+                            <div class="form-group">
+                                <label>User Mobile / ID</label>
+                                <input type="text" id="topupUser" placeholder="Mobile number or User ID" />
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Wallet Type</label>
+                                    <select id="topupType">
+                                        <option value="demo">🎭 Demo Money</option>
+                                        <option value="real">💵 Real Money</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Amount (₹)</label>
+                                    <input type="number" id="topupAmt" placeholder="e.g. 500" min="1" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Note (optional)</label>
+                                <input type="text" id="topupNote" placeholder="e.g. Prize winnings, Compensation" />
+                            </div>
+                            <button class="btn btn-primary btn-full" onclick="doTopup()">Add Money 🚀</button>
+                        </div>
+
+                        <!-- Users wallet list -->
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                            <h3>All User Wallets</h3>
+                            <input type="text" id="walletSearch" placeholder="Search by mobile..."
+                                oninput="filterWallets()"
+                                style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);width:220px;" />
+                        </div>
+                        <div id="walletsTable">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js"></script>
+    <script>
+        requireAdmin();
+
+        function showPanel(name, el) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            if (el) el.classList.add('active');
+            if (name === 'dashboard') loadDashboard();
+            if (name === 'sessions') loadSessions();
+            if (name === 'questions') loadSessionsForQ();
+            if (name === 'users') loadUsers();
+            if (name === 'wallets') loadWallets();
+        }
+
+        async function loadDashboard() {
+            try {
+                const data = await api('/api/admin/dashboard');
+
+                // Stats bar
+                document.getElementById('statsBar').innerHTML = `
+            <div class="card stat-card"><div class="stat-num" style="color:var(--blue)">${data.stats.total_users}</div><div class="stat-lbl">Total Users</div></div>
+            <div class="card stat-card"><div class="stat-num" style="color:var(--gold)">${data.stats.total_sessions}</div><div class="stat-lbl">Sessions</div></div>
+            <div class="card stat-card"><div class="stat-num" style="color:var(--green)">₹${data.stats.total_revenue}</div><div class="stat-lbl">Revenue (Owner)</div></div>
+            <div class="card stat-card"><div class="stat-num" style="color:var(--violet)">₹${data.stats.total_prize}</div><div class="stat-lbl">Prize Paid Out</div></div>`;
+
+                // Recent sessions
+                document.getElementById('recentSessions').innerHTML = sessionsTable(data.recentSessions);
+
+                // Owner earnings section
+                const collected = data.stats.total_revenue + data.stats.total_prize;
+                document.getElementById('ownerEarnings').innerHTML = `
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:140px; text-align:center; padding:14px; background:rgba(16,185,129,.1); border-radius:12px;">
+                    <div style="font-size:.75rem; color:var(--muted); margin-bottom:4px;">Total Collected</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:var(--green);">₹${collected}</div>
+                </div>
+                <div style="flex:1; min-width:140px; text-align:center; padding:14px; background:rgba(245,158,11,.08); border-radius:12px;">
+                    <div style="font-size:.75rem; color:var(--muted); margin-bottom:4px;">Platform Earnings (25%)</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:var(--gold);">₹${data.stats.total_revenue}</div>
+                </div>
+                <div style="flex:1; min-width:140px; text-align:center; padding:14px; background:rgba(139,92,246,.08); border-radius:12px;">
+                    <div style="font-size:.75rem; color:var(--muted); margin-bottom:4px;">Prize Distributed (75%)</div>
+                    <div style="font-size:1.8rem; font-weight:900; color:var(--violet);">₹${data.stats.total_prize}</div>
+                </div>
+            </div>
+            ${collected === 0 ? '<p style="color:var(--muted); font-size:.85rem; margin-top:14px; text-align:center;">Abhi koi completed session nahi hai. Sessions complete hone pe earnings yahan dikhegi.</p>' : ''}
+            `;
+
+            } catch (e) {
+                document.getElementById('statsBar').innerHTML = `<p style="color:var(--red);">⚠️ Dashboard load failed. Server chal raha hai? (${e.message})</p>`;
+                document.getElementById('ownerEarnings').innerHTML = `<p style="color:var(--muted);">Server se data nahi aaya. Refresh karo.</p>`;
+            }
+        }
+
+        async function loadSessions() {
+            const sessions = await api('/api/admin/sessions');
+            document.getElementById('sessionsList').innerHTML = sessionsTable(sessions, true);
+        }
+
+        function sessionsTable(sessions, withActions) {
+            if (!sessions.length) return '<p style="color:var(--muted);">No sessions found.</p>';
+            return `<table><thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Seats</th><th>Actions</th></tr></thead><tbody>` +
+                sessions.map(s => `<tr>
+          <td>#${s.id}</td>
+          <td><div style="font-weight:600;">${s.title}</div><div style="font-size:.75rem;color:var(--muted);">₹${s.entry_fee} • ${s.category_name}</div></td>
+          <td><span class="badge badge-${s.status === 'open' ? 'blue' : s.status === 'confirmed' ? 'green' : s.status === 'live' ? 'red' : 'violet'}">${s.status === 'live' ? 'STARTED' : s.status.toUpperCase()}</span></td>
+          <td>${s.seats_booked}/${s.seat_limit}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-gold" style="padding:4px 8px; font-size:.7rem;" onclick="forceStart(${s.id})" title="Start Quiz Now">Start🚀</button>
+              <button class="btn btn-outline" style="padding:4px 8px; font-size:.7rem;" onclick="completeSess(${s.id})">Done</button>
+              <button class="btn btn-success" style="padding:4px 8px; font-size:.7rem;" onclick="quickUpload(${s.id})">Upload 📤</button>
+              <button class="btn btn-outline" style="padding:4px 8px; font-size:.7rem;" onclick="resetSeats(${s.id})">Reset</button>
+              <button class="btn btn-danger" style="padding:4px 8px; font-size:.7rem;" onclick="deleteSession(${s.id})" title="Permanently Delete">🗑️</button>
+            </div>
+          </td>
+        </tr>`).join('') + '</tbody></table>';
+        }
+
+        async function quickUpload(sid) {
+            const input = document.getElementById('excelInput');
+            const sel = document.getElementById('qSessionSelect');
+            // Switch to questions panel and set the correct session
+            showPanel('questions');
+            setTimeout(() => {
+                sel.value = sid;
+                loadSessionQuestions();
+                input.click();
+            }, 100);
+        }
+
+        async function createSession() {
+            const delayMins = parseInt(document.getElementById('newDelay').value) || 60;
+            const payload = {
+                category_id: document.getElementById('newCat').value,
+                title: document.getElementById('newTitle').value.trim(),
+                seat_limit: document.getElementById('newSeats').value,
+                entry_fee: document.getElementById('newFee').value,
+                quiz_delay_minutes: delayMins
+            };
+            if (!payload.title) {
+                document.getElementById('createAlert').innerHTML = '<div class="alert alert-error">⚠️ Session Title required!</div>';
+                return;
+            }
+            try {
+                const btn = document.querySelector('#panel-create .btn-primary');
+                btn.disabled = true;
+                btn.textContent = 'Creating...';
+                const r = await api('/api/admin/sessions', 'POST', payload);
+                document.getElementById('createAlert').innerHTML = `<div class="alert alert-success">✅ Session created! Quiz will start <strong>${delayMins} min</strong> after seats fill up.</div>`;
+                toast('Session created! ✅', 'success');
+                document.getElementById('newTitle').value = '';
+                setTimeout(() => showPanel('sessions'), 1500);
+            } catch (e) {
+                document.getElementById('createAlert').innerHTML = `<div class="alert alert-error">❌ Error: ${e.message}</div>`;
+                toast('Failed: ' + e.message, 'error');
+            } finally {
+                const btn = document.querySelector('#panel-create .btn-primary');
+                if (btn) { btn.disabled = false; btn.textContent = 'Create Session'; }
+            }
+        }
+
+        // Live delay preview
+        document.addEventListener('DOMContentLoaded', () => {
+            const delayEl = document.getElementById('newDelay');
+            if (delayEl) {
+                delayEl.addEventListener('change', () => {
+                    const preview = document.getElementById('delayPreview');
+                    if (preview) preview.textContent = delayEl.value + ' min';
+                });
+            }
+        });
+
+        async function loadSessionsForQ() {
+            const sessions = await api('/api/admin/sessions');
+            const sel = document.getElementById('qSessionSelect');
+            sel.innerHTML = '<option value="">-- Select Session --</option>' + sessions.map(s => `<option value="${s.id}">#${s.id} ${s.title}</option>`).join('');
+        }
+
+        async function loadSessionQuestions() {
+            const sid = document.getElementById('qSessionSelect').value;
+            if (!sid) { document.getElementById('existingQuestions').innerHTML = ''; return; }
+            const qs = await api(`/api/admin/sessions/${sid}/questions`);
+            document.getElementById('existingQuestions').innerHTML = qs.length ?
+                `<h4 style="margin-bottom:10px; margin-top:20px;">Existing Questions (${qs.length})</h4>` +
+                qs.map(q => `<div class="q-row">
+          <div class="q-row-text">${q.question_text}<br><span style="color:var(--green); font-size:.8rem;">✅ ${q.correct.toUpperCase()}</span></div>
+          <button class="btn btn-danger" style="padding:4px 8px; font-size:.75rem;" onclick="deleteQ(${q.id})">Delete</button>
+        </div>`).join('') :
+                '<p style="color:var(--muted); font-size:.88rem; margin-top:20px;">No questions yet.</p>';
+        }
+
+        async function uploadExcel() {
+            const sid = document.getElementById('qSessionSelect').value;
+            if (!sid) { toast('Please select a session first!', 'error'); return; }
+
+            const file = document.getElementById('excelInput').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('session_id', sid);
+
+            toast('Uploading...', 'info');
+            try {
+                const res = await fetch('/api/admin/questions/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + getToken() },
+                    body: formData
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                toast(data.message, 'success');
+                loadSessionQuestions();
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+            document.getElementById('excelInput').value = '';
+        }
+
+        async function addQuestion() {
+            const sid = document.getElementById('qSessionSelect').value;
+            if (!sid) { toast('Select a session first!', 'error'); return; }
+            const correct = document.querySelector('input[name=correct]:checked')?.value;
+            const q = {
+                question_text: document.getElementById('qText').value.trim(),
+                option_a: document.getElementById('qA').value.trim(),
+                option_b: document.getElementById('qB').value.trim(),
+                option_c: document.getElementById('qC').value.trim(),
+                option_d: document.getElementById('qD').value.trim(),
+                correct,
+                explanation: document.getElementById('qExpl').value.trim()
+            };
+            if (!q.question_text || !q.option_a || !q.correct) { toast('Fill mandatory fields!', 'error'); return; }
+            await api('/api/admin/questions', 'POST', { session_id: sid, questions: [q] });
+            toast('Question added!', 'success');
+            ['qText', 'qA', 'qB', 'qC', 'qD', 'qExpl'].forEach(id => document.getElementById(id).value = '');
+            loadSessionQuestions();
+        }
+
+        async function deleteQ(id) {
+            if (!confirm('Are you sure?')) return;
+            await api(`/api/admin/questions/${id}`, 'DELETE');
+            loadSessionQuestions();
+        }
+
+        async function forceStart(id) {
+            if (!confirm('▶️ Start quiz NOW for this session?\n\nSaare registered players ke liye quiz turant shuru ho jayega!')) return;
+            try {
+                const r = await api(`/api/admin/sessions/${id}/start`, 'POST');
+                toast('🔥 Quiz is LIVE! ' + r.message, 'success');
+                loadSessions();
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function cancelSession(id) { if (confirm('Cancel?')) { await api(`/api/admin/sessions/${id}/cancel`, 'POST'); loadSessions(); } }
+        async function completeSess(id) { await api(`/api/admin/sessions/${id}/complete`, 'POST'); toast('Completed!'); loadSessions(); }
+        async function resetSeats(id) { if (confirm('Reset all seats?')) { await api(`/api/admin/sessions/${id}/reset-seats`, 'POST'); loadSessions(); } }
+        async function deleteSession(id) {
+            if (!confirm('⚠️ Permanently DELETE this session?\n\nYeh session aur uske saare questions/seats hamesha ke liye remove ho jayenge!')) return;
+            try {
+                await api(`/api/admin/sessions/${id}`, 'DELETE');
+                toast('✅ Session permanently deleted!', 'success');
+                loadSessions();
+                loadDashboard();
+            } catch (e) {
+                toast('❌ ' + e.message, 'error');
+            }
+        }
+
+        async function loadUsers() {
+            const users = await api('/api/admin/users');
+            document.getElementById('usersList').innerHTML = `<table><thead><tr><th>ID</th><th>User Info</th><th>Admin</th><th>Action</th></tr></thead><tbody>` +
+                users.map(u => `<tr>
+          <td>#${u.id}</td>
+          <td><div style="font-weight:600;">${u.mobile}</div><div style="font-size:.78rem;color:var(--muted);">${u.name || 'No Name'} • ${u.upi_id || 'No UPI'}</div></td>
+          <td>${u.is_admin ? '<span class="badge badge-gold">Admin</span>' : '-'}</td>
+          <td>${u.id == 1 ? '' : `<button class="btn btn-danger" style="padding:4px 10px; font-size:.78rem;" onclick="deleteUser(${u.id})">Delete</button>`}</td>
+        </tr>`).join('') + '</tbody></table>';
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Delete user AND all their seats/results? This cannot be undone.')) return;
+            await api(`/api/admin/users/${id}`, 'DELETE');
+            loadUsers();
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+        async function loadOwnerEarnings() {
+            try {
+                const sessions = await api('/api/admin/sessions');
+                const completedOrLive = sessions.filter(s => ['completed', 'confirmed', 'live'].includes(s.status));
+                let totalEarned = 0;
+                let totalPrize = 0;
+                const rows = completedOrLive.map(s => {
+                    const total = s.entry_fee * s.seats_booked;
+                    const cut = Math.floor(total * 0.25);
+                    const prize = Math.floor(total * 0.75);
+                    totalEarned += cut;
+                    totalPrize += prize;
+                    return `<tr>
+                      <td style="padding:8px 10px; font-weight:600;">${s.title}</td>
+                      <td style="padding:8px 10px; color:var(--muted);">${s.seats_booked}/${s.seat_limit} × ₹${s.entry_fee}</td>
+                      <td style="padding:8px 10px; text-align:right; color:var(--green); font-weight:700;">₹${cut.toLocaleString()} <span style="font-size:.7rem; color:var(--muted);">(25%)</span></td>
+                      <td style="padding:8px 10px; text-align:right; color:var(--gold);">₹${prize.toLocaleString()} <span style="font-size:.7rem; color:var(--muted);">(75%)</span></td>
+                    </tr>`;
+                }).join('');
+
+                document.getElementById('ownerEarnings').innerHTML = `
+                  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
+                    <div class="stat-card">
+                      <div class="stat-num" style="color:var(--green);">₹${totalEarned.toLocaleString()}</div>
+                      <div class="stat-lbl">💰 Your Earnings (25%)</div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-num" style="color:var(--gold);">₹${totalPrize.toLocaleString()}</div>
+                      <div class="stat-lbl">🏆 Total Prize Paid</div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-num" style="color:var(--blue);">${completedOrLive.length}</div>
+                      <div class="stat-lbl">📊 Sessions Tracked</div>
+                    </div>
+                  </div>
+                  <div style="background:rgba(16,185,129,.06); border-radius:10px; padding:12px; margin-bottom:14px; font-size:.82rem; color:var(--muted);">
+                    💸 <strong style="color:var(--green);">₹${totalEarned.toLocaleString()}</strong> is owed to your bank/UPI from all tracked sessions. 
+                    25% is auto-deducted from every session's total collection.
+                  </div>
+                  ${completedOrLive.length > 0 ? `
+                  <table style="width:100%; border-collapse:collapse; font-size:.82rem;">
+                    <thead><tr style="color:var(--muted); border-bottom:1px solid var(--border);">
+                      <th style="padding:8px 10px; text-align:left;">Session</th>
+                      <th style="padding:8px 10px; text-align:left;">Collection</th>
+                      <th style="padding:8px 10px; text-align:right;">Your Cut (25%)</th>
+                      <th style="padding:8px 10px; text-align:right;">Prize Pool (75%)</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                  </table>` : '<p style="color:var(--muted); text-align:center; padding:20px;">No completed sessions yet. Earnings will appear here once sessions fill up.</p>'}`;
+            } catch (e) {
+                document.getElementById('ownerEarnings').innerHTML = `<p style="color:var(--muted);">Failed to load earnings.</p>`;
+            }
+        }
+
+        loadDashboard();
+        loadOwnerEarnings();
+
+        // ─── CATEGORIES & REWARDS JS ──────────────────────────────────
+        async function loadCategories() {
+            const cats = await api('/api/admin/categories');
+            // Update creation select
+            const sel = document.getElementById('newCat');
+            sel.innerHTML = cats.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+
+            // Render list
+            document.getElementById('categoriesList').innerHTML = `
+                <h3 style="margin-bottom:14px;">Existing Categories</h3>
+                <div class="grid-2">
+                    ${cats.map(c => `
+                        <div class="card" style="padding:16px;">
+                            <div style="font-size:1.5rem; margin-bottom:8px;">${c.icon}</div>
+                            <h4 style="margin-bottom:4px;">${c.name}</h4>
+                            <p style="font-size:.78rem; color:var(--muted);">${c.description}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function createCategory() {
+            const name = document.getElementById('catName').value.trim();
+            const icon = document.getElementById('catIcon').value.trim();
+            const description = document.getElementById('catDesc').value.trim();
+            if (!name) return toast('Name required', 'error');
+            await api('/api/admin/categories', 'POST', { name, icon, description });
+            toast('Category created!', 'success');
+            ['catName', 'catIcon', 'catDesc'].forEach(id => document.getElementById(id).value = '');
+            loadCategories();
+        }
+
+        async function assignReward() {
+            const mobile = document.getElementById('rewardMobile').value.trim();
+            const type = document.getElementById('rewardType').value;
+            const detail = document.getElementById('rewardDetail').value.trim();
+            if (!mobile || !detail) return toast('Fill all fields', 'error');
+            await api('/api/admin/rewards', 'POST', { mobile, type, detail });
+            toast('Reward assigned! 🏆', 'success');
+            ['rewardMobile', 'rewardDetail'].forEach(id => document.getElementById(id).value = '');
+            loadRewards();
+        }
+
+        async function loadRewards() {
+            const rewards = await api('/api/admin/rewards');
+            document.getElementById('rewardsList').innerHTML = `
+                <h3 style="margin-bottom:14px;">Recent Rewards</h3>
+                <table><thead><tr><th>User</th><th>Type</th><th>Detail</th><th>Date</th></tr></thead><tbody>
+                ${rewards.map(r => `
+                    <tr>
+                        <td>${r.mobile}</td>
+                        <td>${r.type}</td>
+                        <td style="color:var(--gold); font-weight:700;">${r.detail}</td>
+                        <td style="font-size:.72rem;">${new Date(r.assigned_at * 1000).toLocaleDateString()}</td>
+                    </tr>
+                `).join('')}
+                </tbody></table>
+            `;
+        }
+
+        // ── WALLET MANAGER ────────────────────────────────────────────────────────────
+        let _allWallets = [];
+        async function loadWallets() {
+            document.getElementById('walletsTable').innerHTML = '<div class="spinner"></div>';
+            try {
+                _allWallets = await api('/api/wallet/admin/list');
+                renderWallets(_allWallets);
+            } catch (e) { document.getElementById('walletsTable').innerHTML = `<p style="color:#ef4444;">${e.message}</p>`; }
+        }
+
+        function renderWallets(wallets) {
+            if (!wallets.length) { document.getElementById('walletsTable').innerHTML = '<p style="color:var(--muted);">No users yet</p>'; return; }
+            document.getElementById('walletsTable').innerHTML = `
+                <table>
+                    <thead><tr><th>Mobile</th><th>Name</th><th>🎭 Demo</th><th>💵 Real</th><th>Action</th></tr></thead>
+                    <tbody>
+                    ${wallets.map(w => `
+                        <tr>
+                            <td>${w.mobile}</td>
+                            <td>${w.name || '—'}</td>
+                            <td style="color:#60a5fa;font-weight:700;">₹${w.demo}</td>
+                            <td style="color:#10b981;font-weight:700;">₹${w.real}</td>
+                            <td>
+                                <button class="btn btn-outline" style="padding:4px 10px;font-size:.75rem;" onclick="quickTopup('${w.id}', '${w.mobile}')">+ Add</button>
+                            </td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>`;
+        }
+
+        function filterWallets() {
+            const q = document.getElementById('walletSearch').value.toLowerCase();
+            renderWallets(_allWallets.filter(w => w.mobile.includes(q) || (w.name || '').toLowerCase().includes(q)));
+        }
+
+        function quickTopup(userId, mobile) {
+            document.getElementById('topupUser').value = mobile;
+            document.getElementById('topupUser').focus();
+        }
+
+        async function doTopup() {
+            const userInput = document.getElementById('topupUser').value.trim();
+            const walletType = document.getElementById('topupType').value;
+            const amount = Number(document.getElementById('topupAmt').value);
+            const note = document.getElementById('topupNote').value.trim();
+            if (!userInput || !amount || amount < 1) { toast('Mobile/ID aur amount required hai', 'error'); return; }
+
+            // Resolve user_id from mobile or direct ID
+            let userId = userInput;
+            if (/^\d{10}$/.test(userInput)) {
+                // It's a mobile number — find user
+                const users = _allWallets.find(w => w.mobile === userInput);
+                if (!users) { toast('User not found: ' + userInput, 'error'); return; }
+                userId = users.id;
+            }
+
+            try {
+                const r = await api('/api/wallet/admin/topup', 'POST', { user_id: userId, wallet_type: walletType, amount, note });
+                toast(`✅ ₹${amount} added to ${r.user} (${walletType}) — new balance: ₹${r.new_balance}`, 'success');
+                document.getElementById('topupAmt').value = '';
+                document.getElementById('topupNote').value = '';
+                loadWallets(); // Refresh the list
+            } catch (e) { toast('❌ ' + e.message, 'error'); }
+        }
+
+        // Initialize on load
+        loadCategories();
+        loadRewards();
+        loadOwnerEarnings();
+
+    </script>
+</body>
+
+</html>

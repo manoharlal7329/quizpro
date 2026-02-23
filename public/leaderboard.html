@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Leaderboard — QuizPro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .lb-hero {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 48px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(245, 158, 11, .2);
+        }
+
+        .lb-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .lb-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            max-width: 1000px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+
+        @media(max-width:700px) {
+            .lb-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .lb-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+        }
+
+        .lb-row:last-child {
+            border: none;
+        }
+
+        .lb-rank {
+            font-size: 1.4rem;
+            width: 36px;
+            text-align: center;
+        }
+
+        .lb-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .lb-prize {
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .lb-stat {
+            font-size: .75rem;
+            color: var(--muted);
+        }
+
+        .sess-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .sess-status {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 700;
+        }
+
+        .sess-status.open {
+            background: rgba(16, 185, 129, .2);
+            color: #10b981;
+        }
+
+        .sess-status.confirmed {
+            background: rgba(245, 158, 11, .2);
+            color: #f59e0b;
+        }
+
+        .top3 {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 0 auto 32px;
+            max-width: 600px;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .top3-box {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .top3-box.gold {
+            border-color: #f59e0b;
+        }
+
+        .top3-box.silver {
+            border-color: #94a3b8;
+        }
+
+        .top3-box.bronze {
+            border-color: #b45309;
+        }
+
+        .top3-medal {
+            font-size: 2.5rem;
+        }
+
+        .top3-name {
+            font-weight: 700;
+            margin: 8px 0 4px;
+            font-size: .95rem;
+        }
+
+        .top3-prize {
+            color: var(--gold);
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">← QuizPro</a>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <a href="/leaderboard.html" class="nav-link" style="color:var(--gold);font-weight:700;">🏆 Leaderboard</a>
+            <span id="navName" style="color:var(--muted);font-size:.85rem;"></span>
+            <button onclick="logout()" id="logoutBtn" style="display:none;" class="btn btn-outline"
+                style="padding:6px 14px;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="lb-hero">
+        <div style="font-size:3rem;margin-bottom:8px;">🏆</div>
+        <h1 class="gradient-text">All-Time Leaderboard</h1>
+        <p style="color:var(--muted);">Top Quiz Winners of QuizPro</p>
+    </div>
+
+    <!-- Top 3 Podium -->
+    <div class="top3" id="podium"></div>
+
+    <div class="lb-grid">
+        <!-- Left: Full Leaderboard -->
+        <div class="lb-card">
+            <h3 style="margin-bottom:16px;">📊 Top Players</h3>
+            <div id="lbList">
+                <div class="empty-state">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Right: Live Sessions -->
+        <div class="lb-card">
+            <h3 style="margin-bottom:16px;">🔴 Live & Upcoming Sessions</h3>
+            <div id="sessList">
+                <div class="empty-state">Loading...</div>
+            </div>
+            <a href="/" class="btn btn-gold btn-full" style="margin-top:16px;">🎯 Book a Seat</a>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js"></script>
+    <script>
+        // Optional login
+        const token = getToken();
+        if (token) {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('navName').textContent = u.name || '';
+            document.getElementById('logoutBtn').style.display = 'inline-flex';
+        }
+        function logout() { localStorage.clear(); location.href = '/login.html'; }
+
+        const MEDALS = ['🥇', '🥈', '🥉'];
+        const MEDAL_CLASS = ['gold', 'silver', 'bronze'];
+
+        async function load() {
+            try {
+                const data = await api('/api/leaderboard');
+                renderLeaderboard(data.leaderboard || []);
+                renderSessions(data.live_sessions || []);
+            } catch (e) {
+                document.getElementById('lbList').innerHTML = '<div class="empty-state">⚠️ Unable to load leaderboard</div>';
+            }
+        }
+
+        function renderLeaderboard(list) {
+            // Podium (top 3)
+            const podium = document.getElementById('podium');
+            if (list.length >= 1) {
+                podium.innerHTML = [0, 1, 2].map(i => {
+                    const p = list[i];
+                    if (!p) return '';
+                    return `<div class="top3-box ${MEDAL_CLASS[i]}">
+                        <div class="top3-medal">${MEDALS[i]}</div>
+                        <div class="top3-name">${p.name}</div>
+                        <div class="top3-prize">₹${p.total_prize}</div>
+                        <div class="lb-stat">${p.sessions_played} sessions</div>
+                    </div>`;
+                }).join('');
+            }
+
+            if (list.length === 0) {
+                document.getElementById('lbList').innerHTML = '<div class="empty-state">🎯 No winners yet. Be the first!</div>';
+                return;
+            }
+
+            document.getElementById('lbList').innerHTML = list.slice(3).map((p, i) => `
+                <div class="lb-row">
+                    <div class="lb-rank" style="color:var(--muted);">#${i + 4}</div>
+                    <div>
+                        <div class="lb-name">${p.name}</div>
+                        <div class="lb-stat">${p.sessions_played} sessions • Best rank: ${p.best_rank || '—'}</div>
+                    </div>
+                    <div class="lb-prize">₹${p.total_prize}</div>
+                </div>`).join('') || '<div class="empty-state" style="padding:20px;">More players coming soon!</div>';
+        }
+
+        function renderSessions(sessions) {
+            const el = document.getElementById('sessList');
+            if (!sessions.length) { el.innerHTML = '<div class="empty-state">No live sessions right now</div>'; return; }
+            el.innerHTML = sessions.map(s => `
+                <div class="sess-card">
+                    <div>
+                        <div style="font-weight:700;">${s.title}</div>
+                        <div class="lb-stat">${s.seats_booked}/${s.seat_limit} seats • ₹${s.entry_fee} entry</div>
+                        ${s.prize_pool ? `<div style="color:var(--gold);font-size:.8rem;font-weight:700;">Prize Pool: ₹${s.prize_pool}</div>` : ''}
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                        <span class="sess-status ${s.status}">${s.status === 'open' ? '🟢 OPEN' : '⚡ CONFIRMED'}</span>
+                        <a href="/session.html?id=${s.id}" class="btn btn-primary" style="padding:6px 14px;font-size:.8rem;">Book →</a>
+                    </div>
+                </div>`).join('');
+        }
+
+        load();
+    </script>
+</body>
+
+</html>

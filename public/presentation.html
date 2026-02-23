@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuizPro — Platform Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #f59e0b;
+            --blue: #0ea5e9;
+            --green: #10b981;
+            --red: #ef4444;
+            --violet: #8b5cf6;
+            --bg: #0a0a14;
+            --card: #111827;
+            --border: #1e293b;
+            --text: #f1f5f9;
+            --muted: #64748b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── SLIDES ── */
+        .deck {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            opacity: 0;
+            transform: translateX(60px);
+            transition: all .5s cubic-bezier(.4, 0, .2, 1);
+            pointer-events: none;
+            overflow: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .slide.exit {
+            opacity: 0;
+            transform: translateX(-60px);
+        }
+
+        /* ── PROGRESS BAR ── */
+        #progressBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--blue));
+            transition: width .4s ease;
+            z-index: 100;
+        }
+
+        /* ── NAV ── */
+        .nav {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 100;
+            background: rgba(17, 24, 39, .8);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 10px 20px;
+        }
+
+        .nav button {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: all .2s;
+        }
+
+        .nav button:hover {
+            background: rgba(255, 255, 255, .08);
+        }
+
+        #slideNum {
+            font-size: .85rem;
+            color: var(--muted);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--border);
+            cursor: pointer;
+            transition: all .3s;
+        }
+
+        .dot.active {
+            background: var(--gold);
+            transform: scale(1.3);
+        }
+
+        /* ── SLIDE-SPECIFIC ── */
+        .hero-badge {
+            background: linear-gradient(135deg, rgba(245, 158, 11, .15), rgba(14, 165, 233, .1));
+            border: 1px solid rgba(245, 158, 11, .3);
+            border-radius: 30px;
+            padding: 6px 18px;
+            font-size: .8rem;
+            letter-spacing: 2px;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        h1.big {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--gold), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub {
+            font-size: clamp(.9rem, 2vw, 1.15rem);
+            color: var(--muted);
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.7;
+        }
+
+        /* Cards grid */
+        .grid {
+            display: grid;
+            gap: 16px;
+            width: 100%;
+            max-width: 900px;
+            margin-top: 32px;
+        }
+
+        .g2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .g3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .g4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        @media(max-width:640px) {
+
+            .g2,
+            .g3,
+            .g4 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            transition: transform .3s, box-shadow .3s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, .4);
+        }
+
+        .card .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .card p {
+            font-size: .82rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Flow steps */
+        .flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            justify-content: center;
+            width: 100%;
+            max-width: 860px;
+            margin-top: 28px;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            min-width: 100px;
+            max-width: 140px;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -14px;
+            top: 28px;
+            font-size: 1.4rem;
+            color: var(--muted);
+        }
+
+        .step-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(245, 158, 11, .12);
+            border: 2px solid rgba(245, 158, 11, .3);
+            margin-bottom: 10px;
+        }
+
+        .step p {
+            font-size: .72rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        /* Money split */
+        .split-bar {
+            width: 100%;
+            max-width: 600px;
+            height: 56px;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            margin: 24px 0;
+        }
+
+        .split-75 {
+            background: linear-gradient(135deg, #10b981, #059669);
+            flex: 75;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .split-25 {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            flex: 25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+            color: #000;
+        }
+
+        /* Feature pill */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(14, 165, 233, .08);
+            border: 1px solid rgba(14, 165, 233, .2);
+            border-radius: 30px;
+            padding: 8px 16px;
+            font-size: .85rem;
+            margin: 5px;
+        }
+
+        /* Prize table */
+        .prize-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: .85rem;
+        }
+
+        .prize-row:last-child {
+            border-bottom: none;
+        }
+
+        /* CTA */
+        .cta-btn {
+            background: linear-gradient(135deg, var(--gold), #d97706);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            cursor: pointer;
+            letter-spacing: .5px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 24px;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(245, 158, 11, .4);
+        }
+
+        /* Animated background blobs */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: .12;
+            pointer-events: none;
+            animation: drift 8s ease-in-out infinite;
+        }
+
+        .blob1 {
+            width: 400px;
+            height: 400px;
+            background: var(--gold);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .blob2 {
+            width: 350px;
+            height: 350px;
+            background: var(--blue);
+            bottom: -100px;
+            right: -50px;
+            animation-delay: -4s;
+        }
+
+        @keyframes drift {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(30px, 20px);
+            }
+        }
+
+        /* Section title */
+        .section-title {
+            font-size: clamp(1.4rem, 4vw, 2.2rem);
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .section-sub {
+            font-size: .9rem;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 28px;
+            max-width: 560px;
+        }
+
+        /* Keyboard hint */
+        .hint {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-size: .7rem;
+            color: var(--muted);
+            background: rgba(17, 24, 39, .6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            z-index: 100;
+        }
+
+        /* Fullscreen icon */
+        #fsBtn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(17, 24, 39, .6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: .8rem;
+            color: var(--muted);
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div id="progressBar"></div>
+    <div class="hint">← → Arrow keys | Swipe</div>
+    <button id="fsBtn" onclick="toggleFS()">⛶ Fullscreen</button>
+
+    <div class="deck" id="deck">
+
+        <!-- ══ SLIDE 1: TITLE ══ -->
+        <div class="slide active" id="s1">
+            <div class="hero-badge">🎯 Platform Presentation</div>
+            <h1 class="big">⚡ <span class="gradient-text">QuizPro</span></h1>
+            <p class="sub">India ka pehla <strong style="color:var(--gold);">Skill-Based Quiz Competition</strong>
+                platform —
+                jahan score aur speed se jeeto, luck se nahi!</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:32px;">
+                <span class="pill">🏆 Top 10 Prize Pool</span>
+                <span class="pill">⚡ ms-Level Speed Ranking</span>
+                <span class="pill">💳 UPI Payments</span>
+                <span class="pill">🔒 Anti-Cheat System</span>
+                <span class="pill">📱 Mobile First</span>
+            </div>
+            <p style="margin-top:40px;font-size:.75rem;color:var(--muted);">
+                Built by Manohar Lal Prajapat &nbsp;•&nbsp; 2026
+            </p>
+        </div>
+
+        <!-- ══ SLIDE 2: PROBLEMS WE SOLVE ══ -->
+        <div class="slide" id="s2">
+            <div class="section-title">❌ Problems <span class="gradient-text">We Solve</span></div>
+            <p class="section-sub">Normal quiz apps ki kami</p>
+            <div class="grid g2" style="max-width:700px;">
+                <div class="card" style="border-color:rgba(239,68,68,.3);">
+                    <div class="icon">🎲</div>
+                    <h3>Luck-Based Winning</h3>
+                    <p>Buttons randomly daba ke log jeette hain — skill ka koi role nahi</p>
+                </div>
+                <div class="card" style="border-color:rgba(239,68,68,.3);">
+                    <div class="icon">💸</div>
+                    <h3>No Real Prize</h3>
+                    <p>Points milte hain, asli paise nahi — motivation nahi rehta</p>
+                </div>
+                <div class="card" style="border-color:rgba(239,68,68,.3);">
+                    <div class="icon">👥</div>
+                    <h3>No Community</h3>
+                    <p>Akele khelo — koi competition feel nahi, live thrill nahi</p>
+                </div>
+                <div class="card" style="border-color:rgba(239,68,68,.3);">
+                    <div class="icon">📋</div>
+                    <h3>No Transparency</h3>
+                    <p>Prize kaise calculate hota hai, koi nahi jaanta — trust nahi</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 3: OUR SOLUTION ══ -->
+        <div class="slide" id="s3">
+            <div class="section-title">✅ <span class="gradient-text">QuizPro Solution</span></div>
+            <p class="section-sub">Pure skill, full transparency, real money</p>
+            <div class="grid g2" style="max-width:700px;">
+                <div class="card" style="border-color:rgba(16,185,129,.3);">
+                    <div class="icon">🧠</div>
+                    <h3>Score + Speed Ranking</h3>
+                    <p>Pehle sahi jawab → phir kitna fast. Luck ka koi role nahi!</p>
+                </div>
+                <div class="card" style="border-color:rgba(16,185,129,.3);">
+                    <div class="icon">💰</div>
+                    <h3>Real UPI Prizes</h3>
+                    <p>Top 10 winners ko seedha UPI/bank mein paise milenge</p>
+                </div>
+                <div class="card" style="border-color:rgba(16,185,129,.3);">
+                    <div class="icon">🔥</div>
+                    <h3>Live Sessions</h3>
+                    <p>Limited seats — jab sab bhar jayein tabhi quiz shuru hoti</p>
+                </div>
+                <div class="card" style="border-color:rgba(16,185,129,.3);">
+                    <div class="icon">📊</div>
+                    <h3>Full Transparency</h3>
+                    <p>Prize pool, platform cut — sab publicly dikhta hai</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 4: HOW IT WORKS ══ -->
+        <div class="slide" id="s4">
+            <div class="section-title">🔄 <span class="gradient-text">Kaise Kaam Karta Hai?</span></div>
+            <p class="section-sub">8 simple steps</p>
+            <div class="flow">
+                <div class="step">
+                    <div class="step-icon">📱</div>
+                    <p>Login (OTP)</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">👁️</div>
+                    <p>Questions dekho FREE</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">💳</div>
+                    <p>UPI se Book</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">📘</div>
+                    <p>PDF Study Material</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">🔔</div>
+                    <p>Session Confirm Alert</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">⚡</div>
+                    <p>Live Quiz Start</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">🏆</div>
+                    <p>Results + Ranking</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">💸</div>
+                    <p>UPI Payout</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 5: REVENUE MODEL ══ -->
+        <div class="slide" id="s5">
+            <div class="section-title">💰 <span class="gradient-text">Revenue Model</span></div>
+            <p class="section-sub">Clear aur fair prize structure</p>
+            <div class="split-bar">
+                <div class="split-75">🏆 75% — Players</div>
+                <div class="split-25">💼 25% Platform</div>
+            </div>
+            <div class="grid g2" style="max-width:600px;">
+                <div class="card" style="border-color:rgba(16,185,129,.3);text-align:center;">
+                    <div style="font-size:2rem;font-weight:900;color:var(--green);">75%</div>
+                    <div style="font-size:.85rem;color:var(--muted);margin-top:4px;">Prize Pool — Top 10 winners mein
+                        distribute</div>
+                </div>
+                <div class="card" style="border-color:rgba(245,158,11,.3);text-align:center;">
+                    <div style="font-size:2rem;font-weight:900;color:var(--gold);">25%</div>
+                    <div style="font-size:.85rem;color:var(--muted);margin-top:4px;">Platform Cut — Operations + profit
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="max-width:500px;margin-top:16px;text-align:center;">
+                <p style="font-size:.85rem;color:var(--muted);">
+                    Example: <strong style="color:var(--text);">100 seats × ₹50 = ₹5,000</strong><br>
+                    Prize Pool: <strong style="color:var(--green);">₹3,750</strong> &nbsp;|&nbsp;
+                    Platform: <strong style="color:var(--gold);">₹1,250</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 6: PRIZE DISTRIBUTION ══ -->
+        <div class="slide" id="s6">
+            <div class="section-title">🏅 <span class="gradient-text">Prize Distribution</span></div>
+            <p class="section-sub">Top 15 winners — strictly decreasing order</p>
+            <div class="card" style="max-width:460px;padding:0;overflow:hidden;">
+                <div
+                    style="background:rgba(245,158,11,.08);padding:12px 14px;font-weight:700;color:var(--gold);font-size:.9rem;">
+                    Prize Pool = ₹P (75% of total collection)
+                </div>
+                <div class="prize-row"><span>🥇 1st Place</span><span style="color:var(--gold);font-weight:700;">25% of
+                        P</span></div>
+                <div class="prize-row"><span>🥈 2nd Place</span><span style="color:var(--gold);">15% of P</span></div>
+                <div class="prize-row"><span>🥉 3rd Place</span><span style="color:var(--gold);">11% of P</span></div>
+                <div class="prize-row"><span>4th Place</span><span style="color:var(--muted);">9% of P</span></div>
+                <div class="prize-row"><span>5th Place</span><span style="color:var(--muted);">8% of P</span></div>
+                <div class="prize-row"><span>6th Place</span><span style="color:var(--muted);">7% of P</span></div>
+                <div class="prize-row"><span>7th Place</span><span style="color:var(--muted);">5% of P</span></div>
+                <div class="prize-row"><span>8th Place</span><span style="color:var(--muted);">4.5% of P</span></div>
+                <div class="prize-row"><span>9th Place</span><span style="color:var(--muted);">4% of P</span></div>
+                <div class="prize-row"><span>10th Place</span><span style="color:var(--muted);">3.5% of P</span></div>
+                <div class="prize-row"><span>11th Place</span><span style="color:var(--muted);">2.5% of P</span></div>
+                <div class="prize-row"><span>12th Place</span><span style="color:var(--muted);">2% of P</span></div>
+                <div class="prize-row"><span>13th Place</span><span style="color:var(--muted);">1.5% of P</span></div>
+                <div class="prize-row"><span>14th–15th</span><span style="color:var(--muted);">1% each of P</span></div>
+            </div>
+            <p style="font-size:.75rem;color:var(--muted);margin-top:14px;">Total = 100% distributed. Rounding remainder
+                → 1st rank.</p>
+        </div>
+
+        <!-- ══ SLIDE 7: ADMIN PANEL ══ -->
+        <div class="slide" id="s7">
+            <div class="section-title">🛠️ <span class="gradient-text">Admin Panel</span></div>
+            <p class="section-sub">Full control admin ke haath mein</p>
+            <div class="grid g3">
+                <div class="card">
+                    <div class="icon">📂</div>
+                    <h3>Categories</h3>
+                    <p>Beginner, Skill Builder, Pro Speed — custom categories create karo</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🗂️</div>
+                    <h3>Sessions</h3>
+                    <p>Create, start🚀, complete✅, delete🗑️ — ek jagah sab kuch</p>
+                </div>
+                <div class="card">
+                    <div class="icon">📤</div>
+                    <h3>Excel Upload</h3>
+                    <p>Ek Excel file se 100 questions ek click mein upload karo</p>
+                </div>
+                <div class="card">
+                    <div class="icon">👥</div>
+                    <h3>User Management</h3>
+                    <p>Saare users dekho, admin promote karo</p>
+                </div>
+                <div class="card">
+                    <div class="icon">💰</div>
+                    <h3>Earnings Tracker</h3>
+                    <p>Platform cut, prize paid, total revenue — real-time stats</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🎁</div>
+                    <h3>Rewards</h3>
+                    <p>Special winners ko cash/gifts/free entry dena</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 8: USER FEATURES ══ -->
+        <div class="slide" id="s8">
+            <div class="section-title">📱 <span class="gradient-text">User Features</span></div>
+            <p class="section-sub">User ka full journey</p>
+            <div class="grid g2" style="max-width:720px;">
+                <div class="card">
+                    <div class="icon">🔢</div>
+                    <h3>6-Digit OTP Login</h3>
+                    <p>No password — phone number se login, OTP screen pe dikhta hai</p>
+                </div>
+                <div class="card">
+                    <div class="icon">👁️</div>
+                    <h3>Free Question Preview</h3>
+                    <p>Questions pehle dekho, phir decide karo — answers locked until booking</p>
+                </div>
+                <div class="card">
+                    <div class="icon">📘</div>
+                    <h3>Pre-Study PDF</h3>
+                    <p>Quiz se 30 min pehle PDF study material unlock ho jaata hai</p>
+                </div>
+                <div class="card">
+                    <div class="icon">⏱️</div>
+                    <h3>ms-Level Timing</h3>
+                    <p>Har question ka exact millisecond time record hota hai</p>
+                </div>
+                <div class="card">
+                    <div class="icon">🔔</div>
+                    <h3>Loud Alert (10x Popup)</h3>
+                    <p>Session confirm hone pe aggressive popup + sound + phone vibration</p>
+                </div>
+                <div class="card">
+                    <div class="icon">📊</div>
+                    <h3>Live Leaderboard</h3>
+                    <p>Quiz ke baad turant results + ranking + prize amounts</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 9: ANTI-CHEAT ══ -->
+        <div class="slide" id="s9">
+            <div class="section-title">🔒 <span class="gradient-text">Anti-Cheat System</span></div>
+            <p class="section-sub">Fair play guaranteed</p>
+            <div class="grid g2" style="max-width:640px;">
+                <div class="card" style="border-color:rgba(239,68,68,.25);">
+                    <div class="icon">🚫</div>
+                    <h3>Back Button Blocked</h3>
+                    <p>Quiz mein wapas nahi ja sakte — pushState se block</p>
+                </div>
+                <div class="card" style="border-color:rgba(239,68,68,.25);">
+                    <div class="icon">📋</div>
+                    <h3>Copy-Paste Blocked</h3>
+                    <p>Context menu, copy, paste — sab disable quiz mein</p>
+                </div>
+                <div class="card" style="border-color:rgba(239,68,68,.25);">
+                    <div class="icon">🔑</div>
+                    <h3>Duplicate UTR Check</h3>
+                    <p>Same transaction ID se double booking impossible</p>
+                </div>
+                <div class="card" style="border-color:rgba(239,68,68,.25);">
+                    <div class="icon">💳</div>
+                    <h3>Seat = Payment Only</h3>
+                    <p>Bina verified payment ke quiz access nahi milega</p>
+                </div>
+            </div>
+            <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                <span class="pill" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);">🕐
+                    Per-question Timer</span>
+                <span class="pill" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);">🚪
+                    Auto-Submit on Exit</span>
+                <span class="pill" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);">🔐 JWT Auth
+                    on all routes</span>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 10: TECH STACK ══ -->
+        <div class="slide" id="s10">
+            <div class="section-title">⚙️ <span class="gradient-text">Technology Stack</span></div>
+            <p class="section-sub">Modern, fast aur production-ready</p>
+            <div class="grid g4" style="max-width:860px;">
+                <div class="card" style="text-align:center;">
+                    <div class="icon">🟩</div>
+                    <h3>Node.js</h3>
+                    <p>Fast backend server</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div class="icon">⚡</div>
+                    <h3>Express.js</h3>
+                    <p>REST API routes</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div class="icon">🗃️</div>
+                    <h3>JSON DB</h3>
+                    <p>Zero-setup database</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div class="icon">🔑</div>
+                    <h3>JWT Auth</h3>
+                    <p>Secure tokens</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div class="icon">📡</div>
+                    <h3>SSE</h3>
+                    <p>Real-time updates</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div class="icon">💳</div>
+                    <h3>UPI / Razorpay</h3>
+                    <p>Payment gateway</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div class="icon">📄</div>
+                    <h3>PDF Generate</h3>
+                    <p>Study material</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div class="icon">📱</div>
+                    <h3>Mobile First</h3>
+                    <p>Responsive UI</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 11: ROADMAP ══ -->
+        <div class="slide" id="s11">
+            <div class="section-title">🗺️ <span class="gradient-text">Future Roadmap</span></div>
+            <p class="section-sub">Aage kya aayega</p>
+            <div class="grid g3">
+                <div class="card" style="border-color:rgba(16,185,129,.3);">
+                    <div style="font-size:.7rem;color:var(--green);font-weight:700;margin-bottom:8px;">✅ DONE</div>
+                    <h3>Phase 1 — Core</h3>
+                    <p>Login, Sessions, Questions, Payment, Quiz, Results, Admin</p>
+                </div>
+                <div class="card" style="border-color:rgba(245,158,11,.3);">
+                    <div style="font-size:.7rem;color:var(--gold);font-weight:700;margin-bottom:8px;">🔄 NEXT</div>
+                    <h3>Phase 2 — Scale</h3>
+                    <p>SMS OTP, Razorpay live, Email receipts, Referral system</p>
+                </div>
+                <div class="card" style="border-color:rgba(139,92,246,.3);">
+                    <div style="font-size:.7rem;color:var(--violet);font-weight:700;margin-bottom:8px;">🔮 FUTURE</div>
+                    <h3>Phase 3 — Growth</h3>
+                    <p>Mobile App, Tournaments, College partnerships, Leaderboard seasons</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 12: CTA ══ -->
+        <div class="slide" id="s12">
+            <div class="hero-badge">🚀 Ready to Launch</div>
+            <h1 class="big"><span class="gradient-text">QuizPro</span> — Shuru Karo!</h1>
+            <p class="sub">
+                Platform taiyar hai — admin panel se session banao, questions upload karo,
+                aur players ko jeetnay ka mauka do! 🏆
+            </p>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
+                <a href="/admin.html" class="cta-btn">🛠️ Admin Panel</a>
+                <a href="/dashboard.html" class="cta-btn"
+                    style="background:linear-gradient(135deg,var(--blue),#0284c7);color:#fff;">
+                    📊 User Dashboard
+                </a>
+            </div>
+            <div style="margin-top:32px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">
+                <span class="pill">Admin: 9999999999</span>
+                <span class="pill">Port: 3000</span>
+                <span class="pill">node server.js</span>
+            </div>
+        </div>
+
+    </div><!-- end deck -->
+
+    <!-- Bottom Nav -->
+    <div class="nav">
+        <button onclick="go(-1)" title="Previous">←</button>
+        <span id="slideNum">1 / 12</span>
+        <button onclick="go(1)" title="Next">→</button>
+        <div class="dots" id="dots"></div>
+    </div>
+
+    <script>
+        const TOTAL = 12;
+        let cur = 1;
+
+        const dots = document.getElementById('dots');
+        for (let i = 1; i <= TOTAL; i++) {
+            const d = document.createElement('span');
+            d.className = 'dot' + (i === 1 ? ' active' : '');
+            d.onclick = () => goTo(i);
+            dots.appendChild(d);
+        }
+
+        function goTo(n) {
+            if (n < 1 || n > TOTAL) return;
+            const prev = document.getElementById('s' + cur);
+            prev.classList.remove('active');
+            prev.classList.add('exit');
+            setTimeout(() => prev.classList.remove('exit'), 500);
+            cur = n;
+            document.getElementById('s' + cur).classList.add('active');
+            // update nav
+            document.getElementById('slideNum').textContent = cur + ' / ' + TOTAL;
+            document.querySelectorAll('.dot').forEach((d, i) =>
+                d.classList.toggle('active', i === cur - 1));
+            // progress bar
+            document.getElementById('progressBar').style.width =
+                ((cur / TOTAL) * 100) + '%';
+        }
+
+        function go(dir) { goTo(cur + dir); }
+
+        // Keyboard
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === ' ') go(1);
+            if (e.key === 'ArrowLeft') go(-1);
+        });
+
+        // Touch swipe
+        let tx = 0;
+        document.addEventListener('touchstart', e => tx = e.touches[0].clientX);
+        document.addEventListener('touchend', e => {
+            const dx = tx - e.changedTouches[0].clientX;
+            if (Math.abs(dx) > 50) go(dx > 0 ? 1 : -1);
+        });
+
+        // Fullscreen
+        function toggleFS() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+
+        // Init progress bar
+        document.getElementById('progressBar').style.width = (1 / TOTAL * 100) + '%';
+    </script>
+</body>
+
+</html>

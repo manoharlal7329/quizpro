@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill-Based Learning Quiz Platform – Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── RESET & BASE ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue:    #0ea5e9;
+      --indigo:  #6366f1;
+      --violet:  #8b5cf6;
+      --gold:    #f59e0b;
+      --green:   #10b981;
+      --red:     #ef4444;
+      --dark:    #0f0f1a;
+      --card:    rgba(255,255,255,0.06);
+      --border:  rgba(255,255,255,0.12);
+      --text:    #e2e8f0;
+      --muted:   #94a3b8;
+      --radius:  18px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── SLIDE CONTAINER ─────────────────────────────── */
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 50px 80px;
+      opacity: 0;
+      transform: translateX(60px);
+      transition: opacity .5s ease, transform .5s ease;
+      pointer-events: none;
+      background: var(--dark);
+    }
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: all;
+    }
+    .slide.exit-left {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
+
+    /* ── BACKGROUNDS ──────────────────────────────────── */
+    .bg-blue   { background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,.25) 0%, transparent 65%), var(--dark); }
+    .bg-indigo { background: radial-gradient(ellipse at 70% 30%, rgba(99,102,241,.25) 0%, transparent 65%), var(--dark); }
+    .bg-violet { background: radial-gradient(ellipse at 30% 70%, rgba(139,92,246,.25) 0%, transparent 65%), var(--dark); }
+    .bg-gold   { background: radial-gradient(ellipse at 60% 20%, rgba(245,158,11,.20) 0%, transparent 65%), var(--dark); }
+    .bg-green  { background: radial-gradient(ellipse at 40% 60%, rgba(16,185,129,.22) 0%, transparent 65%), var(--dark); }
+    .bg-red    { background: radial-gradient(ellipse at 80% 80%, rgba(239,68,68,.22) 0%, transparent 65%), var(--dark); }
+
+    /* ── GRID LINES (aesthetic) ──────────────────────── */
+    .slide::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* ── SLIDE NUMBER + TOTAL ────────────────────────── */
+    .slide-num {
+      position: absolute;
+      bottom: 28px;
+      right: 40px;
+      font-size: .78rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    /* ── TYPOGRAPHY ──────────────────────────────────── */
+    .eyebrow {
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    h1.main-title {
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      font-weight: 900;
+      line-height: 1.1;
+      text-align: center;
+      background: linear-gradient(135deg, #e2e8f0 0%, var(--blue) 50%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 18px;
+    }
+
+    .tagline {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      font-weight: 300;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    .tagline span { color: var(--blue); font-weight: 600; }
+
+    h2.slide-title {
+      font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .grad-blue   { background: linear-gradient(135deg, var(--blue), var(--indigo)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-gold   { background: linear-gradient(135deg, var(--gold), #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-green  { background: linear-gradient(135deg, var(--green), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-violet { background: linear-gradient(135deg, var(--violet), #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-red    { background: linear-gradient(135deg, var(--red), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ── CARD ─────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 36px;
+      backdrop-filter: blur(12px);
+      width: 100%;
+    }
+
+    /* ── LIST ─────────────────────────────────────────── */
+    .point-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      max-width: 780px;
+    }
+    .point-list li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: clamp(.9rem, 1.6vw, 1.1rem);
+      font-weight: 400;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      transition: transform .2s, border-color .2s;
+    }
+    .point-list li:hover { transform: translateX(6px); border-color: var(--blue); }
+    .point-list li .icon { font-size: 1.3rem; flex-shrink: 0; }
+    .point-list li strong { color: #fff; }
+
+    /* ── GRID CARDS ──────────────────────────────────── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      width: 100%;
+      max-width: 880px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      max-width: 900px;
+    }
+    .mini-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 20px;
+      text-align: center;
+      transition: transform .25s, border-color .25s;
+    }
+    .mini-card:hover { transform: translateY(-4px); border-color: var(--blue); }
+    .mini-card .big-icon { font-size: 2.2rem; margin-bottom: 10px; }
+    .mini-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .mini-card p  { font-size: .85rem; color: var(--muted); }
+
+    /* ── BADGE ──────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+    .badge-blue   { background: rgba(14,165,233,.18);  color: var(--blue);  border: 1px solid rgba(14,165,233,.35); }
+    .badge-green  { background: rgba(16,185,129,.18);  color: var(--green); border: 1px solid rgba(16,185,129,.35); }
+    .badge-gold   { background: rgba(245,158,11,.18);  color: var(--gold);  border: 1px solid rgba(245,158,11,.35); }
+    .badge-red    { background: rgba(239,68,68,.18);   color: var(--red);   border: 1px solid rgba(239,68,68,.35); }
+    .badge-violet { background: rgba(139,92,246,.18);  color: var(--violet);border: 1px solid rgba(139,92,246,.35); }
+
+    /* ── HIGHLIGHT BOX ───────────────────────────────── */
+    .highlight-box {
+      border-radius: 16px;
+      padding: 22px 30px;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: .5px;
+    }
+    .hbox-blue   { background: rgba(14,165,233,.12);  border: 2px solid rgba(14,165,233,.4);  color: var(--blue); }
+    .hbox-gold   { background: rgba(245,158,11,.12);  border: 2px solid rgba(245,158,11,.4);  color: var(--gold); }
+    .hbox-green  { background: rgba(16,185,129,.12);  border: 2px solid rgba(16,185,129,.4);  color: var(--green);}
+    .hbox-red    { background: rgba(239,68,68,.12);   border: 2px solid rgba(239,68,68,.4);   color: var(--red);  }
+    .hbox-violet { background: rgba(139,92,246,.12);  border: 2px solid rgba(139,92,246,.4);  color: var(--violet);}
+
+    /* ── FLOW STEPS ──────────────────────────────────── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 960px;
+    }
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 24px;
+      min-width: 130px;
+      text-align: center;
+      transition: transform .2s;
+    }
+    .flow-step:hover { transform: translateY(-4px); }
+    .flow-step .step-icon { font-size: 1.8rem; }
+    .flow-step .step-label { font-size: .82rem; font-weight: 600; color: var(--text); }
+    .flow-step .step-sub   { font-size: .72rem; color: var(--muted); }
+    .flow-arrow {
+      color: var(--muted);
+      font-size: 1.4rem;
+      padding: 0 8px;
+    }
+
+    /* ── STAT BOX ─────────────────────────────────────── */
+    .stat-row {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      justify-content: center;
+    }
+    .stat {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .stat .stat-num { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; }
+    .stat .stat-lbl { font-size: .82rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── TIMELINE ─────────────────────────────────────── */
+    .timeline {
+      position: relative;
+      width: 100%;
+      max-width: 820px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 32px;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--blue), var(--violet));
+    }
+    .tl-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .tl-dot {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem; font-weight: 700;
+      position: relative; z-index: 1;
+    }
+    .tl-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      flex: 1;
+    }
+    .tl-content h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .tl-content p  { font-size: .85rem; color: var(--muted); }
+
+    /* ── NAVIGATION ──────────────────────────────────── */
+    .nav {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 100;
+    }
+    .nav-btn {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, border-color .2s, transform .15s;
+    }
+    .nav-btn:hover { background: rgba(14,165,233,.2); border-color: var(--blue); transform: scale(1.1); }
+    .nav-btn:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+
+    .progress-dots {
+      display: flex;
+      gap: 7px;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      transition: background .3s, transform .3s;
+      cursor: pointer;
+    }
+    .dot.active { background: var(--blue); transform: scale(1.4); }
+
+    /* ── LOGO / TOP BAR ──────────────────────────────── */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 36px;
+      background: rgba(15,15,26,.85);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      z-index: 99;
+    }
+    .logo {
+      font-size: .95rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1px;
+    }
+    .progress-bar-wrap {
+      flex: 1;
+      max-width: 300px;
+      margin: 0 24px;
+      height: 4px;
+      background: rgba(255,255,255,.1);
+      border-radius: 2px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--blue), var(--violet));
+      transition: width .5s ease;
+    }
+
+    /* UTILITY */
+    .mt-4  { margin-top: 16px; }
+    .mt-6  { margin-top: 24px; }
+    .mt-8  { margin-top: 32px; }
+    .gap-2 { gap: 8px; }
+    .flex  { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .text-center { text-align: center; }
+    .w-full { width: 100%; }
+    .max-w-md { max-width: 680px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .slide { padding: 60px 24px 80px; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr 1fr; }
+      .flow   { gap: 10px; }
+      .flow-arrow { display: none; }
+    }
+
+    /* ── SLIDE 1 SPECIAL ─────────────────────────────── */
+    .hero-badge-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .pulse-circle {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+      margin-bottom: 24px;
+      animation: pulse 2.5s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(99,102,241,.4);
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);   box-shadow: 0 0 40px rgba(99,102,241,.4); }
+      50%       { transform: scale(1.06); box-shadow: 0 0 70px rgba(99,102,241,.7); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <span class="logo">⚡ QuizPro Platform</span>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar" style="width:5%"></div>
+  </div>
+  <span style="font-size:.82rem; color:var(--muted);" id="slideCounter">1 / 20</span>
+</div>
+
+<div class="deck" id="deck">
+
+  <!-- ═══════════════════════ SLIDE 1 ═══════════════════════ -->
+  <div class="slide bg-indigo active" data-slide="1">
+    <div class="pulse-circle">🎯</div>
+    <div class="eyebrow">Slide 1 · Title</div>
+    <h1 class="main-title">Skill-Based Learning<br>Quiz Platform</h1>
+    <p class="tagline"><span>Learn Fast</span> &nbsp;•&nbsp; <span>Compete Fair</span> &nbsp;•&nbsp; <span>Win Real Rewards</span></p>
+    <div class="hero-badge-row mt-8">
+      <span class="badge badge-blue">🧠 Education</span>
+      <span class="badge badge-green">⚡ Speed & Skill</span>
+      <span class="badge badge-gold">💰 Real Prizes</span>
+      <span class="badge badge-violet">🛡️ 100% Transparent</span>
+    </div>
+    <div class="slide-num">01 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 2 ═══════════════════════ -->
+  <div class="slide bg-blue" data-slide="2">
+    <div class="eyebrow">Slide 2 · Vision</div>
+    <h2 class="slide-title grad-blue">🧠 Platform Vision</h2>
+    <ul class="point-list">
+      <li><span class="icon">📚</span> <span><strong>Education + Skill Improvement</strong> — Learn while you compete</span></li>
+      <li><span class="icon">⚡</span> <span><strong>Speed & Accuracy Based</strong> — Real competition, real results</span></li>
+      <li><span class="icon">🔍</span> <span><strong>Transparent System</strong> — Everything is open and fair</span></li>
+      <li><span class="icon">💸</span> <span><strong>Real Rewards</strong> — Actual money to winners</span></li>
+      <li><span class="icon">✅</span> <span><strong>NOT Gambling</strong> — 100% skill-based, no luck involved</span></li>
+    </ul>
+    <div class="slide-num">02 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 3 ═══════════════════════ -->
+  <div class="slide bg-violet" data-slide="3">
+    <div class="eyebrow">Slide 3 · User Entry</div>
+    <h2 class="slide-title grad-violet">👤 User Entry System</h2>
+    <div class="grid-2" style="max-width:860px">
+      <div class="mini-card">
+        <div class="big-icon">📱</div>
+        <h3>Mobile OTP Login</h3>
+        <p>Secure login/signup via Mobile OTP verification — fast and safe</p>
+      </div>
+      <div class="mini-card">
+        <div class="big-icon">🔢</div>
+        <h3>1 Mobile = 1 Account</h3>
+        <p>One mobile number can register only one account — no duplicates</p>
+      </div>
+      <div class="mini-card">
+        <div class="big-icon">🏦</div>
+        <h3>1 UPI = 1 Account</h3>
+        <p>Each UPI ID tied to exactly one verified account only</p>
+      </div>
+      <div class="mini-card">
+        <div class="big-icon">🚫</div>
+        <h3>Fake Users Blocked</h3>
+        <p>Duplicate and fake user accounts are automatically detected & blocked</p>
+      </div>
+    </div>
+    <div class="slide-num">03 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 4 ═══════════════════════ -->
+  <div class="slide bg-blue" data-slide="4">
+    <div class="eyebrow">Slide 4 · Categories & Sessions</div>
+    <h2 class="slide-title grad-blue">🗂️ Category & Session Structure</h2>
+    <div class="grid-3" style="max-width:860px">
+      <div class="mini-card">
+        <div class="big-icon">🟢</div>
+        <h3>Beginner</h3>
+        <p>Easy questions for newcomers. Build confidence first.</p>
+      </div>
+      <div class="mini-card">
+        <div class="big-icon">🟡</div>
+        <h3>Skill Builder</h3>
+        <p>Intermediate level. Improve your speed and knowledge.</p>
+      </div>
+      <div class="mini-card">
+        <div class="big-icon">🔴</div>
+        <h3>Pro Speed</h3>
+        <p>Expert level. High speed, high accuracy competition.</p>
+      </div>
+    </div>
+    <div class="flex gap-2 items-center justify-center mt-6 w-full" style="flex-wrap:wrap; gap:12px;">
+      <div class="highlight-box hbox-blue">Only <strong>1 Active Session</strong> per Category</div>
+    </div>
+    <div class="mt-6 flex gap-2 justify-center" style="flex-wrap:wrap; gap:10px;">
+      <span class="badge badge-blue">🪑 20 Users</span>
+      <span class="badge badge-green">🪑 50 Users</span>
+      <span class="badge badge-gold">🪑 70 Users</span>
+      <span class="badge badge-violet">🪑 100 Users</span>
+    </div>
+    <div class="slide-num">04 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 5 ═══════════════════════ -->
+  <div class="slide bg-red" data-slide="5">
+    <div class="eyebrow">Slide 5 · Core Rule</div>
+    <h2 class="slide-title grad-red">🚫 Core Rule — MOST IMPORTANT</h2>
+    <div class="highlight-box hbox-red w-full" style="max-width:820px; font-size:clamp(1.1rem,2.5vw,1.6rem); padding:28px 36px;">
+      ⚠️ Session will <strong>NOT Start</strong> Until ALL Seats Are Booked
+    </div>
+    <div class="grid-3 mt-6" style="max-width:820px">
+      <div class="mini-card">
+        <div class="big-icon">❌</div>
+        <h3 style="color:var(--red)">Quiz Blocked</h3>
+        <p>Quiz does not start if even 1 seat is empty</p>
+      </div>
+      <div class="mini-card">
+        <div class="big-icon">❌</div>
+        <h3 style="color:var(--red)">PDF Blocked</h3>
+        <p>Study material not released until full booking</p>
+      </div>
+      <div class="mini-card">
+        <div class="big-icon">❌</div>
+        <h3 style="color:var(--red)">Timer Blocked</h3>
+        <p>Timer does not start until all seats are filled</p>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-6 justify-center" style="flex-wrap:wrap; gap:10px;">
+      <span class="badge badge-green">✔ Fairness</span>
+      <span class="badge badge-blue">✔ Trust</span>
+      <span class="badge badge-gold">✔ No Fake Urgency</span>
+    </div>
+    <div class="slide-num">05 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 6 ═══════════════════════ -->
+  <div class="slide bg-violet" data-slide="6">
+    <div class="eyebrow">Slide 6 · Question Transparency</div>
+    <h2 class="slide-title grad-violet">👀 Question Transparency</h2>
+    <div class="grid-2" style="max-width:860px">
+      <div class="mini-card" style="border-color:rgba(16,185,129,.4)">
+        <div class="big-icon">👁️</div>
+        <h3 style="color:var(--green)">FREE — Questions Visible</h3>
+        <p>All questions are publicly visible to everyone — before payment. No hidden surprises.</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(139,92,246,.4)">
+        <div class="big-icon">🔒</div>
+        <h3 style="color:var(--violet)">LOCKED — Answers & Explanations</h3>
+        <p>Answers and detailed explanations are locked. Unlocked only after entry fee payment.</p>
+      </div>
+    </div>
+    <div class="highlight-box hbox-blue mt-8 w-full" style="max-width:820px">
+      👉 Builds <strong>User Trust</strong> Before Any Payment Is Made
+    </div>
+    <div class="slide-num">06 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 7 ═══════════════════════ -->
+  <div class="slide bg-blue" data-slide="7">
+    <div class="eyebrow">Slide 7 · Payment</div>
+    <h2 class="slide-title grad-blue">💳 Payment System</h2>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--blue); color:#000;">1</div>
+        <div class="tl-content">
+          <h4>User Selects Session</h4>
+          <p>User picks a quiz category and sees available seat options</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--indigo); color:#fff;">2</div>
+        <div class="tl-content">
+          <h4>Pay via Own UPI</h4>
+          <p>Entry fee is paid directly via user's own UPI account — instant verification</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--violet); color:#fff;">3</div>
+        <div class="tl-content">
+          <h4>Payment Success = Seat Booked</h4>
+          <p>On payment confirmation, the user's seat is immediately locked</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--green); color:#000;">4</div>
+        <div class="tl-content">
+          <h4>Different Sessions, Different Fees</h4>
+          <p>Each category and seat size has its own custom entry fee</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-num">07 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 8 ═══════════════════════ -->
+  <div class="slide bg-gold" data-slide="8">
+    <div class="eyebrow">Slide 8 · Revenue Model</div>
+    <h2 class="slide-title grad-gold">💰 Platform Revenue Model</h2>
+    <div class="card w-full" style="max-width:780px; text-align:center;">
+      <p style="color:var(--muted); font-size:.9rem; margin-bottom:8px;">Example — 100 Seat Session</p>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-num" style="color:var(--gold)">₹10,000</div>
+          <div class="stat-lbl">Total Collection<br>100 × ₹100</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" style="color:var(--red)">25%</div>
+          <div class="stat-lbl">Platform Fee<br>→ Owner's UPI</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" style="color:var(--green)">75%</div>
+          <div class="stat-lbl">Prize Pool<br>→ Winners</div>
+        </div>
+      </div>
+    </div>
+    <div class="grid-2 mt-6" style="max-width:780px">
+      <div class="highlight-box hbox-gold">💼 Direct Income<br><span style="font-size:.85rem; font-weight:400; color:var(--muted)">Platform earns from every session</span></div>
+      <div class="highlight-box hbox-green">📊 Transparent<br><span style="font-size:.85rem; font-weight:400; color:var(--muted)">Calculation visible to all users</span></div>
+    </div>
+    <div class="slide-num">08 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 9 ═══════════════════════ -->
+  <div class="slide bg-green" data-slide="9">
+    <div class="eyebrow">Slide 9 · Full Booking Confirmation</div>
+    <h2 class="slide-title grad-green">🔔 Full Booking Confirmation</h2>
+    <div class="highlight-box hbox-green w-full mt-4" style="max-width:820px; font-size:1.2rem;">
+      🎉 As soon as the <strong>Last Seat is Booked</strong> — Session is Confirmed Automatically
+    </div>
+    <div class="grid-2 mt-6" style="max-width:820px">
+      <div class="mini-card" style="border-color:rgba(16,185,129,.4)">
+        <div class="big-icon">📱</div>
+        <h3>Mobile Notification</h3>
+        <p>Instant popup notification on mobile device</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(14,165,233,.4)">
+        <div class="big-icon">💻</div>
+        <h3>Browser / PC Popup</h3>
+        <p>Instant popup notification on browser / PC</p>
+      </div>
+    </div>
+    <div class="card mt-6 w-full" style="max-width:820px">
+      <p style="color:var(--muted); font-size:.85rem; margin-bottom:10px;">📩 Notification Includes:</p>
+      <div class="flex" style="gap:12px; flex-wrap:wrap;">
+        <span class="badge badge-blue">⏰ Quiz Start Time</span>
+        <span class="badge badge-gold">📘 PDF Release Time</span>
+        <span class="badge badge-green">🆔 Session ID</span>
+      </div>
+    </div>
+    <div class="slide-num">09 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 10 ═══════════════════════ -->
+  <div class="slide bg-indigo" data-slide="10">
+    <div class="eyebrow">Slide 10 · Time Flow</div>
+    <h2 class="slide-title grad-blue">⏱️ Session Time Flow</h2>
+    <div class="highlight-box hbox-blue w-full" style="max-width:780px; font-size:1.4rem;">
+      ⏱️ 1 Session = <strong>EXACTLY 1 Hour</strong>
+    </div>
+    <div class="flow mt-8">
+      <div class="flow-step" style="border-color:rgba(245,158,11,.4)">
+        <div class="step-icon">📘</div>
+        <div class="step-label">30 Minutes</div>
+        <div class="step-sub">Pre-Study Phase</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(239,68,68,.4)">
+        <div class="step-icon">🎯</div>
+        <div class="step-label">30 Minutes</div>
+        <div class="step-sub">Live Quiz Phase</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(16,185,129,.4)">
+        <div class="step-icon">🏆</div>
+        <div class="step-label">Results</div>
+        <div class="step-sub">Instant Rankings</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:rgba(99,102,241,.4)">
+        <div class="step-icon">💸</div>
+        <div class="step-label">Payout</div>
+        <div class="step-sub">Direct to UPI</div>
+      </div>
+    </div>
+    <div class="highlight-box hbox-green mt-8 w-full" style="max-width:780px">
+      🤖 Fully Automated — Zero Manual Intervention
+    </div>
+    <div class="slide-num">10 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 11 ═══════════════════════ -->
+  <div class="slide bg-blue" data-slide="11">
+    <div class="eyebrow">Slide 11 · Pre-Study Phase</div>
+    <h2 class="slide-title grad-blue">📘 Pre-Study Phase (30 Min)</h2>
+    <div class="grid-2" style="max-width:860px">
+      <div class="mini-card" style="border-color:rgba(245,158,11,.4)">
+        <div class="big-icon">⏰</div>
+        <h3>PDF Released 30 Min Before</h3>
+        <p>Study material drops exactly 30 minutes before the live quiz begins</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(139,92,246,.4)">
+        <div class="big-icon">🔐</div>
+        <h3>Paid Users Only</h3>
+        <p>Only users who have completed entry fee payment can access the PDF</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(14,165,233,.4)">
+        <div class="big-icon">📄</div>
+        <h3>PDF Contents</h3>
+        <p>20 Questions + Answers below each + 1-line explanation per question</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(16,185,129,.4)">
+        <div class="big-icon">🔏</div>
+        <h3>Watermarked</h3>
+        <p>Each PDF has unique watermark: <strong>UserID + SessionID</strong> — sharing blocked</p>
+      </div>
+    </div>
+    <div class="slide-num">11 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 12 ═══════════════════════ -->
+  <div class="slide bg-violet" data-slide="12">
+    <div class="eyebrow">Slide 12 · Live Quiz Phase</div>
+    <h2 class="slide-title grad-violet">🎯 Live Quiz Phase (30 Min)</h2>
+    <ul class="point-list">
+      <li><span class="icon">📝</span> <span><strong>Same 20 Questions</strong> from the pre-study PDF</span></li>
+      <li><span class="icon">🔀</span> <span><strong>Random Order</strong> — unique question sequence for each user</span></li>
+      <li><span class="icon">⏱️</span> <span><strong>Timer Enabled</strong> — every second counts toward your rank</span></li>
+      <li><span class="icon">⚡</span> <span><strong>Speed + Accuracy</strong> — both are tested simultaneously</span></li>
+    </ul>
+    <div class="stat-row mt-8">
+      <div class="stat">
+        <div class="stat-num" style="color:var(--violet)">20</div>
+        <div class="stat-lbl">Questions</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:var(--blue)">30</div>
+        <div class="stat-lbl">Minutes</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" style="color:var(--gold)">🔀</div>
+        <div class="stat-lbl">Random Order</div>
+      </div>
+    </div>
+    <div class="slide-num">12 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 13 ═══════════════════════ -->
+  <div class="slide bg-gold" data-slide="13">
+    <div class="eyebrow">Slide 13 · Winner Decision</div>
+    <h2 class="slide-title grad-gold">🏆 Winner Decision Logic</h2>
+    <div class="highlight-box hbox-gold w-full mt-2" style="max-width:820px; font-size:1.1rem;">
+      Ranking Based On Pure Skill — No Luck Involved
+    </div>
+    <div class="grid-2 mt-6" style="max-width:820px">
+      <div class="mini-card" style="border-color:rgba(245,158,11,.5)">
+        <div class="big-icon">✅</div>
+        <h3 style="color:var(--gold)">Step 1: Correct Answers</h3>
+        <p>User with highest number of correct answers ranks higher first</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(14,165,233,.5)">
+        <div class="big-icon">⚡</div>
+        <h3 style="color:var(--blue)">Step 2: Fastest Time</h3>
+        <p>If scores tie, the user who finished faster wins the higher rank</p>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-8 justify-center" style="gap:16px; flex-wrap:wrap;">
+      <span class="badge badge-red" style="font-size:.95rem; padding:10px 22px;">❌ No Luck</span>
+      <span class="badge badge-green" style="font-size:.95rem; padding:10px 22px;">✔ 100% Pure Skill</span>
+    </div>
+    <div class="slide-num">13 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 14 ═══════════════════════ -->
+  <div class="slide bg-green" data-slide="14">
+    <div class="eyebrow">Slide 14 · Prize Distribution</div>
+    <h2 class="slide-title grad-green">💸 Prize Distribution</h2>
+    <ul class="point-list">
+      <li><span class="icon">🏅</span> <span><strong>Top Performers</strong> win real cash rewards based on ranking</span></li>
+      <li><span class="icon">🏦</span> <span><strong>Direct UPI / Bank Transfer</strong> — money sent straight to winner's account</span></li>
+      <li><span class="icon">✅</span> <span><strong>No Wallet Hold</strong> — no platform wallet, no lockup period</span></li>
+      <li><span class="icon">⚡</span> <span><strong>No Delay</strong> — prize distributed immediately after results</span></li>
+    </ul>
+    <div class="highlight-box hbox-green mt-8 w-full" style="max-width:820px; font-size:1.1rem;">
+      💰 Winners Get Real Money — Directly in Their Bank Account
+    </div>
+    <div class="slide-num">14 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 15 ═══════════════════════ -->
+  <div class="slide bg-red" data-slide="15">
+    <div class="eyebrow">Slide 15 · Refund Policy</div>
+    <h2 class="slide-title grad-red">🔁 Refund Policy</h2>
+    <div class="grid-2" style="max-width:820px">
+      <div class="mini-card" style="border-color:rgba(239,68,68,.4)">
+        <div class="big-icon">🚫</div>
+        <h3 style="color:var(--red)">User Misses Quiz</h3>
+        <p>If the user doesn't attend the quiz — <strong>No Refund</strong></p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(239,68,68,.4)">
+        <div class="big-icon">📡</div>
+        <h3 style="color:var(--red)">Internet Issue</h3>
+        <p>Connectivity issues on user's side — <strong>No Refund</strong></p>
+      </div>
+    </div>
+    <div class="highlight-box hbox-green mt-6 w-full" style="max-width:820px; font-size:1.15rem;">
+      ✅ Refund is <strong>ONLY issued</strong> if the Platform itself cancels the session
+    </div>
+    <div class="slide-num">15 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 16 ═══════════════════════ -->
+  <div class="slide bg-indigo" data-slide="16">
+    <div class="eyebrow">Slide 16 · Monthly Reward</div>
+    <h2 class="slide-title grad-blue">🏅 Monthly Owner Reward</h2>
+    <div class="grid-2" style="max-width:860px">
+      <div>
+        <p style="color:var(--muted); font-size:.85rem; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">Leaderboard Based On</p>
+        <ul class="point-list" style="max-width:100%;">
+          <li><span class="icon">🎮</span><span><strong>Most Sessions Played</strong></span></li>
+          <li><span class="icon">🏆</span><span><strong>Most Wins</strong></span></li>
+          <li><span class="icon">🎯</span><span><strong>Highest Accuracy Score</strong></span></li>
+        </ul>
+      </div>
+      <div>
+        <p style="color:var(--muted); font-size:.85rem; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">Owner Gives Special Rewards</p>
+        <ul class="point-list" style="max-width:100%;">
+          <li><span class="icon">💵</span><span><strong>Cash Awards</strong></span></li>
+          <li><span class="icon">🎁</span><span><strong>Gift Prizes</strong></span></li>
+          <li><span class="icon">🆓</span><span><strong>Free Session Entries</strong></span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-num">16 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 17 ═══════════════════════ -->
+  <div class="slide bg-violet" data-slide="17">
+    <div class="eyebrow">Slide 17 · Security</div>
+    <h2 class="slide-title grad-violet">🛡️ Security & Fair Play</h2>
+    <div class="grid-2" style="max-width:860px">
+      <div class="mini-card" style="border-color:rgba(139,92,246,.4)">
+        <div class="big-icon">👤</div>
+        <h3>One Account Per Person</h3>
+        <p>1 Mobile = 1 Account. 1 UPI = 1 Account. Strict enforcement.</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(239,68,68,.4)">
+        <div class="big-icon">🤖</div>
+        <h3>Bot & Cheat Detection</h3>
+        <p>Automated system detects and blocks any bot activity or cheating attempts</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(245,158,11,.4)">
+        <div class="big-icon">📋</div>
+        <h3>Copy / Paste Disabled</h3>
+        <p>Right-click, copy, and paste are fully disabled during the quiz</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(16,185,129,.4)">
+        <div class="big-icon">🔗</div>
+        <h3>Content Sharing Blocked</h3>
+        <p>Quiz content and PDF sharing is technically blocked via watermarking</p>
+      </div>
+    </div>
+    <div class="slide-num">17 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 18 ═══════════════════════ -->
+  <div class="slide bg-blue" data-slide="18">
+    <div class="eyebrow">Slide 18 · User Experience Promise</div>
+    <h2 class="slide-title grad-blue">🎯 User Experience Promise</h2>
+    <p style="color:var(--muted); margin-bottom:28px; text-align:center;">Every user who joins this platform will feel:</p>
+    <div class="grid-2" style="max-width:820px">
+      <div class="highlight-box hbox-blue" style="font-size:1rem; padding:20px;">
+        💬 &ldquo;This is for <strong>learning</strong> — not just competition&rdquo;
+      </div>
+      <div class="highlight-box hbox-green" style="font-size:1rem; padding:20px;">
+        💬 &ldquo;The <strong>system is fair</strong> — I can trust it&rdquo;
+      </div>
+      <div class="highlight-box hbox-violet" style="font-size:1rem; padding:20px;">
+        💬 &ldquo;Questions are <strong>transparent</strong> — I can see them before paying&rdquo;
+      </div>
+      <div class="highlight-box hbox-gold" style="font-size:1rem; padding:20px;">
+        💬 &ldquo;Winners get <strong>real money</strong> — no gimmicks&rdquo;
+      </div>
+    </div>
+    <div class="slide-num">18 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 19 ═══════════════════════ -->
+  <div class="slide bg-green" data-slide="19">
+    <div class="eyebrow">Slide 19 · Why This Works</div>
+    <h2 class="slide-title grad-green">📈 Why This Platform Works</h2>
+    <div class="grid-3" style="max-width:900px">
+      <div class="mini-card" style="border-color:rgba(14,165,233,.4)">
+        <div class="big-icon">🤝</div>
+        <h3>Trust Before Payment</h3>
+        <p>Users see questions for free — trust is built before any money is asked</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(16,185,129,.4)">
+        <div class="big-icon">🧠</div>
+        <h3>Skill Over Luck</h3>
+        <p>Results are based on knowledge and speed — completely fair to all</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(245,158,11,.4)">
+        <div class="big-icon">🤖</div>
+        <h3>Automatic Sessions</h3>
+        <p>Zero manual work — the platform runs itself end-to-end</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(139,92,246,.4)">
+        <div class="big-icon">💸</div>
+        <h3>Direct Payouts</h3>
+        <p>No middlemen — money goes straight to winners instantly</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(99,102,241,.4)">
+        <div class="big-icon">📐</div>
+        <h3>Scalable Model</h3>
+        <p>More users = more revenue. Easy to scale horizontally</p>
+      </div>
+      <div class="mini-card" style="border-color:rgba(239,68,68,.4)">
+        <div class="big-icon">📊</div>
+        <h3>Transparent Earnings</h3>
+        <p>Every rupee is accounted for — users and owner both see clear math</p>
+      </div>
+    </div>
+    <div class="slide-num">19 / 20</div>
+  </div>
+
+  <!-- ═══════════════════════ SLIDE 20 ═══════════════════════ -->
+  <div class="slide bg-indigo" data-slide="20">
+    <div class="eyebrow">Slide 20 · Final Summary</div>
+    <h2 class="slide-title" style="color:#fff;">✅ Final Summary</h2>
+    <div class="flow" style="flex-direction:column; gap:0; max-width:780px; width:100%;">
+      <div style="display:flex; align-items:center; gap:14px; width:100%;">
+        <div style="flex:1; height:2px; background:linear-gradient(90deg, var(--blue), var(--violet));"></div>
+      </div>
+    </div>
+    <div class="timeline mt-4" style="max-width:800px">
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--blue); color:#000; font-size:.7rem; width:30px; height:30px;">1</div>
+        <div class="tl-content"><h4>Full Booking First</h4><p>No session starts unless ALL seats are booked by real users</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--indigo); color:#fff; font-size:.7rem; width:30px; height:30px;">2</div>
+        <div class="tl-content"><h4>Auto Notification Sent</h4><p>All users are notified instantly with quiz time and PDF release time</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--violet); color:#fff; font-size:.7rem; width:30px; height:30px;">3</div>
+        <div class="tl-content"><h4>30 Min Study Phase</h4><p>PDF released to paid users only — watermarked with their ID</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--gold); color:#000; font-size:.7rem; width:30px; height:30px;">4</div>
+        <div class="tl-content"><h4>30 Min Live Quiz</h4><p>Randomized questions — speed and accuracy both measured</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--green); color:#000; font-size:.7rem; width:30px; height:30px;">5</div>
+        <div class="tl-content"><h4>Skill-Based Winners → Money Direct to Account</h4><p>Best performers win. Prize money transferred directly to their UPI/bank</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:#ec4899; color:#fff; font-size:.7rem; width:30px; height:30px;">6</div>
+        <div class="tl-content"><h4>Platform Earnings → Owner's UPI</h4><p>25% automatically goes to the platform owner after every session</p></div>
+      </div>
+    </div>
+    <div class="slide-num">20 / 20</div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- NAVIGATION -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)" disabled>&#8592;</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">&#8594;</button>
+</div>
+
+<script>
+  const TOTAL = 20;
+  let current = 1;
+
+  // Build dots
+  const dotsEl = document.getElementById('dots');
+  for (let i = 1; i <= TOTAL; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 1 ? ' active' : '');
+    d.title = 'Slide ' + i;
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(n) {
+    const slides = document.querySelectorAll('.slide');
+    const dots   = document.querySelectorAll('.dot');
+
+    // Exit current
+    const cur = document.querySelector('.slide.active');
+    cur.classList.remove('active');
+    cur.classList.add(n > current ? 'exit-left' : '');
+
+    current = n;
+
+    setTimeout(() => {
+      document.querySelectorAll('.slide').forEach(s => {
+        s.classList.remove('exit-left');
+      });
+    }, 500);
+
+    // Enter next
+    const next = document.querySelector(`[data-slide="${current}"]`);
+    next.classList.add('active');
+
+    // Update dots
+    dots.forEach((d, i) => d.classList.toggle('active', i + 1 === current));
+
+    // Update progress bar
+    document.getElementById('progressBar').style.width = (current / TOTAL * 100) + '%';
+
+    // Update counter
+    document.getElementById('slideCounter').textContent = current + ' / ' + TOTAL;
+
+    // Buttons
+    document.getElementById('prevBtn').disabled = current === 1;
+    document.getElementById('nextBtn').disabled = current === TOTAL;
+  }
+
+  function changeSlide(dir) {
+    const next = current + dir;
+    if (next < 1 || next > TOTAL) return;
+    goTo(next);
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      changeSlide(1);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      changeSlide(-1);
+    }
+  });
+
+  // Touch/swipe support
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1);
+  });
+</script>
+</body>
+</html>

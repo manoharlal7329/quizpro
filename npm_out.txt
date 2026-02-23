@@ -1,0 +1,24 @@
+﻿
+> quiz-platform@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.13[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+node.exe : Γ¥î PORT 9988 is busy. Please 
+run: Get-Process -Name node | Stop-Process 
+-Force
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified 
+   : (Γ¥î PORT 9988 i...-Process -Force:S  
+  tring) [], RemoteException
+    + FullyQualifiedErrorId : NativeComman 
+   dError
+ 
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m

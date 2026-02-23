@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Quiz — QuizPro</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: rgba(10, 10, 20, .95);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .quiz-timer-display {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--gold);
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .quiz-timer-display.urgent {
+            color: var(--red);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .4
+            }
+        }
+
+        .progress-text {
+            font-size: .82rem;
+            color: var(--muted);
+        }
+
+        .q-wrap {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .q-card-live {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .q-number {
+            font-size: .82rem;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .q-text-live {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 9px;
+            border: 2px solid var(--border);
+            background: rgba(255, 255, 255, .04);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: .88rem;
+            cursor: pointer;
+            transition: all .2s;
+            text-align: left;
+            margin-bottom: 7px;
+        }
+
+        .option-btn:hover {
+            border-color: var(--blue);
+            background: rgba(14, 165, 233, .08);
+        }
+
+        .option-btn.selected {
+            border-color: var(--indigo);
+            background: rgba(99, 102, 241, .15);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .option-key {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: .85rem;
+            flex-shrink: 0;
+        }
+
+        .option-btn.selected .option-key {
+            background: var(--indigo);
+        }
+
+        .nav-row {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        .q-dots {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .q-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .q-dot.answered {
+            background: var(--green);
+        }
+
+        .q-dot.current {
+            background: var(--blue);
+            transform: scale(1.3);
+        }
+
+        .submit-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            backdrop-filter: blur(8px);
+        }
+
+        .submit-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 420px;
+        }
+
+        .timing-feedback {
+            font-size: .85rem;
+            color: var(--green);
+            font-weight: 700;
+            margin-top: 12px;
+            display: none;
+            padding: 8px 12px;
+            background: rgba(16, 185, 129, .1);
+            border-radius: 8px;
+            border: 1px solid rgba(16, 185, 129, .2);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Quiz Header -->
+    <div class="quiz-header">
+        <div>
+            <div style="font-size:.78rem; color:var(--muted); font-weight:600;" id="sessionTitle">Live Quiz</div>
+            <div class="q-dots" id="qDots" style="margin-top:6px;"></div>
+        </div>
+        <div style="text-align:center;">
+            <div class="progress-text" id="qProgress">Q 1/20</div>
+            <div class="quiz-timer-display" id="timerDisplay">30:00</div>
+        </div>
+        <button class="btn btn-danger" onclick="confirmSubmit()" style="padding:8px 18px; font-size:.85rem;">Submit
+            All</button>
+    </div>
+
+    <div class="q-wrap">
+        <div id="loadingState" style="text-align:center; padding:60px;">
+            <div class="spinner"></div>
+            <p>Loading quiz...</p>
+        </div>
+        <div id="quizContent" style="display:none;">
+            <div class="q-card-live">
+                <div class="q-number" id="qNum"></div>
+                <div class="q-text-live" id="qText"></div>
+                <div id="optionsWrap"></div>
+                <div id="timingFeedback" class="timing-feedback"></div>
+            </div>
+            <div class="nav-row">
+                <button class="btn btn-outline" id="prevBtn" onclick="changQ(-1)">← Prev</button>
+                <button class="btn btn-primary" id="nextBtn" onclick="changQ(1)">Next →</button>
+            </div>
+        </div>
+        <div id="waitState" style="display:none; text-align:center; padding:60px;">
+            <div style="font-size:3rem; margin-bottom:16px;">⏳</div>
+            <h2 style="margin-bottom:8px;" id="waitTitle">Quiz Not Started</h2>
+            <p style="color:var(--muted);" id="waitMsg"></p>
+            <div id="waitTimer" style="font-size:2.5rem; font-weight:900; color:var(--gold); margin-top:20px;"></div>
+        </div>
+    </div>
+
+    <!-- Submit Confirm Overlay -->
+    <div class="submit-overlay" id="submitOverlay" style="display:none;">
+        <div class="submit-box">
+            <div style="font-size:2.5rem; margin-bottom:16px;">📤</div>
+            <h3 style="margin-bottom:8px;">Submit Quiz?</h3>
+            <p style="color:var(--muted); margin-bottom:8px;" id="submitInfo"></p>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button class="btn btn-outline" style="flex:1;"
+                    onclick="document.getElementById('submitOverlay').style.display='none'">Review Again</button>
+                <button class="btn btn-gold" style="flex:1;" onclick="submitQuiz()">Submit Final ✅</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js"></script>
+    <script>
+        requireLogin();
+        const params = new URLSearchParams(location.search);
+        const sessId = params.get('id');
+        let questions = [];
+        let answers = {};
+        let qTimings = {}; // { qId: ms }
+        let current = 0;
+        let timerInt;
+        let qLoadTime = 0;
+        let autoLockTimeout;
+
+        async function load() {
+            // 10 sec timeout — spinner never hangs forever
+            const timeout = setTimeout(() => {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('waitState').style.display = 'block';
+                document.getElementById('waitTitle').textContent = '⚠️ Connection Timeout';
+                document.getElementById('waitMsg').textContent = 'Server se response nahi mila. Server restart karo: node server.js';
+            }, 10000);
+
+            try {
+                const data = await api(`/api/quiz/${sessId}`);
+                clearTimeout(timeout);
+                questions = data.questions;
+                if (!questions || questions.length === 0) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('waitState').style.display = 'block';
+                    document.getElementById('waitTitle').textContent = '📭 No Questions Found';
+                    document.getElementById('waitMsg').textContent = 'Is session mein questions upload nahi hain. Admin se contact karo.';
+                    return;
+                }
+                document.getElementById('sessionTitle').textContent = data.session.title;
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('quizContent').style.display = 'block';
+                buildDots();
+                renderQ(0);
+                startTimer(data.session.time_remaining || 1800);
+            } catch (e) {
+                clearTimeout(timeout);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('waitState').style.display = 'block';
+                document.getElementById('waitTitle').textContent = e.message || 'Quiz Not Ready';
+                document.getElementById('waitMsg').textContent = 'Error: ' + (e.message || 'Unknown error. Server restart karo.');
+                if (e.starts_in) startWaitTimer(e.starts_in);
+            }
+        }
+
+        function buildDots() {
+            const wrap = document.getElementById('qDots');
+            wrap.innerHTML = questions.map((_, i) => `<div class="q-dot" id="dot${i}" onclick="renderQ(${i})"></div>`).join('');
+        }
+
+        function renderQ(idx) {
+            if (idx < 0 || idx >= questions.length) return;
+            current = idx;
+            const q = questions[idx];
+
+            // UI Update
+            document.getElementById('qNum').textContent = `Question ${idx + 1} of ${questions.length}`;
+            document.getElementById('qProgress').textContent = `Q ${idx + 1}/${questions.length}`;
+            document.getElementById('qText').textContent = q.question_text;
+
+            renderOptions(q);
+
+            // Dots
+            questions.forEach((_, i) => {
+                const d = document.getElementById('dot' + i);
+                if (d) { d.className = 'q-dot' + (answers[questions[i].id] ? ' answered' : '') + (i === current ? ' current' : ''); }
+            });
+            document.getElementById('prevBtn').disabled = idx === 0;
+            document.getElementById('nextBtn').textContent = idx === questions.length - 1 ? 'Review →' : 'Next →';
+
+            // Timing feedback reset
+            const fb = document.getElementById('timingFeedback');
+            if (answers[q.id]) {
+                fb.style.display = 'block';
+                fb.textContent = `✅ Answer submitted in ${qTimings[q.id].toLocaleString()} ms`;
+            } else {
+                fb.style.display = 'none';
+            }
+
+            // Timing logic
+            clearTimeout(autoLockTimeout);
+            if (!answers[q.id]) {
+                qLoadTime = performance.now();
+                // 15s Auto-Lock
+                autoLockTimeout = setTimeout(() => {
+                    if (!answers[q.id]) {
+                        toast('⏰ Time up! Question locked (15,000ms)', 'error');
+                        selectAnswer(q.id, 'none', 15000);
+                    }
+                }, 15000);
+            }
+        }
+
+        function renderOptions(q) {
+            const opts = ['a', 'b', 'c', 'd'];
+            const hasAnswer = !!answers[q.id];
+
+            document.getElementById('optionsWrap').innerHTML = opts.map(k => {
+                let cls = '';
+                if (answers[q.id] === k) cls = 'selected';
+                // If answered, other options become semi-transparent
+                return `
+                    <button class="option-btn ${cls}" 
+                            ${hasAnswer ? 'disabled' : ''} 
+                            onclick="selectAnswer('${q.id}','${k}')">
+                        <span class="option-key">${k.toUpperCase()}</span>
+                        <span>${q['option_' + k]}</span>
+                    </button>`;
+            }).join('');
+        }
+
+        function selectAnswer(qId, opt, forcedMs) {
+            if (answers[qId]) return; // One-time selection only
+
+            const ms = forcedMs || Math.round(performance.now() - qLoadTime);
+            answers[qId] = opt;
+            qTimings[qId] = Math.min(ms, 15000);
+
+            clearTimeout(autoLockTimeout);
+
+            // Show Feedback
+            const fb = document.getElementById('timingFeedback');
+            fb.style.display = 'block';
+            fb.textContent = `✅ Answer submitted in ${qTimings[qId].toLocaleString()} ms`;
+
+            renderQ(current);
+
+            // Auto-move to next after 800ms (slightly slower to let user read feedback)
+            if (current < questions.length - 1) {
+                setTimeout(() => changQ(1), 800);
+            }
+        }
+
+        function changQ(dir) {
+            renderQ(current + dir);
+        }
+
+        function startTimer(seconds) {
+            // If time_remaining is negative (quiz started in past), give full 30 min
+            let remaining = (seconds > 0) ? seconds : 1800;
+            function tick() {
+                const min = String(Math.floor(remaining / 60)).padStart(2, '0');
+                const sec = String(remaining % 60).padStart(2, '0');
+                const el = document.getElementById('timerDisplay');
+                el.textContent = `${min}:${sec}`;
+                el.className = 'quiz-timer-display' + (remaining < 120 ? ' urgent' : '');
+                if (remaining <= 0) { clearInterval(timerInt); submitQuiz(true); return; }
+                remaining--;
+            }
+            tick();
+            timerInt = setInterval(tick, 1000);
+        }
+
+        function confirmSubmit() {
+            const answered = Object.keys(answers).filter(k => answers[k] !== 'none').length;
+            const unanswered = questions.length - Object.keys(answers).length;
+            document.getElementById('submitInfo').textContent = `${answered} answered, ${unanswered} empty.`;
+            document.getElementById('submitOverlay').style.display = 'flex';
+        }
+
+        async function submitQuiz(auto) {
+            clearInterval(timerInt);
+            clearTimeout(autoLockTimeout);
+            document.getElementById('submitOverlay').style.display = 'none';
+
+            try {
+                const result = await api(`/api/quiz/${sessId}/submit`, 'POST', {
+                    answers,
+                    timings: qTimings
+                });
+                toast(`✅ Quiz submitted! Score: ${result.score}/${result.total}`, 'success');
+                setTimeout(() => { window.location.href = `/results.html?id=${sessId}`; }, 1500);
+            } catch (e) {
+                if (e.message.includes('Already submitted')) {
+                    window.location.href = `/results.html?id=${sessId}`;
+                } else {
+                    toast(e.message, 'error');
+                }
+            }
+        }
+
+        // Anti-Cheat: Disable Back Button
+        (function () {
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = function () {
+                window.history.pushState(null, null, window.location.href);
+                toast('⚠️ Navigation is disabled during the quiz!', 'error');
+            };
+        })();
+
+        // Anti-Cheat: Refresh Warning
+        window.addEventListener('beforeunload', (e) => {
+            const msg = 'Quiz is in progress. If you leave, your answers will NOT be saved!';
+            e.preventDefault();
+            e.returnValue = msg;
+            return msg;
+        });
+
+        // Prevent copy-paste
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'a')) e.preventDefault();
+            if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key === 'r')) {
+                toast('🔄 Please do not refresh the page!', 'error');
+                e.preventDefault();
+            }
+        });
+
+        // ── ANTI-CHEAT: Tab Switch / Window Blur ──────────────────────────────────
+        let tabViolations = 0;
+        const MAX_VIOLATIONS = 3;
+
+        // Add violation counter badge to quiz header
+        const violBadge = document.createElement('div');
+        violBadge.id = 'violBadge';
+        violBadge.style.cssText = 'display:none;background:#ef4444;color:#fff;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:20px;';
+        violBadge.textContent = '⚠️ 0 violations';
+        const quizHeader = document.querySelector('.quiz-header');
+        if (quizHeader) quizHeader.appendChild(violBadge);
+
+        function recordViolation() {
+            tabViolations++;
+            const badge = document.getElementById('violBadge');
+            if (badge) {
+                badge.style.display = 'inline-block';
+                badge.textContent = `⚠️ ${tabViolations}/${MAX_VIOLATIONS} violations`;
+                badge.style.background = tabViolations >= 2 ? '#7c3aed' : '#ef4444';
+            }
+
+            if (tabViolations >= MAX_VIOLATIONS) {
+                // Final warning then auto-submit
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(239,68,68,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;text-align:center;padding:24px;';
+                overlay.innerHTML = `
+                    <div style="font-size:3rem;">🚨</div>
+                    <h2 style="font-size:1.6rem;font-weight:900;margin:12px 0;">Tab Switch Detected!</h2>
+                    <p style="font-size:1rem;opacity:.9;">3 violations — Quiz auto-submitting in 3 seconds...</p>`;
+                document.body.appendChild(overlay);
+                clearInterval(timerInt);
+                setTimeout(() => submitQuiz(true), 3000);
+            } else {
+                // Show toast warning
+                toast(`⚠️ Tab switch detected! ${MAX_VIOLATIONS - tabViolations} chances left`, 'error');
+            }
+        }
+
+        // Only track when quiz is loaded (not before)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && questions && questions.length > 0) recordViolation();
+        });
+        window.addEventListener('blur', () => {
+            if (questions && questions.length > 0) recordViolation();
+        });
+
+
+
+        load();
+    </script>
+</body>
+
+</html>

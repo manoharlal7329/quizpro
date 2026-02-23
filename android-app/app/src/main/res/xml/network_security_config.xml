@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Production domain -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">quizpro.in</domain>
+    </domain-config>
+
+    <!-- TESTING ONLY: Allow ngrok for local development -->
+    <!-- Remove before Play Store release -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">ngrok-free.app</domain>
+        <domain includeSubdomains="true">ngrok.io</domain>
+        <domain includeSubdomains="true">localhost</domain>
+    </domain-config>
+</network-security-config>

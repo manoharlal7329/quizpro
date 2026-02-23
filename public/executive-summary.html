@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuizPro — Executive Summary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #d97706;
+            --blue: #0369a1;
+            --green: #059669;
+            --red: #dc2626;
+            --violet: #7c3aed;
+            --dark: #0f172a;
+            --card: #1e293b;
+            --muted: #64748b;
+            --text: #1e293b;
+            --soft: #f8fafc;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f1f5f9;
+            color: var(--text);
+        }
+
+        /* ── PRINT BUTTON ── */
+        .print-bar {
+            background: var(--dark);
+            padding: 12px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .print-bar span {
+            color: #94a3b8;
+            font-size: .85rem;
+        }
+
+        .print-btn {
+            background: linear-gradient(135deg, var(--gold), #b45309);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 9px 22px;
+            font-family: 'Outfit', sans-serif;
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity .2s;
+        }
+
+        .print-btn:hover {
+            opacity: .85;
+        }
+
+        /* ── PAGE ── */
+        .page {
+            max-width: 900px;
+            margin: 32px auto;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
+        }
+
+        /* ── HEADER ── */
+        .hdr {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            padding: 44px 48px 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hdr::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(245, 158, 11, .15), transparent);
+        }
+
+        .hdr-tag {
+            display: inline-block;
+            background: rgba(245, 158, 11, .15);
+            border: 1px solid rgba(245, 158, 11, .4);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: .72rem;
+            letter-spacing: 2px;
+            color: #f59e0b;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .hdr h1 {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .hdr h1 span {
+            background: linear-gradient(135deg, #f59e0b, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #94a3b8;
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        .hdr-pills {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .hdr-pill {
+            background: rgba(255, 255, 255, .07);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: .75rem;
+            color: #cbd5e1;
+        }
+
+        /* ── BODY ── */
+        .body {
+            padding: 40px 48px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 28px;
+        }
+
+        .sec-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .sec-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .sec-title h2 {
+            font-size: .95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--dark);
+        }
+
+        /* 2-col grid */
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media(max-width:600px) {
+
+            .grid2,
+            .grid3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .box {
+            background: var(--soft);
+            border-radius: 10px;
+            padding: 14px 16px;
+            border-left: 3px solid var(--gold);
+        }
+
+        .box.green {
+            border-left-color: var(--green);
+        }
+
+        .box.blue {
+            border-left-color: var(--blue);
+        }
+
+        .box.red {
+            border-left-color: var(--red);
+        }
+
+        .box.violet {
+            border-left-color: var(--violet);
+        }
+
+        .box h4 {
+            font-size: .82rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--dark);
+        }
+
+        .box p,
+        .box ul {
+            font-size: .78rem;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .box ul {
+            padding-left: 14px;
+        }
+
+        /* Split bar */
+        .split-wrap {
+            margin: 10px 0;
+        }
+
+        .split-bar {
+            display: flex;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 44px;
+        }
+
+        .s75 {
+            flex: 75;
+            background: linear-gradient(135deg, var(--green), #047857);
+            display: flex;
+            align-items: center;
+            padding-left: 16px;
+            font-weight: 800;
+            font-size: .9rem;
+            color: #fff;
+        }
+
+        .s25 {
+            flex: 25;
+            background: linear-gradient(135deg, var(--gold), #b45309);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: .85rem;
+            color: #fff;
+        }
+
+        .split-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        /* Step list */
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .step-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--soft);
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .step-num {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--dark);
+            color: #fff;
+            font-size: .65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Prize example */
+        .prize-ex {
+            background: linear-gradient(135deg, #0f172a, #1e3a5f);
+            border-radius: 12px;
+            padding: 18px 20px;
+            color: #fff;
+        }
+
+        .prize-ex .big {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #f59e0b;
+        }
+
+        .prize-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: .78rem;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+        }
+
+        .prize-row:last-child {
+            border: none;
+        }
+
+        .pr-amt {
+            font-weight: 700;
+            color: #f59e0b;
+        }
+
+        /* Badges */
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 6px;
+            padding: 5px 11px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+
+        .badge.g {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .badge.b {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge.y {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.r {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge.p {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        /* Vision box */
+        .vision {
+            background: linear-gradient(135deg, #0f172a, #1e3a5f);
+            border-radius: 14px;
+            padding: 28px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .vision .eq {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #f59e0b, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .vision p {
+            font-size: .85rem;
+            color: #94a3b8;
+            line-height: 1.7;
+        }
+
+        /* Footer */
+        .footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 16px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer span {
+            font-size: .72rem;
+            color: var(--muted);
+        }
+
+        .conf {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: .7rem;
+            color: #92400e;
+            font-weight: 700;
+        }
+
+        /* ── PRINT ── */
+        @media print {
+            .print-bar {
+                display: none;
+            }
+
+            body {
+                background: #fff;
+            }
+
+            .page {
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            .body {
+                padding: 28px 36px;
+            }
+
+            .hdr {
+                padding: 28px 36px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Print Bar -->
+    <div class="print-bar">
+        <span>⚡ QuizPro — Executive Summary &nbsp;|&nbsp; Confidential</span>
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+    </div>
+
+    <div class="page">
+
+        <!-- ── HEADER ── -->
+        <div class="hdr">
+            <div class="hdr-tag">Executive Summary</div>
+            <h1>⚡ <span>QuizPro</span></h1>
+            <p class="tagline">"Learn First. Answer Right. Win Transparently."</p>
+            <div class="hdr-pills">
+                <span class="hdr-pill">🧠 Skill-Based</span>
+                <span class="hdr-pill">💳 Direct UPI Payouts</span>
+                <span class="hdr-pill">📘 Pre-Study Learning</span>
+                <span class="hdr-pill">🔒 Anti-Cheat</span>
+                <span class="hdr-pill">📱 Mobile First</span>
+                <span class="hdr-pill">🇮🇳 India-Ready</span>
+            </div>
+        </div>
+
+        <div class="body">
+
+            <!-- PROBLEM + SOLUTION — 2 col -->
+            <div class="grid2" style="margin-bottom:28px;">
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#fee2e2;">❌</div>
+                        <h2>Problem</h2>
+                    </div>
+                    <div class="box red">
+                        <ul>
+                            <li>Quiz apps rely on <strong>luck or pure speed</strong></li>
+                            <li>Results feel <strong>untransparent</strong> — users don't trust them</li>
+                            <li>Sessions start anytime — <strong>no commitment</strong></li>
+                            <li>Prize structures are <strong>vague or wallet-locked</strong></li>
+                            <li>No real <strong>learning value</strong> built-in</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#d1fae5;">✅</div>
+                        <h2>Our Solution</h2>
+                    </div>
+                    <div class="box green">
+                        <ul>
+                            <li>Questions visible <strong>FREE before payment</strong> (trust-first)</li>
+                            <li><strong>30-min pre-study</strong> PDF with answers & explanations</li>
+                            <li>Ranking: <strong>Accuracy first → Speed (ms)</strong></li>
+                            <li><strong>Direct UPI payouts</strong> — no wallet holds</li>
+                            <li>Sessions start <strong>only at 100% seat booking</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HOW IT WORKS -->
+            <div class="section">
+                <div class="sec-title">
+                    <div class="sec-icon" style="background:#dbeafe;">🔄</div>
+                    <h2>How It Works</h2>
+                </div>
+                <div class="steps">
+                    <div class="step-chip">
+                        <div class="step-num">1</div>OTP Login
+                    </div>
+                    <div class="step-chip">
+                        <div class="step-num">2</div>Select Session
+                    </div>
+                    <div class="step-chip">
+                        <div class="step-num">3</div>View Questions FREE
+                    </div>
+                    <div class="step-chip">
+                        <div class="step-num">4</div>Book via UPI / QR
+                    </div>
+                    <div class="step-chip">
+                        <div class="step-num">5</div>Wait for Full Booking
+                    </div>
+                    <div class="step-chip">
+                        <div class="step-num">6</div>Pre-Study PDF Unlocks
+                    </div>
+                    <div class="step-chip">
+                        <div class="step-num">7</div>Live Quiz (ms timing)
+                    </div>
+                    <div class="step-chip">
+                        <div class="step-num">8</div>Results + UPI Payout
+                    </div>
+                </div>
+            </div>
+
+            <!-- REVENUE + PRIZE — 2 col -->
+            <div class="grid2">
+
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#fef3c7;">💰</div>
+                        <h2>Revenue Model</h2>
+                    </div>
+                    <div class="split-wrap">
+                        <div class="split-bar">
+                            <div class="s75">🏆 75% — Winners</div>
+                            <div class="s25">💼 25%</div>
+                        </div>
+                        <div class="split-labels">
+                            <span>Prize Pool → Top 15 winners via UPI</span>
+                            <span>Platform</span>
+                        </div>
+                    </div>
+                    <div class="box" style="margin-top:8px;border-left-color:var(--violet);">
+                        <ul>
+                            <li>No inventory, no ads dependency</li>
+                            <li>High repeat usage via skill competition</li>
+                            <li>25% platform cut on every session</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#ede9fe;">🏅</div>
+                        <h2>Prize Example</h2>
+                    </div>
+                    <div class="prize-ex">
+                        <div>100 users × ₹100 = <span class="big">₹10,000</span></div>
+                        <div style="margin-top:12px;">
+                            <div class="prize-row"><span>🏆 Prize Pool (75%)</span><span class="pr-amt">₹7,500</span>
+                            </div>
+                            <div class="prize-row"><span>💼 Platform (25%)</span><span class="pr-amt">₹2,500</span>
+                            </div>
+                            <div class="prize-row"><span>🥇 1st Place (25%)</span><span class="pr-amt">₹1,875</span>
+                            </div>
+                            <div class="prize-row"><span>🥈 2nd Place (15%)</span><span class="pr-amt">₹1,125</span>
+                            </div>
+                            <div class="prize-row"><span>🥉 3rd Place (11%)</span><span class="pr-amt">₹825</span></div>
+                            <div class="prize-row"><span>4th–6th Place</span><span class="pr-amt">₹675–₹525</span></div>
+                            <div class="prize-row"><span>7th–10th Place</span><span class="pr-amt">₹375–₹263</span>
+                            </div>
+                            <div class="prize-row"><span>11th–15th Place</span><span class="pr-amt">₹188–₹75</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- DIFFERENTIATORS + SECURITY — 2 col -->
+            <div class="grid2" style="margin-top:0;">
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#d1fae5;">⭐</div>
+                        <h2>Key Differentiators</h2>
+                    </div>
+                    <div class="badge-row">
+                        <span class="badge g">✅ Full-booking only sessions</span>
+                        <span class="badge b">📘 Pre-study learning model</span>
+                        <span class="badge y">⏱️ Millisecond timing</span>
+                        <span class="badge p">📊 Transparent rank logic</span>
+                        <span class="badge g">💳 Direct bank / UPI payout</span>
+                        <span class="badge b">👁️ Free question preview</span>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#fee2e2;">🔒</div>
+                        <h2>Security & Fair Play</h2>
+                    </div>
+                    <div class="badge-row">
+                        <span class="badge r">🚫 1 user = 1 mobile</span>
+                        <span class="badge r">📋 Copy/paste blocked</span>
+                        <span class="badge r">🔙 Back-nav blocked</span>
+                        <span class="badge r">🔑 Duplicate UTR detected</span>
+                        <span class="badge r">🤖 Abnormal speed flagged</span>
+                        <span class="badge r">🔐 JWT auth all routes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEGAL + ROADMAP — 2 col -->
+            <div class="grid2">
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#dbeafe;">⚖️</div>
+                        <h2>Legal Positioning</h2>
+                    </div>
+                    <div class="box blue">
+                        <h4>QuizPro is NOT gambling.</h4>
+                        <p>It is a <strong>skill-based educational platform</strong>:</p>
+                        <ul>
+                            <li>Pre-study material provided</li>
+                            <li>No randomness whatsoever</li>
+                            <li>No betting odds or house advantage</li>
+                            <li>Fully aligned with Indian skill-gaming norms</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="sec-title">
+                        <div class="sec-icon" style="background:#ede9fe;">🗺️</div>
+                        <h2>Scalability & Roadmap</h2>
+                    </div>
+                    <div class="box violet">
+                        <ul>
+                            <li><strong>Now:</strong> Core platform live — Sessions, Quiz, Payouts</li>
+                            <li><strong>Next:</strong> SMS OTP, Razorpay live, Email receipts, Referral</li>
+                            <li><strong>Soon:</strong> Aptitude, Coding, Exam categories</li>
+                            <li><strong>Future:</strong> Mobile App, Tournaments, College leagues</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISION -->
+            <div class="vision">
+                <div class="eq">QuizPro = Education × Competition × Trust</div>
+                <p>To become India's most trusted <strong style="color:#f59e0b;">skill-based competitive learning
+                        platform</strong>,<br>
+                    where users learn, compete fairly, and earn transparently.</p>
+            </div>
+
+        </div><!-- end body -->
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <span>⚡ QuizPro Platform &nbsp;•&nbsp; Built by Manohar Lal Prajapat &nbsp;•&nbsp; 2026</span>
+            <span class="conf">CONFIDENTIAL</span>
+        </div>
+
+    </div><!-- end page -->
+
+</body>
+
+</html>

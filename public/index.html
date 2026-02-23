@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="manifest" href="/manifest.json" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Platform — Learn, Compete & Win</title>
+    <meta name="description"
+        content="Skill-Based Learning Quiz Platform. Learn fast, compete fair, win real rewards." />
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        /* Hero */
+        .hero {
+            min-height: calc(100vh - 60px);
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, .2) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(14, 165, 233, .15) 0%, transparent 60%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+        }
+
+        .hero-eyebrow {
+            font-size: .8rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 20px;
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 22px;
+        }
+
+        .hero-title .grad {
+            background: linear-gradient(135deg, #e2e8f0 0%, var(--blue) 50%, var(--violet) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 1.1rem;
+            color: var(--muted);
+            margin-bottom: 36px;
+            line-height: 1.8;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 36px;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        /* Floating circles */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .c1 {
+            width: 300px;
+            height: 300px;
+            right: -100px;
+            top: 10%;
+            background: radial-gradient(circle, rgba(99, 102, 241, .15) 0%, transparent 70%);
+            animation-delay: 0s;
+        }
+
+        .c2 {
+            width: 200px;
+            height: 200px;
+            right: 15%;
+            bottom: 15%;
+            background: radial-gradient(circle, rgba(14, 165, 233, .12) 0%, transparent 70%);
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-20px)
+            }
+        }
+
+        /* How it works */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 60px;
+        }
+
+        .step-card .step-num {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .step-card h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step-card p {
+            font-size: .88rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 60px 0;
+        }
+
+        .stats-bar .stat {
+            background: var(--surface);
+            padding: 28px 20px;
+            text-align: center;
+        }
+
+        .stats-bar .stat .num {
+            font-size: 1.9rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--blue), var(--violet));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-bar .stat .lbl {
+            font-size: .8rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* Categories preview */
+        .cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .cat-chip {
+            padding: 30px;
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            transition: transform .25s;
+        }
+
+        .cat-chip:hover {
+            transform: translateY(-6px);
+        }
+
+        .cat-chip::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: .12;
+        }
+
+        .cat-chip.beginner {
+            background: linear-gradient(135deg, rgba(16, 185, 129, .1), rgba(16, 185, 129, .04));
+            border: 1px solid rgba(16, 185, 129, .25);
+        }
+
+        .cat-chip.skill {
+            background: linear-gradient(135deg, rgba(245, 158, 11, .1), rgba(245, 158, 11, .04));
+            border: 1px solid rgba(245, 158, 11, .25);
+        }
+
+        .cat-chip.pro {
+            background: linear-gradient(135deg, rgba(239, 68, 68, .1), rgba(239, 68, 68, .04));
+            border: 1px solid rgba(239, 68, 68, .25);
+        }
+
+        .cat-chip .cat-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .cat-chip h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .cat-chip p {
+            font-size: .85rem;
+            color: var(--muted);
+        }
+
+        section {
+            padding: 60px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <span class="logo">⚡ QuizPro</span>
+        <div class="nav-links">
+            <a href="#how">How It Works</a>
+            <a href="/dashboard.html">Sessions</a>
+            <a href="/login.html" class="btn btn-primary" style="padding:8px 20px;">Login / Sign Up</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <!-- HERO -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <p class="hero-eyebrow">🎯 India's Skill-Based Quiz Platform</p>
+                    <h1 class="hero-title">
+                        <span class="grad">Learn Fast.</span><br>
+                        Compete Fair.<br>
+                        Win Real Rewards.
+                    </h1>
+                    <p class="hero-sub">
+                        Not gambling. <strong style="color:var(--text)">100% Skill-Based.</strong> Study from our PDF,
+                        take the quiz, rank higher than others, and win real money directly in your bank account.
+                    </p>
+                    <div class="hero-badges">
+                        <span class="badge badge-blue">📚 Education First</span>
+                        <span class="badge badge-green">✅ Fair & Transparent</span>
+                        <span class="badge badge-gold">💰 Real Payouts</span>
+                        <span class="badge badge-violet">🛡️ Secure Platform</span>
+                    </div>
+                    <div class="hero-btns">
+                        <a href="/login.html" class="btn btn-primary" style="font-size:1.05rem; padding:14px 36px;">Get
+                            Started Free →</a>
+                        <a href="#how" class="btn btn-outline" style="padding:14px 28px;">How It Works</a>
+                    </div>
+                </div>
+            </div>
+            <div class="circle c1"></div>
+            <div class="circle c2"></div>
+        </section>
+
+        <!-- STATS -->
+        <div class="container">
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="num" id="statUsers">--</div>
+                    <div class="lbl">Registered Users</div>
+                </div>
+                <div class="stat">
+                    <div class="num" id="statSessions">--</div>
+                    <div class="lbl">Total Sessions</div>
+                </div>
+                <div class="stat">
+                    <div class="num">75%</div>
+                    <div class="lbl">Goes to Prize Pool</div>
+                </div>
+                <div class="stat">
+                    <div class="num">30s</div>
+                    <div class="lbl">Avg Question Time</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOW IT WORKS -->
+        <section id="how">
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-sub">Simple, fair, and fully automated</p>
+                <div class="steps">
+                    <div class="step-card card">
+                        <div class="step-num">1</div>
+                        <h3>📋 Browse & See Questions</h3>
+                        <p>All quiz questions are visible to everyone for FREE before you pay. No surprises, full
+                            transparency.</p>
+                    </div>
+                    <div class="step-card card">
+                        <div class="step-num">2</div>
+                        <h3>💳 Book Your Seat via UPI</h3>
+                        <p>Pay the entry fee with your UPI ID. Once all seats fill up, the session is automatically
+                            confirmed.</p>
+                    </div>
+                    <div class="step-card card">
+                        <div class="step-num">3</div>
+                        <h3>📘 Study the PDF (30 min)</h3>
+                        <p>Get exclusive access to the answer PDF 30 minutes before the quiz. Study well!</p>
+                    </div>
+                    <div class="step-card card">
+                        <div class="step-num">4</div>
+                        <h3>⚡ Take the Live Quiz (30 min)</h3>
+                        <p>Answer 20 questions in 30 minutes. Speed + accuracy = your rank. Questions appear in random
+                            order for each user.</p>
+                    </div>
+                    <div class="step-card card">
+                        <div class="step-num">5</div>
+                        <h3>🏆 Win Real Money</h3>
+                        <p>Top performers win prize money sent directly to their UPI/bank. 75% of total collection goes
+                            to winners.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CATEGORIES -->
+        <section>
+            <div class="container">
+                <h2 class="section-title">Quiz Categories</h2>
+                <p class="section-sub">Choose your level and compete</p>
+                <div class="cat-grid">
+                    <a href="/dashboard.html" class="cat-chip beginner">
+                        <div class="cat-icon">🟢</div>
+                        <h3 style="color:var(--green)">Beginner</h3>
+                        <p>Perfect for newcomers. Build confidence and earn while you learn.</p>
+                    </a>
+                    <a href="/dashboard.html" class="cat-chip skill">
+                        <div class="cat-icon">🟡</div>
+                        <h3 style="color:var(--gold)">Skill Builder</h3>
+                        <p>Intermediate level. Speed up your thinking and grow your skills.</p>
+                    </a>
+                    <a href="/dashboard.html" class="cat-chip pro">
+                        <div class="cat-icon">🔴</div>
+                        <h3 style="color:var(--red)">Pro Speed</h3>
+                        <p>Expert level. High stakes, high speed, high rewards.</p>
+                    </a>
+                </div>
+                <div style="text-align:center; margin-top:40px;">
+                    <a href="/login.html" class="btn btn-primary" style="padding:14px 40px; font-size:1rem;">Join Now &
+                        Start Winning →</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js"></script>
+    <script>
+        fetch('/api/admin/dashboard').catch(() => { });
+        // Simple count fetch
+        fetch('/api/sessions').then(r => r.json()).then(d => {
+            if (Array.isArray(d)) {
+                document.getElementById('statSessions').textContent = d.length;
+            }
+        }).catch(() => { });
+        renderFooter();
+    </script>
+</body>
+
+</html>

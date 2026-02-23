@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — QuizPro</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 22px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-family: var(--font);
+            font-weight: 600;
+            font-size: .88rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--blue);
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--blue), var(--indigo));
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .session-card {
+            position: relative;
+        }
+
+        .session-card .fee {
+            font-size: 1.5rem;
+            font-weight: 900;
+        }
+
+        .session-card .s-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .session-card .s-meta {
+            font-size: .82rem;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        .session-card .seat-row {
+            margin: 14px 0;
+        }
+
+        .session-card .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 14px;
+        }
+
+        /* countdown badge */
+        .time-badge {
+            font-size: .78rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(245, 158, 11, .12);
+            color: var(--gold);
+            border: 1px solid rgba(245, 158, 11, .25);
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .wallet-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .wallet-chip {
+            flex: 1;
+            min-width: 140px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+        }
+
+        .wallet-chip .wlabel {
+            font-size: .75rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .wallet-chip .wamt {
+            font-size: 1.6rem;
+            font-weight: 900;
+        }
+
+        .wallet-chip .wamt.demo {
+            color: #60a5fa;
+        }
+
+        .wallet-chip .wamt.real {
+            color: #10b981;
+        }
+
+        .ref-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ref-code {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: var(--gold);
+            font-family: monospace;
+        }
+
+        .txn-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+            font-size: .85rem;
+        }
+
+        .txn-cr {
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .txn-dr {
+            color: #ef4444;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="/" class="logo">⚡ QuizPro</a>
+        <div class="nav-links">
+            <span id="userGreet" style="color:var(--muted); font-size:.88rem;"></span>
+            <a href="/dashboard.html" class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;">Dashboard</a>
+            <button class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;"
+                onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="container" style="padding-top:40px;">
+            <div class="page-hero">
+                <h1>📋 My Dashboard</h1>
+                <p>Book sessions, track your wallet, and invite friends.</p>
+            </div>
+
+            <!-- WALLET BAR -->
+            <div class="wallet-bar" id="walletBar">
+                <div class="wallet-chip">
+                    <div class="wlabel">🎭 Demo Balance</div>
+                    <div class="wamt demo" id="demoAmt">₹—</div>
+                    <div style="font-size:.7rem;color:var(--muted);margin-top:4px;">Testing money (use to practice)
+                    </div>
+                </div>
+                <div class="wallet-chip">
+                    <div class="wlabel">💵 Real Balance</div>
+                    <div class="wamt real" id="realAmt">₹—</div>
+                    <div style="font-size:.7rem;color:var(--muted);margin-top:4px;">Prize winnings + UPI deposits</div>
+                </div>
+                <div class="wallet-chip"
+                    style="flex:none;min-width:auto;display:flex;flex-direction:column;justify-content:center;gap:8px;">
+                    <button class="btn btn-outline" style="padding:8px 16px;font-size:.8rem;" onclick="showTxns()">📄
+                        Transactions</button>
+                    <a href="/leaderboard.html" class="btn btn-outline"
+                        style="padding:8px 16px;font-size:.8rem;text-align:center;">🏆 Leaderboard</a>
+                </div>
+            </div>
+
+            <!-- REFERRAL BOX -->
+            <div class="ref-box">
+                <div>
+                    <div style="font-size:.75rem;color:var(--muted);margin-bottom:4px;">🤝 YOUR REFERRAL CODE</div>
+                    <div class="ref-code" id="refCode">LOADING...</div>
+                    <div style="font-size:.72rem;color:var(--muted);margin-top:4px;">Dost ko invite karo → dono ko
+                        ₹<span id="refBonus">50</span> demo bonus!</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-outline" style="padding:8px 14px;font-size:.8rem;" onclick="copyRef()">📋
+                        Copy</button>
+                    <button class="btn btn-primary" style="padding:8px 14px;font-size:.8rem;" onclick="shareRef()">📱
+                        Share</button>
+                </div>
+            </div>
+
+            <!-- BADGES SECTION -->
+            <div id="badgeSection" style="margin-bottom:24px; display:none;">
+                <div
+                    style="font-size:.75rem;color:var(--muted);font-weight:700;letter-spacing:.08em;margin-bottom:10px;">
+                    🏅 YOUR BADGES</div>
+                <div id="badgeList" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+            </div>
+
+            <!-- Txns modal -->
+            <div id="txnModal"
+                style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;display:none;align-items:center;justify-content:center;">
+                <div
+                    style="background:var(--card);border-radius:20px;padding:24px;max-width:420px;width:90%;max-height:70vh;overflow-y:auto;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+                        <h3>📄 Wallet Transactions</h3>
+                        <button onclick="document.getElementById('txnModal').style.display='none'"
+                            style="background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+                    </div>
+                    <div id="txnList">
+                        <div style="text-align:center;color:var(--muted);padding:20px;">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="tab-bar">
+                <button class="tab-btn active" data-cat="all" onclick="filterSessions('all', this)">All
+                    Sessions</button>
+                <button class="tab-btn" data-cat="1" onclick="filterSessions('1', this)">🟢 Beginner</button>
+                <button class="tab-btn" data-cat="2" onclick="filterSessions('2', this)">🟡 Skill Builder</button>
+                <button class="tab-btn" data-cat="3" onclick="filterSessions('3', this)">🔴 Pro Speed</button>
+            </div>
+
+            <div id="sessionsGrid" class="grid-3" style="align-items:start;"></div>
+            <div id="loadingState" class="empty-state">
+                <div class="spinner"></div>
+                <p>Loading sessions...</p>
+            </div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <div class="icon">🎯</div>
+                <p>No active sessions right now.<br>Check back soon or ask admin to create one.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js"></script>
+    <script>
+        requireLogin();
+        let allSessions = [];
+        const user = getUser();
+        if (user) document.getElementById('userGreet').textContent = `👤 ${user.mobile}`;
+
+        // Load wallet
+        async function loadWallet() {
+            try {
+                const w = await api('/api/wallet/me');
+                document.getElementById('demoAmt').textContent = '₹' + (w.demo || 0);
+                document.getElementById('realAmt').textContent = '₹' + (w.real || 0);
+            } catch (e) { }
+        }
+
+        // Load referral code
+        async function loadProfile() {
+            try {
+                const me = await api('/api/auth/me');
+                document.getElementById('refCode').textContent = me.referral_code || 'N/A';
+                if (user) document.getElementById('userGreet').textContent = `👤 ${me.name || me.mobile}`;
+            } catch (e) { }
+        }
+
+        function copyRef() {
+            const code = document.getElementById('refCode').textContent;
+            const link = `${location.origin}/login.html?ref=${code}`;
+            navigator.clipboard.writeText(link).then(() => toast('🔗 Referral link copied!', 'success')).catch(() => toast(code, 'info'));
+        }
+
+        function shareRef() {
+            const code = document.getElementById('refCode').textContent;
+            const link = `${location.origin}/login.html?ref=${code}`;
+            const txt = `🎯 QuizPro pe join karo aur ₹100 free demo money pao!\nMera referral code use karo: ${code}\n${link}`;
+            if (navigator.share) navigator.share({ title: 'QuizPro Referral', text: txt, url: link });
+            else { navigator.clipboard.writeText(txt); toast('Share message copied!', 'success'); }
+        }
+
+        async function showTxns() {
+            document.getElementById('txnModal').style.display = 'flex';
+            try {
+                const txns = await api('/api/wallet/txns');
+                document.getElementById('txnList').innerHTML = txns.length ? txns.map(t => `
+                    <div class="txn-row">
+                        <div>
+                            <div>${t.note}</div>
+                            <div style="font-size:.7rem;color:var(--muted);">${t.wallet === 'demo' ? '🎭 Demo' : '💵 Real'} • ${new Date(t.at * 1000).toLocaleDateString()}</div>
+                        </div>
+                        <div class="txn-${t.type === 'credit' ? 'cr' : 'dr'}">${t.type === 'credit' ? '+' : '-'}₹${t.amount}</div>
+                    </div>`).join('') : '<p style="text-align:center;color:var(--muted);">No transactions yet</p>';
+            } catch (e) { document.getElementById('txnList').innerHTML = 'Error loading'; }
+        }
+
+        loadWallet();
+        loadProfile();
+
+        // Load badges
+        async function loadBadges() {
+            try {
+                const badges = await api('/api/auth/badges');
+                if (!badges.length) return;
+                document.getElementById('badgeSection').style.display = 'block';
+                document.getElementById('badgeList').innerHTML = badges.map(b => `
+                    <div title="${b.desc}" style="background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:12px;padding:8px 14px;display:flex;align-items:center;gap:6px;cursor:default;">
+                        <span style="font-size:1.3rem;">${b.icon}</span>
+                        <span style="font-size:.78rem;font-weight:700;color:var(--text);">${b.name}</span>
+                    </div>`).join('');
+            } catch (e) { }
+        }
+        loadBadges();
+
+        async function loadSessions() {
+            try {
+                allSessions = await api('/api/sessions');
+                renderSessions(allSessions);
+            } catch (e) {
+                document.getElementById('sessionsGrid').innerHTML =
+                    `<div style="color:var(--muted);text-align:center;padding:40px;grid-column:1/-1;">
+                        <div style="font-size:2rem;margin-bottom:8px;">⚠️</div>
+                        <div>Sessions load nahi hue.</div>
+                        <div style="font-size:.8rem;margin-top:6px;">${e.message}</div>
+                        <button class="btn btn-outline" style="margin-top:14px;" onclick="loadSessions()">🔄 Retry</button>
+                    </div>`;
+            } finally {
+                hideLoading('loadingState'); // ALWAYS hide spinner
+            }
+        }
+
+        function filterSessions(catId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const filtered = catId === 'all' ? allSessions : allSessions.filter(s => s.category_id == catId);
+            renderSessions(filtered);
+        }
+
+        function renderSessions(sessions) {
+            const grid = document.getElementById('sessionsGrid');
+            const empty = document.getElementById('emptyState');
+            if (!sessions.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+            empty.style.display = 'none';
+            const statusMap = {
+                open: { label: 'Open', cls: 'badge-blue' },
+                confirmed: { label: 'Confirmed ✅', cls: 'badge-green' },
+                live: { label: '⚡ QUIZ STARTED', cls: 'badge-red' },
+                completed: { label: 'Completed', cls: 'badge-violet' },
+                cancelled: { label: 'Cancelled', cls: 'badge-red' }
+            };
+            grid.innerHTML = sessions.map(s => {
+                const pct = Math.round((s.seats_booked / s.seat_limit) * 100);
+                const st = statusMap[s.status] || { label: s.status, cls: 'badge-blue' };
+                const seatsLeft = s.seat_limit - s.seats_booked;
+                let timeInfo = '';
+                if (s.quiz_start_at) {
+                    const diff = s.quiz_start_at - Math.floor(Date.now() / 1000);
+                    if (diff > 0) timeInfo = `<div class="time-badge">⏰ Quiz in ${formatCountdown(diff)}</div>`;
+                }
+                return `
+        <div class="card card-hover session-card" onclick="window.location='/session.html?id=${s.id}'">
+          <span class="badge ${st.cls} status-badge">${st.label}</span>
+          <div class="s-title">${s.title}</div>
+          <div class="s-meta">${s.category_name} • ${s.seat_limit} seats</div>
+          <div class="fee" style="color:var(--gold)">₹${s.entry_fee} <span style="font-size:.85rem; font-weight:400; color:var(--muted)">entry fee</span></div>
+          <div style="font-size:.8rem; color:var(--green); margin-top:4px;">Prize Pool: ₹${Math.floor(s.entry_fee * s.seat_limit * 0.75)}</div>
+          <div class="seat-row">
+            <div class="seat-label"><span>${s.seats_booked}/${s.seat_limit} seats booked</span><span>${seatsLeft} left</span></div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%"></div></div>
+          </div>
+          ${timeInfo}
+          <!-- Prize Pool Breakdown -->
+          <div style="background:rgba(245,158,11,.06); border:1px solid rgba(245,158,11,.2); border-radius:10px; padding:10px 12px; margin-top:10px; font-size:.78rem;">
+            <div style="font-weight:700; color:var(--gold); margin-bottom:6px;">🏆 Prize Pool Breakdown</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 8px; color:var(--muted);">
+              <span>Total Collection:</span><span style="color:var(--text); font-weight:600;">₹${(s.entry_fee * s.seat_limit).toLocaleString()}</span>
+              <span>🏆 Prize Pool (75%):</span><span style="color:var(--green); font-weight:700;">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75).toLocaleString()}</span>
+              <span>🥇 1st Prize:</span><span style="color:var(--gold); font-weight:700;">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75 * 0.27).toLocaleString()}</span>
+              <span>🥈 2nd Prize:</span><span style="color:var(--text);">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75 * 0.16).toLocaleString()}</span>
+              <span>🥉 3rd Prize:</span><span style="color:var(--text);">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75 * 0.12).toLocaleString()}</span>
+              <span>Platform (25%):</span><span style="color:var(--muted);">₹${Math.floor(s.entry_fee * s.seat_limit * 0.25).toLocaleString()}</span>
+            </div>
+            <div style="margin-top:6px; color:var(--muted); font-size:.7rem;">💸 Top 10 winners paid directly to UPI/Bank</div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:12px;">
+            ${s.status === 'live'
+                        ? `<a href="/quiz.html?id=${s.id}" class="btn btn-gold" style="flex:1; text-align:center; font-weight:700; font-size:.95rem;">🔥 START QUIZ NOW</a>`
+                        : `<button class="btn btn-primary" style="flex:1; pointer-events:none;">View Session →</button>`
+                    }
+            ${user && user.is_admin ? `
+              <button class="btn btn-success" style="padding:10px; font-size:1.1rem;" title="Admin: Quick Excel Upload" 
+                onclick="event.stopPropagation(); quickUpload(${s.id})">📤</button>
+            ` : ''}
+          </div>
+        </div>`;
+            }).join('');
+        }
+
+        async function quickUpload(sid) {
+            let input = document.getElementById('quickExcelInput');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'file';
+                input.id = 'quickExcelInput';
+                input.style.display = 'none';
+                input.accept = '.xlsx,.xls';
+                document.body.appendChild(input);
+            }
+            input.onchange = async () => {
+                const file = input.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('session_id', sid);
+
+                toast('📤 Uploading questions...', 'info');
+                try {
+                    const res = await fetch('/api/admin/questions/upload', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + getToken() },
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error);
+                    toast('✅ ' + data.message, 'success');
+                } catch (e) {
+                    toast('❌ ' + e.message, 'error');
+                }
+                input.value = '';
+            };
+            input.click();
+        }
+
+        function formatCountdown(sec) {
+            const m = Math.floor(sec / 60), s = sec % 60;
+            return `${m}m ${s}s`;
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+        loadSessions();
+        renderFooter();
+        // Auto-refresh every 30 seconds
+        setInterval(loadSessions, 30000);
+    </script>
+</body>
+
+</html>

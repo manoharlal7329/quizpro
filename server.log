@@ -1,0 +1,7 @@
+
+> quiz-platform@1.0.0 start
+> node server.js
+
+❌ PORT 9988 is busy. Please run: Get-Process -Name node | Stop-Process -Force
+OK
+❌ PORT 9988 is busy. Please run: Get-Process -Name node | Stop-Process -Force

@@ -1,0 +1,42 @@
+{
+    "name": "QuizPro — Skill Quiz Platform",
+    "short_name": "QuizPro",
+    "description": "Win real money playing skill-based quizzes",
+    "start_url": "/dashboard.html",
+    "display": "standalone",
+    "background_color": "#0a0a14",
+    "theme_color": "#7c3aed",
+    "orientation": "portrait",
+    "lang": "en",
+    "icons": [
+        {
+            "src": "/icons/icon-192.svg",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512.svg",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "education",
+        "entertainment",
+        "games"
+    ],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "url": "/dashboard.html",
+            "description": "Open Quiz Dashboard"
+        },
+        {
+            "name": "Leaderboard",
+            "url": "/leaderboard.html",
+            "description": "View Top Winners"
+        }
+    ]
+}
