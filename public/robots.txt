@@ -1,7 +1,3 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /api/
-Disallow: /dashboard.html
-
-Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://quizpro.onrender.com/sitemap.xml
