@@ -33,6 +33,7 @@ app.use('/api/sessions', require('./routes/sessions'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/quiz', require('./routes/quiz'));
 app.use('/api/results', require('./routes/results'));
+app.use('/api/admin-auth', require('./routes/adminAuth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));

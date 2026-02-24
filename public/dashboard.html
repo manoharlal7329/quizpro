@@ -277,7 +277,7 @@
         requireLogin();
         let allSessions = [];
         const user = getUser();
-        if (user) document.getElementById('userGreet').textContent = `👤 ${user.mobile}`;
+        if (user) document.getElementById('userGreet').textContent = `👤 ${user.email}`;
 
         // Load wallet
         async function loadWallet() {
@@ -293,7 +293,7 @@
             try {
                 const me = await api('/api/auth/me');
                 document.getElementById('refCode').textContent = me.referral_code || 'N/A';
-                if (user) document.getElementById('userGreet').textContent = `👤 ${me.name || me.mobile}`;
+                if (user) document.getElementById('userGreet').textContent = `👤 ${me.name || me.email}`;
             } catch (e) { }
         }
 

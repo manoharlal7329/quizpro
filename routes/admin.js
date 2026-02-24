@@ -1,336 +1,334 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../database/db');
-const { data, save } = db;
+const { data, save } = require('../database/db');
 const authMiddleware = require('../middleware/auth');
 const multer = require('multer');
-const xlsx = require('xlsx');
+const XLSX = require('xlsx');
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Always check live DB for admin status; fallback to JWT if user not found (e.g. old cached token)
-const adminOnly = (req, res, next) => {
-    const liveUser = data.users.find(u => u.id == req.user.id);
-    if (liveUser && liveUser.is_admin) return next();
-    // Fallback: JWT itself has is_admin (for old sessions / cached tokens)
-    if (!liveUser && req.user.is_admin) return next();
-    res.status(403).json({ error: 'Admin access required' });
-};
+// ── Admin guard middleware ────────────────────────────────────────────────────
+function adminOnly(req, res, next) {
+  // Check if token has explicit admin role (from adminAuth.js)
+  if (req.user && req.user.role === 'admin') return next();
 
-router.use(authMiddleware, adminOnly);
+  // Check if user ID in database has is_admin flag (old auth)
+  const user = (data.users || []).find(u => u.id == req.user.id);
+  if (!user || !user.is_admin) return res.status(403).json({ error: 'Admin only' });
+  next();
+}
 
-// ─── DASHBOARD STATS ──────────────────────────────────────────────────────────
-router.get('/dashboard', async (req, res) => {
-    const completed = data.sessions.filter(s => s.status === 'completed');
-    const revenue = completed.reduce((acc, s) => acc + (s.platform_cut || 0), 0);
-    const prizePaid = completed.reduce((acc, s) => acc + (s.prize_pool || 0), 0);
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+router.get('/dashboard', authMiddleware, adminOnly, (req, res) => {
+  const sessions = data.sessions || [];
+  const users = data.users || [];
+  const seats = data.seats || [];
+  const wallets = data.wallets || [];
 
-    const recentSessions = data.sessions
-        .sort((a, b) => b.created_at - a.created_at)
-        .slice(0, 5)
-        .map(s => {
-            const cat = data.categories.find(c => c.id == s.category_id);
-            return { ...s, category_name: cat?.name };
-        });
+  const totalUsers = users.filter(u => !u.is_admin).length;
+  const totalSessions = sessions.length;
+  const totalRevenue = sessions.filter(s => s.status === 'completed').reduce((sum, s) => sum + (s.platform_cut || 0), 0);
+  const totalPrize = sessions.filter(s => s.status === 'completed').reduce((sum, s) => sum + (s.prize_pool || 0), 0);
 
-    res.json({
-        stats: {
-            total_users: data.users.length,
-            total_sessions: data.sessions.length,
-            total_revenue: revenue,
-            total_prize: prizePaid
-        },
-        recentSessions
+  const stats = {
+    total_users: totalUsers,
+    total_sessions: totalSessions,
+    total_revenue: totalRevenue,
+    total_prize: totalPrize
+  };
+
+  // Recent sessions (last 5)
+  const recentSessions = sessions
+    .sort((a, b) => b.created_at - a.created_at)
+    .slice(0, 5)
+    .map(s => {
+      const cat = (data.categories || []).find(c => c.id == s.category_id);
+      return { ...s, category_name: cat?.name || 'Category' };
     });
+
+  res.json({ stats, recentSessions });
 });
 
-// ─── ALL SESSIONS ─────────────────────────────────────────────────────────────
-router.get('/sessions', async (req, res) => {
-    const sessions = data.sessions.map(s => {
-        const cat = data.categories.find(c => c.id == s.category_id);
-        return { ...s, category_name: cat?.name };
+// ─── SESSIONS — LIST ──────────────────────────────────────────────────────────
+router.get('/sessions', authMiddleware, adminOnly, (req, res) => {
+  const sessions = (data.sessions || [])
+    .sort((a, b) => b.created_at - a.created_at)
+    .map(s => {
+      const cat = (data.categories || []).find(c => c.id == s.category_id);
+      const qCount = (data.questions || []).filter(q => q.session_id == s.id).length;
+      return { ...s, category_name: cat?.name, question_count: qCount };
     });
-    res.json(sessions);
+  res.json(sessions);
 });
 
-// ─── CREATE SESSION ───────────────────────────────────────────────────────────
-router.post('/sessions', async (req, res) => {
-    const { category_id, title, seat_limit, entry_fee, quiz_delay_minutes } = req.body;
+// ─── SESSIONS — CREATE ────────────────────────────────────────────────────────
+router.post('/sessions', authMiddleware, adminOnly, (req, res) => {
+  const { category_id, title, seat_limit, entry_fee, quiz_delay_minutes } = req.body;
+  if (!category_id || !title || !seat_limit || entry_fee === undefined) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
 
-    // ✅ PLAN RULE: Sirf 1 active session per category
-    const existing = (data.sessions || []).find(
-        s => s.category_id == category_id && ['open', 'confirmed'].includes(s.status)
-    );
-    if (existing) {
-        return res.status(400).json({
-            error: `Is category mein already ek active session hai: "${existing.title}". Pehle use cancel ya complete karo.`
-        });
+  // ✅ PLAN RULE: Only 1 active session per category
+  const existing = (data.sessions || []).find(
+    s => s.category_id == category_id && ['open', 'confirmed'].includes(s.status)
+  );
+  if (existing) {
+    return res.status(400).json({
+      error: `Is category mein already ek active session hai: "${existing.title}". Pehle use cancel ya complete karo.`
+    });
+  }
+
+  if (!data.sessions) data.sessions = [];
+  const session = {
+    id: Date.now(),
+    category_id: Number(category_id),
+    title,
+    seat_limit: Number(seat_limit),
+    seats_booked: 0,
+    entry_fee: Number(entry_fee),
+    quiz_delay_minutes: Number(quiz_delay_minutes) || 60,
+    status: 'open',
+    created_at: Math.floor(Date.now() / 1000)
+  };
+  data.sessions.push(session);
+  save();
+  res.json({ success: true, session });
+});
+
+// ─── SESSIONS — QUESTIONS LIST ────────────────────────────────────────────────
+router.get('/sessions/:id/questions', authMiddleware, adminOnly, (req, res) => {
+  const questions = (data.questions || []).filter(q => q.session_id == req.params.id);
+  res.json(questions);
+});
+
+// ─── SESSIONS — FORCE START ───────────────────────────────────────────────────
+router.post('/sessions/:id/start', authMiddleware, adminOnly, (req, res) => {
+  const session = (data.sessions || []).find(s => s.id == req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+
+  const now = Math.floor(Date.now() / 1000);
+  session.quiz_start_at = now;
+  session.quiz_end_at = now + 1800;
+  session.pdf_at = now;
+  session.status = 'live';
+  session.prize_pool = Math.floor(session.entry_fee * session.seats_booked * 0.75);
+  session.platform_cut = Math.floor(session.entry_fee * session.seats_booked * 0.25);
+  save();
+
+  // SSE broadcast
+  try {
+    const sessionsRouter = require('./sessions');
+    if (sessionsRouter.broadcastSession) {
+      sessionsRouter.broadcastSession(session.id, {
+        status: 'live',
+        quiz_start_at: session.quiz_start_at,
+        pdf_at: session.pdf_at,
+        seats_booked: session.seats_booked
+      });
     }
+  } catch (e) { }
 
-    const newSess = {
-        id: Date.now(),
-        category_id: parseInt(category_id),
-        title,
-        seat_limit: parseInt(seat_limit),
-        seats_booked: 0,
-        entry_fee: parseInt(entry_fee),
-        quiz_delay_minutes: parseInt(quiz_delay_minutes) || 60,
-        status: 'open',
-        created_at: Math.floor(Date.now() / 1000)
-    };
-    data.sessions.push(newSess);
+  res.json({ success: true, message: 'Quiz is NOW LIVE!', quiz_start_at: session.quiz_start_at });
+});
+
+// ─── SESSIONS — CANCEL (with auto-refund) ────────────────────────────────────
+router.post('/sessions/:id/cancel', authMiddleware, adminOnly, (req, res) => {
+  const session = (data.sessions || []).find(s => s.id == req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+
+  session.status = 'cancelled';
+
+  // ✅ Auto refund all bookers to real wallet
+  const seats = (data.seats || []).filter(s => s.session_id == session.id);
+  let refundCount = 0;
+  seats.forEach(seat => {
+    const w = (data.wallets || []).find(w => w.user_id == seat.user_id);
+    if (w) {
+      w.real = (w.real || 0) + session.entry_fee;
+      if (!data.transactions) data.transactions = [];
+      if (!data.wallet_txns) data.wallet_txns = [];
+      data.wallet_txns.push({
+        id: Date.now() + Math.random(),
+        user_id: seat.user_id,
+        wallet: 'real',
+        type: 'credit',
+        amount: session.entry_fee,
+        note: `♻️ Refund: Session cancelled — ${session.title}`,
+        at: Math.floor(Date.now() / 1000)
+      });
+      refundCount++;
+    }
+  });
+  save();
+  res.json({ success: true, message: `Session cancelled. ${refundCount} refunds issued.` });
+});
+
+// ─── SESSIONS — COMPLETE ──────────────────────────────────────────────────────
+router.post('/sessions/:id/complete', authMiddleware, adminOnly, (req, res) => {
+  const session = (data.sessions || []).find(s => s.id == req.params.id);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+  session.status = 'completed';
+  save();
+  res.json({ success: true });
+});
+
+// ─── SESSIONS — RESET SEATS ───────────────────────────────────────────────────
+router.post('/sessions/:id/reset-seats', authMiddleware, adminOnly, (req, res) => {
+  const session = (data.sessions || []).find(s => s.id == req.params.id);
+  if (session) {
+    session.seats_booked = 0;
+    session.status = 'open';
+    data.seats = (data.seats || []).filter(s => s.session_id != req.params.id);
     save();
-    res.json({ id: newSess.id, message: 'Session created' });
+  }
+  res.json({ success: true, message: 'Seats reset to zero' });
 });
 
-// ─── ADD QUESTIONS ────────────────────────────────────────────────────────────
-router.post('/questions', async (req, res) => {
-    const { session_id, questions } = req.body;
-    questions.forEach(q => {
-        data.questions.push({
-            id: Date.now() + Math.random(),
-            session_id: parseInt(session_id),
-            ...q
-        });
-    });
-    save();
-    res.json({ message: 'Questions added' });
+// ─── SESSIONS — DELETE ────────────────────────────────────────────────────────
+router.delete('/sessions/:id', authMiddleware, adminOnly, (req, res) => {
+  data.sessions = (data.sessions || []).filter(s => s.id != req.params.id);
+  data.questions = (data.questions || []).filter(q => q.session_id != req.params.id);
+  data.seats = (data.seats || []).filter(s => s.session_id != req.params.id);
+  save();
+  res.json({ success: true });
 });
 
-router.get('/sessions/:id/questions', async (req, res) => {
-    res.json(data.questions.filter(q => q.session_id == req.params.id));
-});
-
-router.delete('/questions/:id', async (req, res) => {
-    data.questions = data.questions.filter(q => q.id != req.params.id);
-    save();
-    res.json({ message: 'Deleted' });
-});
-
-// ─── ADD QUESTIONS (BULK VIA EXCEL) ──────────────────────────────────────────
-router.post('/questions/upload', upload.single('file'), async (req, res) => {
+// ─── QUESTIONS — EXCEL UPLOAD ─────────────────────────────────────────────────
+router.post('/questions/upload', authMiddleware, adminOnly, upload.single('file'), (req, res) => {
+  try {
     const { session_id } = req.body;
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    if (!session_id) return res.status(400).json({ error: 'session_id required' });
 
-    try {
-        const workbook = xlsx.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const wb = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws);
 
-        const formatted = sheetData.map(row => ({
-            id: Date.now() + Math.random(),
-            session_id: parseInt(session_id),
-            question_text: row.question || row.question_text || row.Question,
-            option_a: row.a || row.option_a || row.A,
-            option_b: row.b || row.option_b || row.B,
-            option_c: row.c || row.option_c || row.C,
-            option_d: row.d || row.option_d || row.D,
-            correct: String(row.correct || row.Answer || 'a').toLowerCase(),
-            explanation: row.explanation || row.Explanation || ''
-        }));
+    if (!rows.length) return res.status(400).json({ error: 'Excel is empty' });
 
-        data.questions.push(...formatted);
-        save();
-
-        const fs = require('fs');
-        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-
-        res.json({ message: `${formatted.length} questions uploaded successfully` });
-    } catch (e) {
-        res.status(500).json({ error: 'Excel parsing failed: ' + e.message });
-    }
-});
-
-// ─── MANAGE USERS (ENHANCED) ──────────────────────────────────────────────────
-router.get('/users', async (req, res) => {
-    res.json(data.users);
-});
-
-router.delete('/users/:id', async (req, res) => {
-    const uid = parseInt(req.params.id);
-    if (uid === 1) return res.status(400).json({ error: 'Cannot delete primary admin' });
-
-    data.users = data.users.filter(u => u.id != uid);
-    data.seats = data.seats.filter(s => s.user_id != uid);
-    data.quiz_attempts = data.quiz_attempts.filter(a => a.user_id != uid);
-    save();
-    res.json({ message: 'User and all related data deleted' });
-});
-
-// ─── MANUAL STATE OVERRIDES ───────────────────────────────────────────────────
-router.post('/sessions/:id/complete', async (req, res) => {
-    const session = data.sessions.find(s => s.id == req.params.id);
-    if (session) {
-        session.status = 'completed';
-        save();
-    }
-    res.json({ message: 'Session marked as completed' });
-});
-
-router.post('/sessions/:id/reset-seats', async (req, res) => {
-    const session = data.sessions.find(s => s.id == req.params.id);
-    if (session) {
-        session.seats_booked = 0;
-        session.status = 'open';
-        data.seats = data.seats.filter(s => s.session_id != req.params.id);
-        save();
-    }
-    res.json({ message: 'Session seats reset to zero' });
-});
-
-// ─── FORCE START / CANCEL ─────────────────────────────────────────────────────
-router.post('/sessions/:id/force-start', async (req, res) => {
-    const session = data.sessions.find(s => s.id == req.params.id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-
-    const now = Math.floor(Date.now() / 1000);
-    session.quiz_start_at = now;
-    session.quiz_end_at = now + 1800;    // 30 min quiz
-    session.pdf_at = now;            // PDF unlocks immediately on force start
-    session.status = 'live';
-    session.prize_pool = Math.floor(session.entry_fee * session.seats_booked * 0.75);
-    session.platform_cut = Math.floor(session.entry_fee * session.seats_booked * 0.25);
-    save();
-
-    // ✅ SSE broadcast — all connected users get real-time "LIVE" notification
-    try {
-        const sessionsRouter = require('./sessions');
-        if (sessionsRouter.broadcastSession) {
-            sessionsRouter.broadcastSession(session.id, {
-                status: 'live',
-                quiz_start_at: session.quiz_start_at,
-                pdf_at: session.pdf_at,
-                seats_booked: session.seats_booked
-            });
-        }
-    } catch (e) { }
-
-    res.json({ message: 'Quiz is NOW LIVE! Users can join immediately.', quiz_start_at: session.quiz_start_at });
-});
-
-router.post('/sessions/:id/cancel', async (req, res) => {
-    const session = data.sessions.find(s => s.id == req.params.id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-
-    session.status = 'cancelled';
-
-    // ✅ PLAN RULE: Platform cancels → auto refund all bookers to real wallet
-    const seats = (data.seats || []).filter(s => s.session_id == session.id);
-    let refundCount = 0;
-    seats.forEach(seat => {
-        const userWallet = (data.wallets || []).find(w => w.user_id == seat.user_id);
-        if (userWallet) {
-            userWallet.real = (userWallet.real || 0) + session.entry_fee;
-            if (!data.transactions) data.transactions = [];
-            data.transactions.push({
-                id: Date.now() + refundCount,
-                user_id: seat.user_id,
-                type: 'real',
-                direction: 'credit',
-                amount: session.entry_fee,
-                note: `Auto-refund: Session "${session.title}" cancelled by admin`,
-                created_at: Math.floor(Date.now() / 1000)
-            });
-            refundCount++;
-        }
+    if (!data.questions) data.questions = [];
+    const added = [];
+    rows.forEach(row => {
+      const q = {
+        id: Date.now() + Math.random(),
+        session_id: Number(session_id),
+        question_text: row['question'] || row['Question'] || row['question_text'] || '',
+        option_a: row['option_a'] || row['Option A'] || row['A'] || '',
+        option_b: row['option_b'] || row['Option B'] || row['B'] || '',
+        option_c: row['option_c'] || row['Option C'] || row['C'] || '',
+        option_d: row['option_d'] || row['Option D'] || row['D'] || '',
+        correct: (row['correct'] || row['Correct'] || row['answer'] || 'a').toString().toLowerCase().trim(),
+        explanation: row['explanation'] || row['Explanation'] || ''
+      };
+      if (q.question_text) { data.questions.push(q); added.push(q); }
     });
-
     save();
-    console.log(`🚫 Session ${session.id} cancelled — ${refundCount} users auto-refunded ₹${session.entry_fee} each`);
-    res.json({ message: `Session cancelled. ${refundCount} users auto-refunded ₹${session.entry_fee} to their wallet.` });
+    res.json({ success: true, added: added.length, questions: added });
+  } catch (e) {
+    res.status(500).json({ error: 'Upload failed: ' + e.message });
+  }
 });
 
-// ─── DELETE SESSION PERMANENTLY ──────────────────────────────────────────────
-router.delete('/sessions/:id', async (req, res) => {
-    const sid = req.params.id;
-    const session = data.sessions.find(s => s.id == sid);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
+// ─── QUESTIONS — MANUAL ADD ───────────────────────────────────────────────────
+router.post('/questions', authMiddleware, adminOnly, (req, res) => {
+  const { session_id, questions } = req.body;
+  if (!session_id || !Array.isArray(questions)) return res.status(400).json({ error: 'Invalid data' });
 
-    // Remove session and all related data
-    data.sessions = data.sessions.filter(s => s.id != sid);
-    data.questions = data.questions.filter(q => q.session_id != sid);
-    data.seats = data.seats.filter(s => s.session_id != sid);
-    data.payments = data.payments.filter(p => p.session_id != sid);
-    data.quiz_attempts = data.quiz_attempts.filter(a => a.session_id != sid);
-    save();
-
-    res.json({ message: 'Session permanently deleted' });
+  if (!data.questions) data.questions = [];
+  questions.forEach(q => {
+    data.questions.push({
+      id: Date.now() + Math.random(),
+      session_id: Number(session_id),
+      question_text: q.question_text,
+      option_a: q.option_a, option_b: q.option_b,
+      option_c: q.option_c, option_d: q.option_d,
+      correct: q.correct, explanation: q.explanation || ''
+    });
+  });
+  save();
+  res.json({ success: true });
 });
 
-// ─── CATEGORIES ──────────────────────────────────────────────────────────────
-router.get('/categories', async (req, res) => {
-    res.json(data.categories || []);
+// ─── QUESTIONS — DELETE ───────────────────────────────────────────────────────
+router.delete('/questions/:id', authMiddleware, adminOnly, (req, res) => {
+  data.questions = (data.questions || []).filter(q => q.id != req.params.id);
+  save();
+  res.json({ success: true });
 });
 
-router.post('/categories', async (req, res) => {
-    const { name, icon, description } = req.body;
-    if (!name) return res.status(400).json({ error: 'Name required' });
-    const newCat = { id: Date.now(), name, icon, description };
-    data.categories = data.categories || [];
-    data.categories.push(newCat);
-    save();
-    res.json(newCat);
+// ─── USERS — LIST ─────────────────────────────────────────────────────────────
+router.get('/users', authMiddleware, adminOnly, (req, res) => {
+  const users = (data.users || []).map(u => {
+    const w = (data.wallets || []).find(w => w.user_id == u.id) || { demo: 0, real: 0 };
+    const attempts = (data.quiz_attempts || []).filter(a => a.user_id == u.id).length;
+    return { id: u.id, mobile: u.mobile, name: u.name, is_admin: u.is_admin, wallet_demo: w.demo, wallet_real: w.real, attempts };
+  });
+  res.json(users);
 });
 
-// ─── REWARDS ──────────────────────────────────────────────────────────────────
-router.post('/rewards', async (req, res) => {
-    const { mobile, type, detail } = req.body;
-    if (!mobile || !type) return res.status(400).json({ error: 'Missing details' });
-
-    const reward = {
-        id: Date.now(),
-        mobile,
-        type,
-        detail,
-        assigned_at: Math.floor(Date.now() / 1000)
-    };
-    data.rewards = data.rewards || [];
-    data.rewards.push(reward);
-    save();
-    res.json(reward);
+// ─── USERS — DELETE ───────────────────────────────────────────────────────────
+router.delete('/users/:id', authMiddleware, adminOnly, (req, res) => {
+  const user = (data.users || []).find(u => u.id == req.params.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  if (user.is_admin) return res.status(403).json({ error: 'Cannot delete admin' });
+  data.users = data.users.filter(u => u.id != req.params.id);
+  save();
+  res.json({ success: true });
 });
 
-router.get('/rewards', async (req, res) => {
-    res.json(data.rewards || []);
+// ─── CATEGORIES — LIST ────────────────────────────────────────────────────────
+router.get('/categories', authMiddleware, adminOnly, (req, res) => {
+  res.json(data.categories || []);
 });
 
-// ─── GO LIVE — Manually start a session quiz ──────────────────────────────────
-router.post('/sessions/:id/start', async (req, res) => {
-    const session = (data.sessions || []).find(s => s.id == req.params.id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-    if (session.status === 'live') return res.status(400).json({ error: 'Already live' });
-    if (session.status === 'completed') return res.status(400).json({ error: 'Already completed' });
+// ─── CATEGORIES — CREATE ──────────────────────────────────────────────────────
+router.post('/categories', authMiddleware, adminOnly, (req, res) => {
+  const { name, icon, description } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name required' });
 
-    const now = Math.floor(Date.now() / 1000);
-    session.quiz_start_at = now;
-    session.pdf_at = now - 1;   // PDF already available
-    session.status = 'live';
-    session.prize_pool = session.prize_pool || Math.floor((session.entry_fee || 0) * (session.seats_booked || 0) * 0.75);
-    session.platform_cut = session.platform_cut || Math.floor((session.entry_fee || 0) * (session.seats_booked || 0) * 0.25);
-    save();
-
-    // Broadcast SSE to all connected users in this session
-    try {
-        const sessionsRouter = require('./sessions');
-        if (sessionsRouter.broadcastSession) {
-            sessionsRouter.broadcastSession(session.id, {
-                seats_booked: session.seats_booked,
-                status: 'live',
-                quiz_start_at: session.quiz_start_at
-            });
-        }
-    } catch (e) { }
-
-    res.json({ success: true, message: 'Quiz is now LIVE 🔥', session_id: session.id, quiz_start_at: session.quiz_start_at });
+  if (!data.categories) data.categories = [];
+  const cat = {
+    id: Date.now(),
+    name,
+    icon: icon || '📚',
+    description: description || '',
+    level: data.categories.length + 1,
+    color: '#7c3aed'
+  };
+  data.categories.push(cat);
+  save();
+  res.json({ success: true, category: cat });
 });
 
-// ─── CANCEL SESSION ─────────────────────────────────────────────────────────
-router.post('/sessions/:id/cancel', async (req, res) => {
-    const session = (data.sessions || []).find(s => s.id == req.params.id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-    session.status = 'cancelled';
-    save();
-    res.json({ success: true });
+// ─── WALLET TOPUP ─────────────────────────────────────────────────────────────
+router.post('/wallet/topup', authMiddleware, adminOnly, (req, res) => {
+  const { user_id, wallet_type, amount, note } = req.body;
+  if (!user_id || !wallet_type || !amount) return res.status(400).json({ error: 'Missing params' });
+
+  const { getWallet, addTxn } = require('./wallet');
+  const w = getWallet(user_id);
+  const type = wallet_type === 'real' ? 'real' : 'demo';
+  w[type] += Number(amount);
+  addTxn(user_id, type, 'credit', Number(amount), note || 'Admin top-up');
+  save();
+  res.json({ success: true, new_balance: w[type] });
+});
+
+// ─── REWARDS — LOG MANUAL PAYOUT ─────────────────────────────────────────────
+router.post('/rewards', authMiddleware, adminOnly, (req, res) => {
+  const { mobile, type, detail } = req.body;
+  if (!data.rewards) data.rewards = [];
+  data.rewards.push({
+    id: Date.now(),
+    mobile, type, detail,
+    at: Math.floor(Date.now() / 1000)
+  });
+  save();
+  res.json({ success: true });
+});
+
+// ─── REWARDS — LIST ───────────────────────────────────────────────────────────
+router.get('/rewards', authMiddleware, adminOnly, (req, res) => {
+  res.json((data.rewards || []).sort((a, b) => b.at - a.at));
 });
 
 module.exports = router;

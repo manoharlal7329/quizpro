@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — QuizPro</title>
+    <title>Login / Register — QuizPro</title>
     <link rel="stylesheet" href="/css/style.css" />
     <style>
         body {
@@ -22,57 +22,60 @@
 
         .login-logo {
             text-align: center;
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--blue), var(--violet));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
 
-        .otp-inputs {
+        .tabs {
             display: flex;
             gap: 10px;
-            justify-content: center;
-            margin: 16px 0;
-        }
-
-        .otp-inputs input {
-            width: 44px;
-            height: 50px;
-            text-align: center;
-            font-size: 1.3rem;
-            font-weight: 700;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px;
             border-radius: 12px;
         }
 
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
             color: var(--muted);
-            font-size: .88rem;
+            font-weight: 600;
             cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
         }
 
-        .back-link span {
-            color: var(--blue);
-            cursor: pointer;
+        .tab-btn.active {
+            background: var(--blue);
+            color: #fff;
         }
 
-        #step2 {
+        .auth-panel {
             display: none;
         }
 
-        .otp-hint {
-            text-align: center;
-            font-size: .82rem;
-            color: var(--muted);
-            margin-bottom: 16px;
+        .auth-panel.active {
+            display: block;
         }
 
-        .otp-hint strong {
-            color: var(--gold);
+        .admin-login-link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .admin-login-link a {
+            color: var(--violet);
+            text-decoration: none;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -81,124 +84,120 @@
     <div class="login-wrap">
         <div class="login-logo">⚡ QuizPro</div>
 
-        <!-- STEP 1: Mobile -->
-        <div id="step1" class="card">
-            <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:6px;">Welcome Back 👋</h2>
-            <p style="color:var(--muted); font-size:.9rem; margin-bottom:24px;">Enter your mobile number to continue</p>
-            <div id="alertBox"></div>
-            <div class="form-group">
-                <label>📱 Mobile Number</label>
-                <input type="tel" id="mobileInput" placeholder="Enter 10-digit mobile number" maxlength="10" />
-            </div>
-            <button class="btn btn-primary btn-full" id="sendOtpBtn" onclick="sendOtp()">Send OTP</button>
-            <p style="text-align:center; margin-top:16px; font-size:.8rem; color:var(--muted);">
-                New user? Account is created automatically on first login.
-            </p>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+            <button class="tab-btn" onclick="switchTab('register')">Register</button>
         </div>
 
-        <!-- STEP 2: OTP -->
-        <div id="step2" class="card">
-            <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:6px;">Enter OTP 🔐</h2>
-            <p style="color:var(--muted); font-size:.9rem; margin-bottom:8px;">OTP sent to <strong
-                    id="mobileDisplay"></strong></p>
-            <div id="alertBox2"></div>
-            <div id="otpHintBox"
-                style="display:none; text-align:center; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.3); border-radius:10px; padding:12px; margin-bottom:12px;">
-                <div style="font-size:.75rem; color:var(--muted); margin-bottom:4px;">Your OTP</div>
-                <div id="otpDisplay" style="font-size:2rem; font-weight:900; color:var(--gold); letter-spacing:8px;">
-                </div>
-                <div style="font-size:.7rem; color:var(--muted); margin-top:4px;">Enter this OTP below ↓</div>
+        <!-- LOGIN PANEL -->
+        <div id="login-panel" class="auth-panel card active">
+            <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:6px;">Welcome Back 👋</h2>
+            <p style="color:var(--muted); font-size:.9rem; margin-bottom:24px;">Login to your account</p>
+            <div id="loginAlert"></div>
+            <div class="form-group">
+                <label>📧 Email Address</label>
+                <input type="email" id="loginEmail" placeholder="Enter your email" required />
             </div>
-            <div class="otp-inputs">
-                <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" />
-                <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" />
-                <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" />
-                <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" />
-                <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" />
-                <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" />
+            <div class="form-group">
+                <label>🔒 Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required />
             </div>
-            <button class="btn btn-success btn-full" id="verifyOtpBtn" onclick="verifyOtp()">Verify OTP & Login</button>
-            <p class="back-link">Wrong number? <span onclick="goBack()">Go back</span></p>
+            <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Login 🚀</button>
+        </div>
+
+        <!-- REGISTER PANEL -->
+        <div id="register-panel" class="auth-panel card">
+            <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:6px;">Create Account ✨</h2>
+            <p style="color:var(--muted); font-size:.9rem; margin-bottom:24px;">Join the skill-based challenge</p>
+            <div id="registerAlert"></div>
+            <div class="form-group">
+                <label>📧 Email Address</label>
+                <input type="email" id="regEmail" placeholder="Enter your email" required />
+            </div>
+            <div class="form-group">
+                <label>🔒 Password</label>
+                <input type="password" id="regPassword" placeholder="Min 6 characters" required />
+            </div>
+            <button class="btn btn-success btn-full" id="registerBtn" onclick="doRegister()">Register Now 🏆</button>
+        </div>
+
+        <div class="admin-login-link">
+            Are you an Admin? <a href="/admin_login.html">Login to Admin Panel</a>
         </div>
     </div>
 
     <div id="toast"></div>
     <script src="/js/common.js"></script>
     <script>
-        let mobile = '';
-        // Capture referral code from URL (?ref=CODE)
-        const _refCode = new URLSearchParams(location.search).get('ref') || '';
-        if (_refCode) {
-            document.getElementById('step1').insertAdjacentHTML('afterbegin', `
-                <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:.82rem;">
-                    🎁 Referral code <strong style="color:var(--gold);">${_refCode}</strong> detect hua — register karo aur ₹100 free demo bonus pao!
-                </div>`);
-        };
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
 
-        // OTP digit auto-focus
-        document.querySelectorAll('.otp-digit').forEach((inp, i, all) => {
-            inp.addEventListener('input', () => { if (inp.value && i < all.length - 1) all[i + 1].focus(); });
-            inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && i > 0) all[i - 1].focus(); });
-        });
-
-        async function sendOtp() {
-            mobile = document.getElementById('mobileInput').value.trim();
-            if (!/^\d{10}$/.test(mobile)) { showAlert('alertBox', 'Enter valid 10-digit mobile number', 'error'); return; }
-            setBtnLoading('sendOtpBtn', true);
-            try {
-                const r = await api('/api/auth/send-otp', 'POST', { mobile, ref_code: _refCode });
-                document.getElementById('mobileDisplay').textContent = mobile;
-                document.getElementById('step1').style.display = 'none';
-                document.getElementById('step2').style.display = 'block';
-                // Show OTP on screen (SMS provider not integrated)
-                if (r.otp) {
-                    document.getElementById('otpHintBox').style.display = 'block';
-                    document.getElementById('otpDisplay').textContent = r.otp;
-                    // Auto-fill OTP digits
-                    const digits = document.querySelectorAll('.otp-digit');
-                    [...r.otp].forEach((d, i) => { if (digits[i]) digits[i].value = d; });
-                }
-                document.querySelectorAll('.otp-digit')[0].focus();
-                toast('OTP generated! Enter it below.', 'success');
-            } catch (e) {
-                showAlert('alertBox', e.message, 'error');
+            if (type === 'login') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('login-panel').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('register-panel').classList.add('active');
             }
-            setBtnLoading('sendOtpBtn', false);
         }
 
-        async function verifyOtp() {
-            const otp = [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
-            if (otp.length !== 6) { showAlert('alertBox2', 'Enter the 6-digit OTP', 'error'); return; }
-            setBtnLoading('verifyOtpBtn', true);
+        async function doLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) return toast('Fill all fields', 'error');
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+
             try {
-                const r = await api('/api/auth/verify-otp', 'POST', { mobile, otp });
+                const r = await api('/api/auth/login', 'POST', { email, password });
                 localStorage.setItem('token', r.token);
                 localStorage.setItem('user', JSON.stringify(r.user));
-                toast('Login successful! Redirecting...', 'success');
-                setTimeout(() => { window.location.href = r.user.is_admin ? '/admin.html' : '/dashboard.html'; }, 1000);
+                toast('Login Successful!', 'success');
+                setTimeout(() => {
+                    window.location.href = r.user.is_admin ? '/admin.html' : '/dashboard.html';
+                }, 1000);
             } catch (e) {
-                showAlert('alertBox2', e.message, 'error');
+                document.getElementById('loginAlert').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Login 🚀';
             }
-            setBtnLoading('verifyOtpBtn', false);
         }
 
-        function goBack() {
-            document.getElementById('step2').style.display = 'none';
-            document.getElementById('step1').style.display = 'block';
+        async function doRegister() {
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            if (!email || !password) return toast('Fill mandatory fields', 'error');
+            if (password.length < 6) return toast('Password too short (min 6)', 'error');
+
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating account...';
+
+            try {
+                const r = await api('/api/auth/register', 'POST', { email, password });
+                localStorage.setItem('token', r.token);
+                localStorage.setItem('user', JSON.stringify(r.user));
+                toast('Registration Successful!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1000);
+            } catch (e) {
+                document.getElementById('registerAlert').innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Register Now 🏆';
+            }
         }
 
-        function showAlert(id, msg, type) {
-            document.getElementById(id).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+        // Redirect if already logged in
+        if (localStorage.getItem('token')) {
+            const user = getUser();
+            window.location.href = (user && user.is_admin) ? '/admin.html' : '/dashboard.html';
         }
-
-        function setBtnLoading(id, loading) {
-            const btn = document.getElementById(id);
-            btn.disabled = loading;
-            btn.textContent = loading ? 'Please wait...' : (id === 'sendOtpBtn' ? 'Send OTP' : 'Verify OTP & Login');
-        }
-
-        // If already logged in, redirect
-        if (localStorage.getItem('token')) window.location.href = '/dashboard.html';
     </script>
 </body>
 

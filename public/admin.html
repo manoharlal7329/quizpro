@@ -659,7 +659,7 @@
             document.getElementById('usersList').innerHTML = `<table><thead><tr><th>ID</th><th>User Info</th><th>Admin</th><th>Action</th></tr></thead><tbody>` +
                 users.map(u => `<tr>
           <td>#${u.id}</td>
-          <td><div style="font-weight:600;">${u.mobile}</div><div style="font-size:.78rem;color:var(--muted);">${u.name || 'No Name'} • ${u.upi_id || 'No UPI'}</div></td>
+          <td><div style="font-weight:600;">${u.email}</div><div style="font-size:.78rem;color:var(--muted);">${u.name || 'No Name'} • ${u.upi_id || 'No UPI'}</div></td>
           <td>${u.is_admin ? '<span class="badge badge-gold">Admin</span>' : '-'}</td>
           <td>${u.id == 1 ? '' : `<button class="btn btn-danger" style="padding:4px 10px; font-size:.78rem;" onclick="deleteUser(${u.id})">Delete</button>`}</td>
         </tr>`).join('') + '</tbody></table>';

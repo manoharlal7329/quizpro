@@ -2,19 +2,17 @@
   "users": [
     {
       "id": 1,
-      "mobile": "7976595645",
-      "name": "Admin",
+      "email": "manoharlala02911@gmail.com",
+      "password": "$2b$10$P6Fn7xRkj/9EZgPoYu.Ca.6thydLw5yaIjkXMsHaasMgwwhABc18W",
+      "name": "Manohar Lal Prajapati",
       "is_admin": 1,
-      "otp": null,
-      "otp_expires": null,
       "referral_code": "ADMT9PR"
     },
     {
       "id": 1771869909793,
-      "mobile": "7976595645",
+      "email": "user5645@example.com",
+      "password": "$2b$10$wE8w.6u5s8.UvG2K9oY2X.b6Jt3Qf.1Vd2G3H4I5J6K7L8M9N0O1P",
       "name": "User_5645",
-      "otp": null,
-      "otp_expires": null,
       "is_admin": 0,
       "referral_code": "UUUFUTB",
       "referred_by": null,
@@ -22,16 +20,18 @@
     },
     {
       "id": 1771873180014,
-      "mobile": "9587124896",
+      "email": "user4896@example.com",
+      "password": "$2b$10$wE8w.6u5s8.UvG2K9oY2X.b6Jt3Qf.1Vd2G3H4I5J6K7L8M9N0O1P",
       "name": "User_4896",
-      "otp": null,
-      "otp_expires": null,
       "is_admin": 0,
       "referral_code": "UUURP3U",
       "referred_by": null,
       "created_at": 1771873180
     }
   ],
+  "settings": {
+    "admin_secret_code": "123456"
+  },
   "categories": [
     {
       "id": 1,

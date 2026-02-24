@@ -34,9 +34,10 @@ function requireLogin() {
 }
 
 function requireAdmin() {
+    const token = getToken();
     const user = getUser();
-    if (!getToken() || !user || !user.is_admin) {
-        window.location.href = '/login.html';
+    if (!token || (user && user.is_admin === 0)) {
+        window.location.href = '/admin_login.html';
         return false;
     }
     return true;

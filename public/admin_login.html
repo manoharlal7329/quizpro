@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login — QuizPro</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #020617;
+        }
+
+        .login-wrap {
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--violet);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .login-logo {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .card {
+            border: 1px solid rgba(139, 92, 246, 0.3) !important;
+            box-shadow: 0 10px 40px -10px rgba(139, 92, 246, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-wrap">
+        <center>
+            <div class="admin-badge">Admin Access</div>
+            <div class="login-logo">Admin Login</div>
+            <p style="color:var(--muted); font-size:.85rem; margin-bottom:32px;">Please enter your credentials</p>
+        </center>
+
+        <div class="card">
+            <div id="alertBox"></div>
+            <div class="form-group">
+                <label>📧 Admin Email</label>
+                <input type="email" id="email" placeholder="admin@quizpro.in" required />
+            </div>
+            <div class="form-group">
+                <label>🔒 Password</label>
+                <input type="password" id="password" placeholder="••••••••" required />
+            </div>
+            <button class="btn btn-violet btn-full" id="loginBtn" onclick="doAdminLogin()"
+                style="background:var(--violet)">Enter Full Power Mode ⚡</button>
+        </div>
+
+        <p style="text-align:center; margin-top:24px; font-size:.8rem;">
+            <a href="/login.html" style="color:var(--muted); text-decoration:none;">← Back to User Login</a>
+        </p>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js"></script>
+    <script>
+        async function doAdminLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) return toast('Fill all fields', 'error');
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Verifying security...';
+
+            try {
+                const r = await api('/api/admin-auth/login', 'POST', { email, password });
+                localStorage.setItem('token', r.token);
+                localStorage.setItem('user', JSON.stringify(r.user));
+                toast('Authorization Granted! ⚡', 'success');
+                setTimeout(() => {
+                    window.location.href = '/admin.html';
+                }, 1000);
+            } catch (e) {
+                document.getElementById('alertBox').innerHTML = `<div class="alert alert-error">${e.message || 'Access Denied'}</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Enter Full Power Mode ⚡';
+            }
+        }
+
+    </script>
+</body>
+
+</html>
