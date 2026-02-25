@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet — QuizPro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .wallet-card {
+            background: linear-gradient(135deg, var(--card) 0%, rgba(30, 41, 59, .5) 100%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: var(--blue);
+            filter: blur(100px);
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .balance-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .balance-item .label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .balance-item .value {
+            font-size: 2.2rem;
+            font-weight: 900;
+        }
+
+        .balance-item .demo-val {
+            color: var(--blue);
+        }
+
+        .balance-item .real-val {
+            color: var(--green);
+        }
+
+        .deposit-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .amt-input-wrap {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .amt-input-wrap span {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--muted);
+        }
+
+        .amt-input-wrap input {
+            width: 100%;
+            padding: 14px 14px 14px 40px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .amt-input-wrap input:focus {
+            border-color: var(--blue);
+        }
+
+        .quick-amts {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .txn-history {
+            margin-top: 40px;
+        }
+
+        .txn-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        .txn-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .txn-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .txn-info p {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .txn-amt {
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .cr {
+            color: var(--green);
+        }
+
+        .dr {
+            color: var(--red);
+        }
+
+        @media (max-width: 600px) {
+            .balance-group {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">⚡ QuizPro</a>
+        <div class="nav-links">
+            <a href="/dashboard.html" class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;">Dashboard</a>
+            <button class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;"
+                onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="container" style="padding-top:40px; max-width: 800px;">
+            <div class="page-hero">
+                <h1>💰 My Wallet</h1>
+                <p>Add money to join quizzes and track your winnings.</p>
+            </div>
+
+            <div class="wallet-card">
+                <div class="balance-group">
+                    <div class="balance-item">
+                        <div class="label">💵 Real Balance</div>
+                        <div class="value real-val" id="realBal">₹0</div>
+                    </div>
+                    <div class="balance-item">
+                        <div class="label">🎭 Demo Balance</div>
+                        <div class="value demo-val" id="demoBal">₹0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-grid"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
+                <!-- DEPOSIT BOX -->
+                <div class="deposit-section">
+                    <h3 style="margin-bottom: 8px;">💳 Add Money</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Instant deposit using
+                        UPI/Razorpay</p>
+
+                    <div class="amt-input-wrap">
+                        <span>₹</span>
+                        <input type="number" id="depositAmt" placeholder="Enter amount" min="10" value="100">
+                    </div>
+
+                    <div style="font-size: 0.8rem; color: var(--green); margin-bottom: 20px; font-weight: 600;">
+                        ✨ 100% Amount will be credited. No GST for users.
+                    </div>
+
+                    <div class="quick-amts">
+                        <button class="quick-btn" onclick="setAmt(100)">+100</button>
+                        <button class="quick-btn" onclick="setAmt(500)">+500</button>
+                        <button class="quick-btn" onclick="setAmt(1000)">+1000</button>
+                    </div>
+
+                    <button class="btn btn-primary" id="depositBtn"
+                        style="width: 100%; margin-top: 24px; padding: 14px;" onclick="startDeposit()">
+                        Add Money →
+                    </button>
+                </div>
+
+                <!-- WITHDRAW BOX -->
+                <div class="deposit-section" style="border-color: var(--gold);">
+                    <h3 style="margin-bottom: 8px;">🏦 Withdraw Funds</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Transfer winnings to your
+                        Bank/UPI</p>
+
+                    <div
+                        style="font-size: 0.85rem; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; margin-bottom: 15px; color: var(--gold); text-align: center;">
+                        Withdrawable: <strong id="withdrawableDisplay" style="font-size: 1.1rem;">₹0</strong>
+                    </div>
+
+                    <div class="amt-input-wrap">
+                        <span>₹</span>
+                        <input type="number" id="withdrawAmt" placeholder="Amount (Min 100)" min="100" value="100"
+                            oninput="updateWithdrawPreview()">
+                    </div>
+
+                    <input type="text" id="withdrawUpi" placeholder="Enter UPI ID (e.g. name@upi)"
+                        style="width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; color: var(--text); margin-bottom: 12px;">
+
+                    <input type="password" id="withdrawPin" placeholder="Enter 4-Digit Wallet PIN" maxlength="4"
+                        style="width: 100%; padding: 12px; border: 1px solid var(--blue); background: rgba(0,0,0,0.3); border-radius: 10px; color: #fff; margin-bottom: 12px; font-family: monospace; letter-spacing: 4px;">
+
+                    <div id="withdrawBreakdown"
+                        style="font-size: 0.75rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Govt. TDS (30%):</span>
+                            <span id="wtTds" style="color: var(--red);">-₹30</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-weight: 700; margin-top: 4px; color: var(--green);">
+                            <span>Net Payout:</span>
+                            <span id="wtNet">₹70</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-outline" id="withdrawBtn"
+                        style="width: 100%; margin-top: 20px; border-color: var(--gold); color: var(--gold);"
+                        onclick="requestWithdrawal()">
+                        Request Bank Transfer
+                    </button>
+                </div>
+
+                <!-- PIN SECURITY BOX -->
+                <div class="deposit-section" style="border-color: var(--blue);">
+                    <h3 style="margin-bottom: 8px;">🔐 Wallet Security</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Set or update your 4-digit
+                        PIN for payments & withdrawals.</p>
+
+                    <div style="margin: 20px 0;">
+                        <label style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">New
+                            4-Digit PIN</label>
+                        <input type="password" id="newWalletPin" maxlength="4" placeholder="••••"
+                            style="width: 100%; padding: 14px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; text-align: center; font-size: 1.5rem; letter-spacing: 12px; outline: none;">
+                    </div>
+
+                    <button class="btn btn-primary" style="width: 100%; background: var(--blue); border: none;"
+                        onclick="updateWalletPin()">
+                        Update Wallet PIN
+                    </button>
+                    <p id="pinStatus"
+                        style="font-size: 0.75rem; color: var(--green); margin-top: 10px; text-align: center; font-weight: 600;">
+                    </p>
+                </div>
+            </div>
+
+            <!-- TAX EDUCATION CARDS -->
+            <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="card" style="border-left: 4px solid var(--green);">
+                    <h4 style="color: var(--green); margin-bottom: 10px;">🛡️ No GST for Users</h4>
+                    <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.6;">
+                        Aapke deposit par **0% Tax** lagega. Poora ka poora paisa aapke wallet mein aayega. GST ki
+                        zimmedari platform owner ki hogi.
+                    </p>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--orange);">
+                    <h4 style="color: var(--gold); margin-bottom: 10px;">🏆 TDS (30%) on Withdrawal</h4>
+                    <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.6;">
+                        Income Tax rules ke mutabik, jab aap winnings bank mein mangte hain, toh **30% TDS** kat-ta hai.
+                        Ye aapke PAN card par Govt. ko credit kiya jata hai aur IT file karte waqt wapas mil sakta hai.
+                    </p>
+                </div>
+            </div>
+
+            <div class="txn-history">
+                <h3 style="margin-bottom: 20px;">📄 Transaction History</h3>
+                <div id="txnList" class="card">
+                    <div style="padding: 40px; text-align: center; color: var(--muted);">Loading history...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="/js/common.js"></script>
+    <script>
+        requireLogin();
+
+        async function loadData() {
+            try {
+                // Load balances
+                const w = await api('/api/wallet/me');
+                document.getElementById('realBal').textContent = '₹' + (w.real || 0);
+                document.getElementById('demoBal').textContent = '₹' + (w.demo || 0);
+
+                // Update withdrawable amount
+                window.withdrawableAmt = w.withdrawable || 0;
+                document.getElementById('withdrawableDisplay').textContent = '₹' + window.withdrawableAmt;
+                document.getElementById('pinStatus').textContent = w.has_pin ? '✅ PIN is active' : '⚠️ PIN not set yet';
+                updateWithdrawPreview();
+
+                // Load txns
+                const txns = await api('/api/wallet/txns');
+                const list = document.getElementById('txnList');
+                if (!txns || txns.length === 0) {
+                    list.innerHTML = '<div style="padding: 40px; text-align:center; color: var(--muted);">No transactions yet.</div>';
+                    return;
+                }
+
+                list.innerHTML = txns.map(t => `
+                    <div class="txn-item">
+                        <div class="txn-info">
+                            <h4>${t.note}</h4>
+                            <p>${new Date(t.at * 1000).toLocaleString()} • ${t.wallet.toUpperCase()}</p>
+                        </div>
+                        <div class="txn-amt ${t.type === 'credit' ? 'cr' : 'dr'}">
+                            ${t.type === 'credit' ? '+' : '-'}₹${t.amount}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                toast('Error loading wallet data', 'error');
+            }
+        }
+
+        function setAmt(val) {
+            document.getElementById('depositAmt').value = val;
+        }
+
+        function updateWithdrawPreview() {
+            const amt = parseInt(document.getElementById('withdrawAmt').value) || 0;
+            const tds = Math.floor(amt * 0.30);
+            const net = amt - tds;
+
+            document.getElementById('wtTds').textContent = '-₹' + tds;
+            document.getElementById('wtNet').textContent = '₹' + net;
+        }
+
+        // Initialize preview
+        updateWithdrawPreview();
+
+        async function requestWithdrawal() {
+            const amt = parseInt(document.getElementById('withdrawAmt').value);
+            const upi = document.getElementById('withdrawUpi').value.trim();
+            const pin = document.getElementById('withdrawPin').value;
+
+            if (!amt || amt < 100) return toast('Min withdrawal is ₹100', 'error');
+            if (amt > window.withdrawableAmt) return toast(`Insufficient withdrawable balance. (Max ₹${window.withdrawableAmt})`, 'error');
+            if (!upi) return toast('Please enter UPI ID', 'error');
+            if (!pin || pin.length !== 4) return toast('Please enter a 4-digit Wallet PIN', 'error');
+
+            const btn = document.getElementById('withdrawBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+
+            try {
+                const res = await api('/api/wallet/withdraw', 'POST', {
+                    amount: amt,
+                    upi_id: upi,
+                    pin: pin
+                });
+                toast(res.message, 'success');
+                document.getElementById('withdrawPin').value = '';
+                loadData();
+            } catch (e) {
+                toast(e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Request Bank Transfer';
+            }
+        }
+
+        async function updateWalletPin() {
+            const pin = document.getElementById('newWalletPin').value;
+            if (!pin || !/^\d{4}$/.test(pin)) return toast('PIN must be exactly 4 digits', 'error');
+
+            try {
+                toast('Updating PIN...', 'info');
+                await api('/api/wallet/set-pin', 'POST', { pin });
+                toast('✅ Wallet PIN updated successfully', 'success');
+                document.getElementById('newWalletPin').value = '';
+                loadData();
+            } catch (e) {
+                toast('❌ Failed to update PIN: ' + e.message, 'error');
+            }
+        }
+
+        async function startDeposit() {
+            const amt = parseInt(document.getElementById('depositAmt').value);
+            if (!amt || amt < 10) return toast('Min deposit is ₹10', 'error');
+
+            const btn = document.getElementById('depositBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Initializing...';
+
+            try {
+                const order = await api('/api/wallet/deposit', 'POST', { amount: amt });
+
+                if (order.simulation) {
+                    if (confirm(`🏎️ SIMULATION MODE ENABLED\n\nReal Keys not found. Do you want to process a TEST deposit of ₹${amt}?`)) {
+                        toast('⌛ Verifying simulation payment...', 'info');
+                        const verify = await api('/api/wallet/confirm-deposit', 'POST', {
+                            order_id: order.order_id,
+                            payment_id: 'SIM_PAY_' + Date.now(),
+                            amount: amt,
+                            simulation: true
+                        });
+                        if (verify.success) {
+                            toast('✅ Simulation: Wallet updated successfully!', 'success');
+                            loadData();
+                        }
+                    }
+                    return;
+                }
+
+                const options = {
+                    key: order.key,
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: 'QuizPro Wallet',
+                    description: 'Adding funds to wallet',
+                    order_id: order.order_id,
+                    handler: async function (res) {
+                        toast('⌛ Verifying payment... ', 'info');
+                        try {
+                            const verify = await api('/api/wallet/confirm-deposit', 'POST', {
+                                order_id: order.order_id,
+                                payment_id: res.razorpay_payment_id,
+                                razorpay_signature: res.razorpay_signature,
+                                amount: amt
+                            });
+                            if (verify.success) {
+                                toast('✅ Wallet updated successfully!', 'success');
+                                loadData();
+                            }
+                        } catch (e) {
+                            toast('Verification Failed: ' + e.message, 'error');
+                        }
+                    },
+                    prefill: {
+                        email: getUser()?.email || ''
+                    },
+                    theme: { color: '#6366f1' }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (e) {
+                toast(e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Add Money →';
+            }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+        loadData();
+        renderFooter();
+    </script>
+</body>
+
+</html>

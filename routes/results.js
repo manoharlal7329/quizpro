@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { data, save } = require('../database/db');
 const authMiddleware = require('../middleware/auth');
-const { getWallet, addTxn } = require('./wallet');
+const { getWallet, addTxn } = require('./wallet_utils');
 
 // Top 15 prize distribution — strictly decreasing (% of 75% prize pool)
 const PRIZE_DIST = [
@@ -110,7 +110,7 @@ router.post('/:id/publish', authMiddleware, async (req, res) => {
         const prizeEntry = prizes.find(p => p.rank === attempt.rank);
         if (prizeEntry && prizeEntry.amount > 0) {
             const wallet = getWallet(attempt.user_id);
-            wallet.real += prizeEntry.amount;
+            wallet.win_bal += prizeEntry.amount;
             attempt.prize = prizeEntry.amount;
             addTxn(attempt.user_id, 'real', 'credit', prizeEntry.amount, `🏆 Prize #${attempt.rank} — ${session.title}`);
             credited.push({ user_id: attempt.user_id, rank: attempt.rank, amount: prizeEntry.amount });

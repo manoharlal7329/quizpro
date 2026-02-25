@@ -110,14 +110,38 @@
             <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:6px;">Create Account ✨</h2>
             <p style="color:var(--muted); font-size:.9rem; margin-bottom:24px;">Join the skill-based challenge</p>
             <div id="registerAlert"></div>
+
+            <div class="grid-2" style="gap:10px;">
+                <div class="form-group">
+                    <label>👤 Full Name</label>
+                    <input type="text" id="regFullName" placeholder="e.g. Rahul Kumar" required />
+                </div>
+                <div class="form-group">
+                    <label>🆔 User Name</label>
+                    <input type="text" id="regUsername" placeholder="e.g. rahul123" required />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📞 Phone Number</label>
+                <input type="tel" id="regPhone" placeholder="10 Digit Mobile No." maxlength="10" required />
+            </div>
+
             <div class="form-group">
                 <label>📧 Email Address</label>
                 <input type="email" id="regEmail" placeholder="Enter your email" required />
             </div>
+
             <div class="form-group">
                 <label>🔒 Password</label>
                 <input type="password" id="regPassword" placeholder="Min 6 characters" required />
             </div>
+
+            <div class="form-group">
+                <label>🤝 Referral Code (Optional)</label>
+                <input type="text" id="regRefCode" placeholder="Enter code if any" />
+            </div>
+
             <button class="btn btn-success btn-full" id="registerBtn" onclick="doRegister()">Register Now 🏆</button>
         </div>
 
@@ -170,16 +194,23 @@
         async function doRegister() {
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
+            const fullName = document.getElementById('regFullName').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const refCode = document.getElementById('regRefCode').value.trim();
 
-            if (!email || !password) return toast('Fill mandatory fields', 'error');
+            if (!email || !password || !fullName || !username || !phone) return toast('Fill all mandatory fields', 'error');
             if (password.length < 6) return toast('Password too short (min 6)', 'error');
+            if (phone.length !== 10) return toast('Enter valid 10-digit phone number', 'error');
 
             const btn = document.getElementById('registerBtn');
             btn.disabled = true;
             btn.textContent = 'Creating account...';
 
             try {
-                const r = await api('/api/auth/register', 'POST', { email, password });
+                const r = await api('/api/auth/register', 'POST', {
+                    email, password, fullName, username, phone, refCode
+                });
                 localStorage.setItem('token', r.token);
                 localStorage.setItem('user', JSON.stringify(r.user));
                 toast('Registration Successful!', 'success');

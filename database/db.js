@@ -54,7 +54,12 @@ if (data.categories.length === 0) {
   save();
 }
 if (!data.users.find(u => u.is_admin === 1)) {
-  data.users.push({ id: 1, mobile: '9999999999', name: 'Admin', is_admin: 1 });
+  data.users.push({
+    id: 1,
+    email: 'manoharlala02911@gmail.com',
+    name: 'Manohar Lal Prajapati',
+    is_admin: 1
+  });
   save();
 }
 

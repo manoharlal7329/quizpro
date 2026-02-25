@@ -654,15 +654,84 @@
             }
         }
 
-        async function loadUsers() {
-            const users = await api('/api/admin/users');
-            document.getElementById('usersList').innerHTML = `<table><thead><tr><th>ID</th><th>User Info</th><th>Admin</th><th>Action</th></tr></thead><tbody>` +
-                users.map(u => `<tr>
-          <td>#${u.id}</td>
-          <td><div style="font-weight:600;">${u.email}</div><div style="font-size:.78rem;color:var(--muted);">${u.name || 'No Name'} • ${u.upi_id || 'No UPI'}</div></td>
-          <td>${u.is_admin ? '<span class="badge badge-gold">Admin</span>' : '-'}</td>
-          <td>${u.id == 1 ? '' : `<button class="btn btn-danger" style="padding:4px 10px; font-size:.78rem;" onclick="deleteUser(${u.id})">Delete</button>`}</td>
-        </tr>`).join('') + '</tbody></table>';
+        let _allUsers = [];
+
+        async function loadUsers(sortBy = 'newest') {
+            try {
+                _allUsers = await api('/api/admin/users');
+
+                // Sorting logic
+                if (sortBy === 'oldest') {
+                    _allUsers.sort((a, b) => a.created_at - b.created_at);
+                } else if (sortBy === 'most_active') {
+                    _allUsers.sort((a, b) => b.quizzes_solved - a.quizzes_solved);
+                } else {
+                    _allUsers.sort((a, b) => b.created_at - a.created_at); // Newest first
+                }
+
+                const list = document.getElementById('usersList');
+                list.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; background:rgba(255,255,255,0.03); padding:12px; border-radius:12px;">
+                        <h3 style="font-size:.95rem;">👤 Total Users: ${_allUsers.length}</h3>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <label style="font-size:.75rem; color:var(--muted);">Sort By:</label>
+                            <select onchange="loadUsers(this.value)" style="padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:.8rem;">
+                                <option value="newest" ${sortBy === 'newest' ? 'selected' : ''}>📅 Newest First</option>
+                                <option value="oldest" ${sortBy === 'oldest' ? 'selected' : ''}>⏳ Oldest Members</option>
+                                <option value="most_active" ${sortBy === 'most_active' ? 'selected' : ''}>🔥 Most Active (Quizzes)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table style="font-size:.85rem;">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Full Name / Username</th>
+                                <th>Contact Details</th>
+                                <th>Age / Status</th>
+                                <th>Quizzes</th>
+                                <th>Wallets</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${_allUsers.map(u => {
+                    const days = Math.floor((Math.floor(Date.now() / 1000) - u.created_at) / 86400);
+                    return `
+                                <tr>
+                                    <td>#${u.id}</td>
+                                    <td>
+                                        <div style="font-weight:700; color:var(--text);">${u.full_name}</div>
+                                        <div style="font-size:.7rem; color:var(--muted);">@${u.username}</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size:.8rem;">📞 ${u.phone}</div>
+                                        <div style="font-size:.7rem; color:var(--muted);">📧 ${u.email}</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size:.8rem; font-weight:600; color:var(--blue);">${days} Days Old</div>
+                                        ${u.is_admin ? '<span class="badge badge-gold" style="font-size:.65rem; padding:2px 6px;">Admin</span>' : ''}
+                                    </td>
+                                    <td>
+                                        <div style="font-size:1.1rem; font-weight:900; color:var(--gold);">${u.quizzes_solved}</div>
+                                        <div style="font-size:.65rem; color:var(--muted);">Solved</div>
+                                    </td>
+                                    <td>
+                                        <div style="color:var(--green); font-weight:700;">₹${u.wallet_real} <span style="font-size:.7rem; color:var(--muted);">Real</span></div>
+                                        <div style="color:var(--blue); font-size:.75rem;">₹${u.wallet_demo} <span style="font-size:.7rem; color:var(--muted);">Demo</span></div>
+                                    </td>
+                                    <td>
+                                        ${u.id == 1 ? '-' : `
+                                            <button class="btn btn-danger" style="padding:4px 8px; font-size:.7rem;" onclick="deleteUser(${u.id})">Delete</button>
+                                        `}
+                                    </td>
+                                </tr>`;
+                }).join('')}
+                        </tbody>
+                    </table>`;
+            } catch (e) {
+                document.getElementById('usersList').innerHTML = `<p style="color:var(--red);">Error loading users: ${e.message}</p>`;
+            }
         }
 
         async function deleteUser(id) {

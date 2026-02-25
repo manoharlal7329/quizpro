@@ -258,9 +258,20 @@ router.delete('/questions/:id', authMiddleware, adminOnly, (req, res) => {
 // ─── USERS — LIST ─────────────────────────────────────────────────────────────
 router.get('/users', authMiddleware, adminOnly, (req, res) => {
   const users = (data.users || []).map(u => {
-    const w = (data.wallets || []).find(w => w.user_id == u.id) || { demo: 0, real: 0 };
-    const attempts = (data.quiz_attempts || []).filter(a => a.user_id == u.id).length;
-    return { id: u.id, mobile: u.mobile, name: u.name, is_admin: u.is_admin, wallet_demo: w.demo, wallet_real: w.real, attempts };
+    const w = (data.wallets || []).find(w => w.user_id == u.id) || { demo: 0, win_bal: 0, dep_bal: 0 };
+    return {
+      id: u.id,
+      email: u.email,
+      full_name: u.full_name || u.name,
+      username: u.username || u.name,
+      phone: u.phone || u.mobile,
+      is_admin: u.is_admin,
+      wallet_demo: w.demo,
+      wallet_real: (w.dep_bal || 0) + (w.win_bal || 0),
+      withdrawable: w.win_bal || 0,
+      quizzes_solved: u.quizzes_solved || 0,
+      created_at: u.created_at || Math.floor(Date.now() / 1000)
+    };
   });
   res.json(users);
 });

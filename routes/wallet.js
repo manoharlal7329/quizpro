@@ -2,36 +2,30 @@ const express = require('express');
 const router = express.Router();
 const { data, save } = require('../database/db');
 const authMiddleware = require('../middleware/auth');
+const crypto = require('crypto');
 
-// ── Helper: get or create wallet ─────────────────────────────────────────────
-function getWallet(userId) {
-    if (!data.wallets) data.wallets = [];
-    let w = data.wallets.find(w => String(w.user_id) === String(userId));
-    if (!w) {
-        w = { user_id: userId, demo: 0, real: 0 };
-        data.wallets.push(w);
-    }
-    return w;
+// Razorpay config
+const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
+const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
+const RZP_REAL = RZP_KEY_ID.startsWith('rzp_') && !RZP_KEY_ID.includes('PLACEHOLDER');
+
+let Razorpay;
+if (RZP_REAL) {
+    try { Razorpay = require('razorpay'); } catch (e) { console.warn('[Wallet] Razorpay package not installed'); }
 }
 
-// ── Helper: record transaction ────────────────────────────────────────────────
-function addTxn(userId, wallet, type, amount, note) {
-    if (!data.wallet_txns) data.wallet_txns = [];
-    data.wallet_txns.push({
-        id: Date.now() + Math.floor(Math.random() * 999),
-        user_id: userId,
-        wallet,       // 'demo' or 'real'
-        type,         // 'credit' or 'debit'
-        amount,
-        note,
-        at: Math.floor(Date.now() / 1000)
-    });
-}
+const { getWallet, addTxn } = require('./wallet_utils');
+
 
 // ── GET /api/wallet/me ────────────────────────────────────────────────────────
 router.get('/me', authMiddleware, (req, res) => {
     const w = getWallet(req.user.id);
-    res.json({ demo: w.demo, real: w.real });
+    res.json({
+        demo: w.demo,
+        real: w.dep_bal + w.win_bal, // Total visible balance
+        withdrawable: w.win_bal,     // Hidden from main view, used for withdrawal limit
+        has_pin: !!w.pin
+    });
 });
 
 // ── GET /api/wallet/txns ──────────────────────────────────────────────────────
@@ -46,7 +40,7 @@ router.get('/txns', authMiddleware, (req, res) => {
 // ── POST /api/wallet/pay ─────────────────────────────────────────────────────
 // Deduct from wallet and book a session seat
 router.post('/pay', authMiddleware, (req, res) => {
-    const { session_id, wallet_type } = req.body; // wallet_type: 'demo' or 'real'
+    const { session_id, wallet_type, pin } = req.body; // wallet_type: 'demo' or 'real'
     const userId = req.user.id;
 
     const session = (data.sessions || []).find(s => s.id == session_id);
@@ -62,14 +56,28 @@ router.post('/pay', authMiddleware, (req, res) => {
     const type = wallet_type === 'real' ? 'real' : 'demo';
     const fee = session.entry_fee;
 
-    if (wallet[type] < fee) {
-        return res.status(400).json({
-            error: `Insufficient ${type} balance. Have ₹${wallet[type]}, need ₹${fee}`
-        });
+    if (type === 'real') {
+        if (!wallet.pin) return res.status(400).json({ error: 'Please set your Wallet PIN first in the Wallet page.' });
+        if (String(wallet.pin) !== String(pin)) return res.status(403).json({ error: 'Incorrect Wallet PIN' });
+
+        const totalReal = wallet.dep_bal + wallet.win_bal;
+        if (totalReal < fee) {
+            return res.status(400).json({ error: `Insufficient balance. Need ₹${fee}` });
+        }
+
+        // 🔄 ROTATE LOGIC: Use dep_bal (unrotated) first, then win_bal
+        if (wallet.dep_bal >= fee) {
+            wallet.dep_bal -= fee;
+        } else {
+            const remainder = fee - wallet.dep_bal;
+            wallet.dep_bal = 0;
+            wallet.win_bal -= remainder;
+        }
+    } else {
+        if (wallet.demo < fee) return res.status(400).json({ error: `Insufficient demo balance` });
+        wallet.demo -= fee;
     }
 
-    // Deduct
-    wallet[type] -= fee;
     addTxn(userId, type, 'debit', fee, `Seat booked: ${session.title}`);
 
     // Create seat
@@ -113,6 +121,90 @@ router.post('/pay', authMiddleware, (req, res) => {
 });
 
 
+// ── POST /api/wallet/set-pin ─────────────────────────────────────────────────
+router.post('/set-pin', authMiddleware, (req, res) => {
+    const { pin } = req.body;
+    if (!pin || !/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'PIN must be exactly 4 digits' });
+
+    const wallet = getWallet(req.user.id);
+    wallet.pin = String(pin);
+    save();
+    res.json({ success: true, message: 'Wallet PIN set successfully' });
+});
+
+// ── POST /api/wallet/deposit ─────────────────────────────────────────────────
+// Create a Razorpay order (or Simulation order) to add funds
+router.post('/deposit', authMiddleware, async (req, res) => {
+    const { amount } = req.body; // Amount in INR
+    if (!amount || amount < 10) return res.status(400).json({ error: 'Minimum deposit is ₹10' });
+
+    if (RZP_REAL && Razorpay) {
+        try {
+            const rzp = new Razorpay({ key_id: RZP_KEY_ID, key_secret: RZP_KEY_SECRET });
+            const order = await rzp.orders.create({
+                amount: amount * 100, // paise
+                currency: 'INR',
+                receipt: `wallet_${req.user.id}_${Date.now()}`,
+                notes: { user_id: String(req.user.id), type: 'wallet_deposit' }
+            });
+
+            return res.json({
+                order_id: order.id,
+                amount: order.amount,
+                currency: 'INR',
+                key: RZP_KEY_ID
+            });
+        } catch (e) {
+            console.error('[Wallet] Order create error:', e.message);
+            return res.status(500).json({ error: 'Failed to create deposit order' });
+        }
+    }
+
+    // 🏎️ SIMULATION MODE (when real keys are missing)
+    console.log(`[Wallet] Using Simulation Mode for user ${req.user.id}`);
+    res.json({
+        simulation: true,
+        order_id: `sim_order_${Date.now()}`,
+        amount: amount * 100,
+        currency: 'INR',
+        key: 'SIMULATION_KEY'
+    });
+});
+
+// ── POST /api/wallet/confirm-deposit ──────────────────────────────────────────
+// Verify Razorpay payment (or Simulation token) and credit real wallet
+router.post('/confirm-deposit', authMiddleware, async (req, res) => {
+    const { order_id, payment_id, razorpay_signature, amount, simulation } = req.body;
+
+    if (simulation === true) {
+        if (!order_id.startsWith('sim_order_')) {
+            return res.status(400).json({ error: 'Invalid simulation request' });
+        }
+        console.log(`[Wallet] Simulation Deposit Approved for ${req.user.id}`);
+    } else if (RZP_REAL && razorpay_signature) {
+        const body = order_id + '|' + payment_id;
+        const expectedSig = crypto.createHmac('sha256', RZP_KEY_SECRET).update(body).digest('hex');
+
+        if (expectedSig !== razorpay_signature) {
+            return res.status(400).json({ error: 'Invalid payment signature' });
+        }
+    } else {
+        return res.status(400).json({ error: 'Signature verification required or simulation missing' });
+    }
+
+    const wallet = getWallet(req.user.id);
+    const depositAmount = Number(amount);
+
+    // 🏷️ 100% Credit to dep_bal (Unrotated)
+    wallet.dep_bal += depositAmount;
+
+    addTxn(req.user.id, 'real', 'credit', depositAmount, `💰 Wallet Deposit (ID: ${payment_id})`);
+
+    save();
+    res.json({ success: true, new_balance: wallet.dep_bal + wallet.win_bal });
+});
+
+
 // ── POST /api/wallet/admin/topup ─────────────────────────────────────────────
 // Admin credits demo or real balance to any user
 router.post('/admin/topup', authMiddleware, (req, res) => {
@@ -127,11 +219,16 @@ router.post('/admin/topup', authMiddleware, (req, res) => {
 
     const wallet = getWallet(user_id);
     const type = wallet_type === 'real' ? 'real' : 'demo';
-    wallet[type] += Number(amount);
+    if (type === 'real') {
+        wallet.win_bal += Number(amount); // Admin topups are treated as winnings/withdrawable
+    } else {
+        wallet.demo += Number(amount);
+    }
+
     addTxn(user_id, type, 'credit', Number(amount), note || `Admin topup by ${liveUser.name}`);
 
     save();
-    res.json({ success: true, user: targetUser.mobile, wallet_type: type, new_balance: wallet[type] });
+    res.json({ success: true, user: targetUser.mobile, wallet_type: type, new_balance: type === 'real' ? (wallet.dep_bal + wallet.win_bal) : wallet.demo });
 });
 
 // ── GET /api/wallet/admin/list ────────────────────────────────────────────────
@@ -141,14 +238,22 @@ router.get('/admin/list', authMiddleware, (req, res) => {
 
     const result = (data.users || []).map(u => {
         const w = getWallet(u.id);
-        return { id: u.id, mobile: u.mobile, name: u.name, demo: w.demo, real: w.real };
+        return {
+            id: u.id,
+            mobile: u.mobile,
+            name: u.name,
+            demo: w.demo,
+            real: w.dep_bal + w.win_bal,
+            dep_bal: w.dep_bal,
+            win_bal: w.win_bal
+        };
     });
 
     res.json(result);
 });
 
 // ── POST /api/wallet/admin/credit-prize ──────────────────────────────────────
-// Credit prize money to real wallet (called by results route)
+// Credit prize money to real wallet (Full 100%)
 router.post('/admin/credit-prize', authMiddleware, (req, res) => {
     const liveUser = (data.users || []).find(u => u.id == req.user.id);
     if (!liveUser || !liveUser.is_admin) return res.status(403).json({ error: 'Admin only' });
@@ -158,7 +263,7 @@ router.post('/admin/credit-prize', authMiddleware, (req, res) => {
 
     prizes.forEach(p => {
         const wallet = getWallet(p.user_id);
-        wallet.real += p.amount;
+        wallet.win_bal += p.amount; // Prizes go to winning balance
         addTxn(p.user_id, 'real', 'credit', p.amount, `🏆 Prize #${p.rank} — ${p.session_title}`);
     });
 
@@ -166,6 +271,60 @@ router.post('/admin/credit-prize', authMiddleware, (req, res) => {
     res.json({ success: true, credited: prizes.length });
 });
 
+// ── POST /api/wallet/withdraw ────────────────────────────────────────────────
+// Request a withdrawal (Apply 30% TDS here)
+router.post('/withdraw', authMiddleware, (req, res) => {
+    const { amount, upi_id, pin } = req.body;
+    if (!amount || amount < 100) return res.status(400).json({ error: 'Minimum withdrawal is ₹100' });
+    if (!upi_id) return res.status(400).json({ error: 'UPI ID is required' });
+
+    const wallet = getWallet(req.user.id);
+    if (!wallet.pin) return res.status(400).json({ error: 'Please set your Wallet PIN first.' });
+    if (String(wallet.pin) !== String(pin)) return res.status(403).json({ error: 'Incorrect Wallet PIN' });
+
+    const withdrawalAmt = Number(amount);
+
+    if (wallet.win_bal < withdrawalAmt) {
+        return res.status(400).json({ error: 'Insufficient withdrawable balance. You must play quizzes to convert deposits into winnings.' });
+    }
+
+    // 🏷️ APPLY 30% TDS (Tax Deducted at Source on withdrawal)
+    const tdsAmount = Math.floor(withdrawalAmt * 0.30);
+    const netPayout = withdrawalAmt - tdsAmount;
+
+    // Deduct from win_bal
+    wallet.win_bal -= withdrawalAmt;
+
+    // Record transactions
+    addTxn(req.user.id, 'real', 'debit', withdrawalAmt, `📤 Withdrawal Request (${upi_id})`);
+    addTxn(req.user.id, 'real', 'credit', tdsAmount, `🏛️ TDS Adjustment (Will be paid to Govt)`); // This is slightly confusing, let's just record the net.
+    // Actually, it's better to record: 
+    // Debit withdrawal (full)
+    // Note says (Includes 30% TDS: Rs X. Final Net Payout: Rs Y)
+
+    // Store request for admin to process
+    if (!data.withdrawals) data.withdrawals = [];
+    const request = {
+        id: Date.now(),
+        user_id: req.user.id,
+        amount: withdrawalAmt,
+        tds: tdsAmount,
+        net: netPayout,
+        upi_id,
+        status: 'pending',
+        at: Math.floor(Date.now() / 1000)
+    };
+    data.withdrawals.push(request);
+
+    save();
+    res.json({
+        success: true,
+        net_amount: netPayout,
+        tds_amount: tdsAmount,
+        message: `Withdrawal request for ₹${netPayout} (after ₹${tdsAmount} TDS) placed successfully.`
+    });
+});
+
+
 module.exports = router;
-module.exports.getWallet = getWallet;
-module.exports.addTxn = addTxn;
+

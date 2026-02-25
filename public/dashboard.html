@@ -190,21 +190,20 @@
 
             <!-- WALLET BAR -->
             <div class="wallet-bar" id="walletBar">
-                <div class="wallet-chip">
+                <a href="/wallet.html" class="wallet-chip" style="text-decoration:none;">
                     <div class="wlabel">🎭 Demo Balance</div>
                     <div class="wamt demo" id="demoAmt">₹—</div>
-                    <div style="font-size:.7rem;color:var(--muted);margin-top:4px;">Testing money (use to practice)
-                    </div>
-                </div>
-                <div class="wallet-chip">
+                    <div style="font-size:.7rem;color:var(--muted);margin-top:4px;">Manage Wallet →</div>
+                </a>
+                <a href="/wallet.html" class="wallet-chip" style="text-decoration:none;">
                     <div class="wlabel">💵 Real Balance</div>
                     <div class="wamt real" id="realAmt">₹—</div>
-                    <div style="font-size:.7rem;color:var(--muted);margin-top:4px;">Prize winnings + UPI deposits</div>
-                </div>
+                    <div style="font-size:.7rem;color:var(--muted);margin-top:4px;">Add Money / Withdraw →</div>
+                </a>
                 <div class="wallet-chip"
                     style="flex:none;min-width:auto;display:flex;flex-direction:column;justify-content:center;gap:8px;">
-                    <button class="btn btn-outline" style="padding:8px 16px;font-size:.8rem;" onclick="showTxns()">📄
-                        Transactions</button>
+                    <a href="/wallet.html" class="btn btn-primary"
+                        style="padding:10px 20px;font-size:.85rem;text-align:center;">💳 Add Money</a>
                     <a href="/leaderboard.html" class="btn btn-outline"
                         style="padding:8px 16px;font-size:.8rem;text-align:center;">🏆 Leaderboard</a>
                 </div>

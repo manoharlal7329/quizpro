@@ -52,11 +52,6 @@ app.get('/pitch', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pit
 app.get('/sitemap.xml', (req, res) => res.sendFile(path.join(__dirname, 'public', 'sitemap.xml')));
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, 'public', 'robots.txt')));
 
-// ─── 404 for unknown API routes (does NOT affect HTML pages) ──────────────────
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ error: 'API route not found' });
-});
-
 // NOTE: No catch-all app.get('*') here — it was intercepting .html pages!
 // express.static() already handles all public/*.html files correctly.
 
@@ -91,3 +86,5 @@ process.on('uncaughtException', (e) => {
 process.on('unhandledRejection', (reason) => {
     console.error('⚠️  Unhandled Rejection (server still running):', reason?.message || reason);
 });
+
+module.exports = server;

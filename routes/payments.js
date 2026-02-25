@@ -42,12 +42,8 @@ router.post('/create-order', authMiddleware, async (req, res) => {
         }
     }
 
-    // Demo mode fallback
-    const order_id = 'order_demo_' + Date.now();
-    if (!data.payments) data.payments = [];
-    data.payments.push({ id: Date.now(), user_id: req.user.id, session_id, order_id, amount: session.entry_fee, status: 'pending' });
-    save();
-    res.json({ order_id, amount: session.entry_fee * 100, currency: 'INR', key: 'demo', demo: true });
+    // Strict mode: Fail if Razorpay is not configured (preventing accidental demo bookings)
+    return res.status(500).json({ error: 'Real Payment Gateway is not configured. Please use QR Code method.' });
 });
 
 // ─── VERIFY PAYMENT ─────────────────────────────────────────────────────────────────────────
@@ -110,55 +106,5 @@ router.post('/verify', authMiddleware, async (req, res) => {
     res.json(result);
 });
 
-// ── DUMMY PAYMENT (Testing Mode) ─────────────────────────────────────────────
-// Simulates a full payment without real UPI — for admin testing only
-router.post('/dummy-pay', authMiddleware, async (req, res) => {
-    const { session_id, utr, amount } = req.body;
-
-    const session = data.sessions.find(s => s.id == session_id);
-    if (!session) return res.status(404).json({ error: 'Session not found' });
-    if (session.status !== 'open') return res.status(400).json({ error: 'Session not open' });
-    if (session.seats_booked >= session.seat_limit) return res.status(400).json({ error: 'Seats full' });
-
-    const userId = req.user.id;
-
-    // Prevent double booking
-    const already = (data.seats || []).find(s => s.session_id == session_id && s.user_id == userId);
-    if (already) return res.status(400).json({ error: 'Already booked' });
-
-    // Duplicate UTR check
-    const dupUTR = (data.payments || []).find(p => p.utr === utr);
-    if (dupUTR) return res.status(400).json({ error: 'Duplicate transaction ID' });
-
-    // Create seat
-    const seat = { id: Date.now(), session_id: Number(session_id), user_id: userId, paid_at: Math.floor(Date.now() / 1000), payment_id: 'DUMMY_' + utr };
-    if (!data.seats) data.seats = [];
-    data.seats.push(seat);
-
-    // Create payment record
-    if (!data.payments) data.payments = [];
-    data.payments.push({ id: Date.now() + 1, user_id: userId, session_id: Number(session_id), order_id: 'dummy_order_' + utr, utr, amount: amount || 5000, status: 'paid', dummy: true });
-
-    session.seats_booked = (session.seats_booked || 0) + 1;
-
-    const result = { success: true, seat_id: seat.id, dummy: true };
-
-    // ── FORCE CONFIRM always in dummy mode ──
-    // Seats full hone ka intezaar nahi — turant confirm + quiz turant accessible
-    session.status = 'confirmed';
-    session.quiz_start_at = Math.floor(Date.now() / 1000);  // NOW — quiz turant start
-    session.pdf_at = Math.floor(Date.now() / 1000) - 1;     // PDF already unlocked
-    const booked = session.seats_booked;
-    const total = Math.max(booked, session.seat_limit);
-    session.prize_pool = Math.floor(session.entry_fee * total * 0.75);
-    session.platform_cut = Math.floor(session.entry_fee * total * 0.25);
-
-    result.session_confirmed = true;
-    result.quiz_start_at = session.quiz_start_at;
-    result.pdf_unlocked = true;
-
-    save();
-    res.json(result);
-});
-
+// Dummy pay removed for production launch
 module.exports = router;

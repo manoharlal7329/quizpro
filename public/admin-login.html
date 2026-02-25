@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Login - QuizPro</title>
+</head>
+<body>
+
+<h2>Admin Login</h2>
+
+<form id="adminLogin">
+  <input type="email" id="email" placeholder="Admin Email" required /><br><br>
+  <input type="password" id="password" placeholder="Password" required /><br><br>
+  <button type="submit">Login</button>
+</form>
+
+<script>
+document.getElementById("adminLogin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const res = await fetch("/api/admin/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value
+    })
+  });
+
+  const data = await res.json();
+  if (data.success) {
+    window.location.href = data.redirect;
+  } else {
+    alert(data.message);
+  }
+});
+</script>
+
+</body>
+</html>

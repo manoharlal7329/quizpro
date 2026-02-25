@@ -70,6 +70,11 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
 
     const total_ms = Object.values(timings || {}).reduce((sum, ms) => sum + ms, 0);
 
+    const user = (data.users || []).find(u => u.id == req.user.id);
+    if (user) {
+        user.quizzes_solved = (user.quizzes_solved || 0) + 1;
+    }
+
     if (!data.quiz_attempts) data.quiz_attempts = [];
     data.quiz_attempts.push({
         id: Date.now(),

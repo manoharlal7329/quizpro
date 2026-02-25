@@ -379,9 +379,11 @@
 
             renderQ(current);
 
-            // Auto-move to next after 800ms (slightly slower to let user read feedback)
+            // Auto-move to next after 800ms
             if (current < questions.length - 1) {
                 setTimeout(() => changQ(1), 800);
+            } else {
+                toast('📝 Last question! Click "Submit All" when ready.', 'info');
             }
         }
 

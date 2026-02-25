@@ -197,22 +197,9 @@
                     return;
                 }
 
-                // Fetch full questions with answers
-                const r = await fetch(`/api/sessions/${sessionId}/pdf`, {
-                    headers: { Authorization: 'Bearer ' + getToken() }
-                });
-                if (!r.ok) {
-                    const err = await r.json();
-                    document.getElementById('lockedState').style.display = 'block';
-                    document.getElementById('lockedMsg').textContent = err.error;
-                    if (err.available_at) startLockedCountdown(err.available_at);
-                    return;
-                }
-
-                // Get questions with answers from session (admin would add — here use session data)
-                // Show session questions (locked on normal route, so use PDF route which returns PDF)
-                // For a cleaner UX, we load session data and show Q+A from questions_with_answers endpoint
-                renderStudyContent(session);
+                // Fetch full questions with answers from dedicated study endpoint
+                const studyData = await api(`/api/sessions/${sessionId}/study`);
+                renderStudyContent(studyData);
 
             } catch (e) {
                 document.getElementById('loadingState').style.display = 'none';
@@ -249,7 +236,7 @@
             // Show download PDF link
             document.getElementById('studyContent').insertAdjacentHTML('beforeend', `
         <div style="text-align:center; margin-top:12px; margin-bottom:30px;">
-          <a href="/api/sessions/${sessionId}/pdf" target="_blank" class="btn btn-outline" style="padding:10px 24px;">
+          <a href="/api/sessions/${sessionId}/pdf?token=${getToken()}" target="_blank" class="btn btn-outline" style="padding:10px 24px;">
             📄 Download PDF with Answers
           </a>
         </div>`);
@@ -262,6 +249,12 @@
                     document.getElementById('quizCountdown').textContent = 'STARTED!';
                     document.getElementById('goToQuizBtn').style.display = 'inline-flex';
                     clearInterval(quizInterval);
+
+                    // Auto-Redirect to Quiz
+                    toast('🚀 Quiz started! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/quiz.html?id=${sessionId}`;
+                    }, 1500);
                     return;
                 }
                 document.getElementById('quizCountdown').textContent = formatTime(remaining);

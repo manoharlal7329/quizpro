@@ -61,7 +61,8 @@ function toast(msg, type = 'info') {
     el.className = `toast-item toast-${type}`;
     el.textContent = msg;
     container.appendChild(el);
-    setTimeout(() => el.remove(), 3500);
+    setTimeout(() => { if (el && el.parentNode) el.remove(); }, 3500);
+    return el;
 }
 
 // ─── HIDE LOADING HELPER ──────────────────────────────────────

@@ -207,91 +207,8 @@
         </div>
     </div>
 
-    <!-- Payment Choice Modal -->
-    <div id="payChoiceModal" class="modal-overlay" style="display:none;">
-        <div class="modal-box" style="max-width:400px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="margin:0;">Choose Payment Method</h3>
-                <button onclick="closeModal('payChoiceModal')"
-                    style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.5rem;">&times;</button>
-            </div>
-            <p style="color:var(--muted); font-size:.82rem; margin-top:8px;">Select your preferred way to pay the entry
-                fee using UPI.</p>
+    <!-- Success/Confirm Modals are kept -->
 
-            <div class="pay-choice-box">
-                <button class="pay-option-btn" onclick="payWithApp()">
-                    <div class="pay-icon">📱</div>
-                    <div class="pay-text">
-                        <h4>Pay using UPI App</h4>
-                        <p>Google Pay, PhonePe, Paytm, etc.</p>
-                    </div>
-                </button>
-                <button class="pay-option-btn" onclick="showQR()">
-                    <div class="pay-icon">🖼️</div>
-                    <div class="pay-text">
-                        <h4>Pay using QR Code</h4>
-                        <p>Scan and pay from any app</p>
-                    </div>
-                </button>
-                <!-- DUMMY PAYMENT — Testing only -->
-                <button class="pay-option-btn" onclick="dummyPay()" id="dummyPayBtn"
-                    style="border:2px dashed rgba(245,158,11,.5); background:rgba(245,158,11,.06);">
-                    <div class="pay-icon">🧪</div>
-                    <div class="pay-text">
-                        <h4 style="color:var(--gold);">Dummy Pay — Test Mode</h4>
-                        <p>Sirf testing ke liye (₹5000 simulate)</p>
-                    </div>
-                </button>
-                <!-- WALLET PAY -->
-                <button class="pay-option-btn" onclick="walletPay()" id="walletPayBtn"
-                    style="border:2px solid rgba(96,165,250,.4); background:rgba(96,165,250,.06);">
-                    <div class="pay-icon">💳</div>
-                    <div class="pay-text">
-                        <h4 style="color:#60a5fa;">Pay from Wallet</h4>
-                        <p id="walletBalLabel">Loading balance...</p>
-                    </div>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- QR Code Modal -->
-    <div id="qrModal" class="modal-overlay" style="display:none;">
-        <div class="modal-box" style="text-align:center; max-width:400px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="margin:0;">Scan QR to Pay</h3>
-                <button onclick="closeModal('qrModal')"
-                    style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.5rem;">&times;</button>
-            </div>
-
-            <div class="qr-display">
-                <img src="/img/payment_qr.png" alt="Payment QR Code">
-            </div>
-
-            <div
-                style="margin:10px 0; padding:12px; background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px;">
-                <div style="font-size:.75rem; color:var(--muted);">UPI ID</div>
-                <div style="font-weight:700; color:var(--gold); margin:2px 0;">manoharlala02911-1@okicici</div>
-                <div style="font-size:.75rem; color:var(--muted); margin-top:8px;">Amount</div>
-                <div style="font-size:1.2rem; font-weight:800; color:var(--text);" id="qrAmount">₹0</div>
-            </div>
-
-            <div style="margin-bottom:15px; text-align:left;">
-                <label style="font-size:.75rem; color:var(--muted); margin-left:4px;">Transaction ID / UTR / Ref
-                    No.</label>
-                <input type="text" id="utrInput" placeholder="Enter UTR / Ref No. (8-20 digits)"
-                    style="width:100%; padding:12px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:10px; color:#fff; margin-top:5px; font-family:monospace;">
-            </div>
-
-            <p style="font-size:.78rem; color:var(--muted); margin:15px 0;">Scan this QR code using any UPI app and
-                complete the payment.</p>
-
-            <button class="btn btn-gold btn-full" onclick="confirmPayment()" style="padding:14px;">✅ I Have Paid — Join
-                Now</button>
-            <p style="font-size:.7rem; color:var(--muted); margin-top:10px;">Wait 10-20 sec after payment before
-                clicking confirm.</p>
-        </div>
-    </div>
 
     <div id="toast"></div>
     <script src="/js/common.js"></script>
@@ -301,6 +218,8 @@
         const sessionId = params.get('id');
         let sessionData = null;
         let hasSeat = false;
+        let evtSource = null;
+
 
         async function load() {
             if (!sessionId) { window.location.href = '/dashboard.html'; return; }
@@ -308,6 +227,7 @@
                 sessionData = await api(`/api/sessions/${sessionId}`);
                 const seatCheck = await api(`/api/sessions/${sessionId}/my-seat`).catch(() => ({ has_seat: false }));
                 hasSeat = seatCheck.has_seat;
+                initSSE(); // Start real-time updates
                 render();
                 document.getElementById('content').style.display = 'block';
             } catch (e) {
@@ -343,7 +263,10 @@
         <h1 style="font-size:1.6rem; font-weight:800; margin-bottom:8px;">${s.title}</h1>
         <div class="info-box">
           <div style="font-size:.85rem; color:var(--blue); font-weight:600; margin-bottom:8px;">👁️ Questions visible FREE — Answers locked until payment</div>
-          <p style="font-size:.82rem; color:var(--muted);">Study the questions below. After booking your seat, you'll get access to answers + explanations 30 minutes before the quiz.</p>
+          <p style="font-size:.82rem; color:var(--muted); line-height:1.5;">
+            Study the questions below. After booking your seat, you'll get access to answers + explanations 30 minutes before the quiz.<br>
+            <strong style="color:var(--gold);">⚠️ Quiz shuru hone se 30 min pehle aapko FULL SCREEN popups aana shuru ho jayenge.</strong>
+          </p>
         </div>
         <h3 style="margin-bottom:16px; font-weight:700;">📋 Quiz Questions (${s.questions?.length || 0})</h3>`;
 
@@ -420,37 +343,48 @@
         </div>
 
         ${hasSeat ? `
-          <div class="alert alert-success">✅ ${s.status === 'confirmed' || s.status === 'live' ? 'Session is confirmed! Quiz is ready.' : 'Seat booked successfully! Waiting for full booking...'}</div>
+          <div class="alert alert-success">✅ ${s.status === 'confirmed' || s.status === 'live' ? 'Session is confirmed!' : 'Seat booked successfully! Waiting for full booking...'}</div>
           ${(() => {
                         const now = Math.floor(Date.now() / 1000);
                         const isConfirmed = s.status === 'confirmed' || s.status === 'live';
                         const pdfAvailable = s.quiz_start_at && (now >= (s.quiz_start_at - 1800));
-                        const quizLive = s.quiz_start_at && (now >= s.quiz_start_at);
+
+                        let pdfBtnAction = '';
+                        if (isConfirmed && pdfAvailable) {
+                            pdfBtnAction = `window.location='/study.html?id=${sessionId}'`;
+                        } else if (isConfirmed) {
+                            const waitRem = (s.quiz_start_at - 1800) - now;
+                            const waitMin = Math.ceil(waitRem / 60);
+                            pdfBtnAction = `toast('📘 PDF opens in ${waitMin} minutes! Stay alert.', 'info')`;
+                        } else {
+                            pdfBtnAction = `toast('PDF will unlock as soon as ALL seats are booked.', 'info')`;
+                        }
 
                         return `
                     <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
-
-                        <!-- PDF Button -->
-                        <button class="btn btn-success btn-full"
-                                onclick="${(isConfirmed && pdfAvailable) ? `window.location='/study.html?id=${sessionId}'` : (isConfirmed ? `toast('📘 PDF opens soon — session is confirmed!', 'info')` : `toast('PDF will unlock when session is confirmed.', 'info')`)}"
-                                ${!(isConfirmed && pdfAvailable) ? 'style="opacity:0.6;"' : ''}>
-                            📘 Download Pre-Study PDF
+                        <!-- PDF Button: Always visible for paid users -->
+                        <button class="btn btn-success btn-full" style="padding:14px; font-weight:700;" onclick="${pdfBtnAction}">
+                            📘 Open Study Material & PDF
                         </button>
 
-                        <!-- START QUIZ button — show whenever confirmed, let quiz.html handle timing -->
-                        ${isConfirmed ? `<a href="/quiz.html?id=${sessionId}" class="btn btn-gold btn-full">🔥 START QUIZ NOW</a>` : ''}
+                        ${isConfirmed ? `<a href="/quiz.html?id=${sessionId}" class="btn btn-gold btn-full" style="padding:14px; font-weight:700;">🔥 LIVE QUIZ ENTRANCE</a>` : ''}
                     </div>
                 `;
                     })()}
         ` : s.status === 'open' ? `
           <button class="btn btn-primary btn-full" id="bookBtn" onclick="openPayChoice()" style="margin-top:4px; font-size:1rem; padding:14px;">
-            💳 Book Seat via UPI — ₹${s.entry_fee}
+            🔐 Join Quiz from Wallet — ₹${s.entry_fee}
           </button>
-          <p style="font-size:.75rem; color:var(--muted); text-align:center; margin-top:10px;">🔒 Protected by Secure UPI Gateway</p>
+          <p style="font-size:.75rem; color:var(--muted); text-align:center; margin-top:10px;">🔒 Secured by 4-Digit Wallet PIN</p>
         ` : `<div class="alert alert-info">This session is ${s.status}. No seats available.</div>`}`;
 
-            // Real-time SSE updates
-            const evtSource = new EventSource(`/api/sessions/${sessionId}/events`);
+            // Moved SSE to initSSE() 
+
+        }
+
+        function initSSE() {
+            if (evtSource) return; // Already connected
+            evtSource = new EventSource(`/api/sessions/${sessionId}/events`);
             evtSource.onmessage = (e) => {
                 const update = JSON.parse(e.data);
                 const oldStatus = sessionData.status;
@@ -488,8 +422,22 @@
                     render();
                 }
             };
-
         }
+
+        // Advance Notification Logic
+        let _notified30 = false;
+        function checkAdvanceNotifications() {
+            if (!hasSeat || !sessionData || !sessionData.quiz_start_at || _notified30) return;
+            const now = Math.floor(Date.now() / 1000);
+            const remaining = sessionData.quiz_start_at - now;
+
+            // Trigger 30 minutes before
+            if (remaining <= 1800 && remaining > 0) {
+                _notified30 = true;
+                showConfirmedPopup(sessionData, "30_MIN_WARNING");
+            }
+        }
+        setInterval(checkAdvanceNotifications, 30000); // Check every 30s
 
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         // openPayChoice is also defined later (wallet version overrides) — keep simple version as fallback
@@ -527,7 +475,7 @@
                     name: 'QuizPro',
                     description: `Session Entry Fee`,
                     order_id: order.order_id,
-                    prefill: { contact: user.mobile || '' },
+                    prefill: { contact: user.email || '' },
                     theme: { color: '#f59e0b' },
                     handler: async function (response) {
                         toast('⏳ Payment verify ho raha hai...', 'info');
@@ -606,7 +554,7 @@
             document.getElementById('successModal').style.display = 'flex';
         }
 
-        function showConfirmedPopup(data) {
+        function showConfirmedPopup(data, type = "SESSION_READY") {
             const quizTime = new Date(data.quiz_start_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const pdfTime = new Date((data.quiz_start_at - 1800) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             let popupCount = 0;
@@ -643,10 +591,16 @@
                 overlay.id = 'aggressivePopup';
                 overlay.style.cssText = `
                     position:fixed; inset:0; z-index:99999;
-                    background:rgba(0,0,0,0.92);
+                    background:rgba(0,0,0,0.95);
                     display:flex; align-items:center; justify-content:center;
                     animation: flashBg 0.5s ease;
                 `;
+
+                const title = type === "30_MIN_WARNING" ? "STUDY NOW! (30m Left)" : "SESSION CONFIRMED!";
+                const subTxt = type === "30_MIN_WARNING"
+                    ? "Quiz shuru hone mein sirf 30 min bache hain! Study material open ho gaya hai."
+                    : "Saari seats bhar gayi! Quiz & PDF ready hai!";
+
                 overlay.innerHTML = `
                     <div style="
                         background: linear-gradient(135deg,#1a1a2e,#16213e);
@@ -656,32 +610,27 @@
                         max-width: 380px;
                         width: 90%;
                         text-align: center;
-                        box-shadow: 0 0 60px rgba(245,158,11,0.5);
+                        box-shadow: 0 0 60px rgba(245,158,11,0.6);
                         animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
                     ">
-                        <div style="font-size:3.5rem; animation:pulse 0.8s infinite;">🔔</div>
-                        <h2 style="color:#f59e0b; font-size:1.5rem; margin:12px 0 6px;">SESSION CONFIRMED!</h2>
+                        <div style="font-size:3.5rem; animation:pulse 0.8s infinite;">${type === "30_MIN_WARNING" ? '🔥' : '🔔'}</div>
+                        <h2 style="color:#f59e0b; font-size:1.5rem; margin:12px 0 6px;">${title}</h2>
                         <p style="color:#e2e8f0; font-size:1rem; margin-bottom:16px;">
-                            Saari seats bhar gayi! <br>
-                            <strong style="color:#f59e0b;">Quiz & PDF ready hai!</strong>
+                            ${subTxt}
                         </p>
                         <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:14px; margin-bottom:20px; font-size:.88rem; color:#94a3b8; line-height:1.8;">
-                            📘 PDF study opens at: <strong style="color:#fff;">${pdfTime}</strong><br>
+                            📘 Study Material: <strong style="color:#10b981;">ABHI KHUL GAYA!</strong><br>
                             ⚡ Quiz starts at: <strong style="color:#f59e0b;">${quizTime}</strong><br>
-                            🎯 <strong style="color:#10b981;">Study karo — rank jeetna hai!</strong>
                         </div>
-                        <div style="font-size:.75rem; color:#f59e0b; margin-bottom:16px; font-weight:700;">
-                            ⚠️ Popup ${popupCount} of ${MAX_POPUPS} — OK karo tabhi band hoga!
+                        <div style="font-size:.78rem; color:#f59e0b; margin-bottom:16px; font-weight:700;">
+                            ⚠️ OK daba kar Study shuru karein! (${popupCount}/${MAX_POPUPS})
                         </div>
                         <button onclick="handlePopupOK()" style="
                             background: linear-gradient(135deg,#f59e0b,#d97706);
                             color:#000; border:none; border-radius:12px;
-                            padding:14px 40px; font-size:1.1rem; font-weight:900;
-                            cursor:pointer; width:100%; letter-spacing:1px;
-                        ">✅ OK — SAMAJH GAYA!</button>
-                        <p style="color:#475569; font-size:.7rem; margin-top:10px;">
-                            Band nahi hoga jab tak OK nahi dabaoge!
-                        </p>
+                            padding:14px; font-size:1.1rem; font-weight:900;
+                            cursor:pointer; width:100%; box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+                        ">📘 START STUDYING NOW →</button>
                     </div>
                 `;
                 document.body.appendChild(overlay);
@@ -711,8 +660,8 @@
                 style.id = 'popupStyles';
                 style.textContent = `
                     @keyframes popIn { from { transform:scale(0.5); opacity:0; } to { transform:scale(1); opacity:1; } }
-                    @keyframes flashBg { 0%,100% { background:rgba(0,0,0,0.92); } 50% { background:rgba(245,158,11,0.15); } }
-                    @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.2); } }
+                    @keyframes flashBg { 0%,100% { background:rgba(0,0,0,0.95); } 50% { background:rgba(245,158,11,0.15); } }
+                    @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.1); } }
                 `;
                 document.head.appendChild(style);
             }
@@ -721,98 +670,92 @@
         }
 
 
-        // ── DUMMY PAYMENT (Testing only) ────────────────────────────────────
-        async function dummyPay() {
-            closeModal('payChoiceModal');
-            const sid = new URLSearchParams(location.search).get('id');
-            const dummyUTR = 'DUMMY' + Date.now().toString().slice(-8);
 
-            const btn = document.getElementById('dummyPayBtn');
-            if (btn) { btn.disabled = true; btn.querySelector('h4').textContent = '⏳ Processing...'; }
+
+        // ── WALLET-ONLY JOIN FLOW (WITH PIN) ──────────────────────────────────────────
+        let _walletData = null;
+        function openPayChoice() {
+            const fee = sessionData ? sessionData.entry_fee : 0;
+            if (confirm(`Do you want to join this quiz? ₹${fee} will be deducted from your wallet.\n\nClick OK to continue and enter your PIN.`)) {
+                showPinModal();
+            }
+        }
+
+        async function showPinModal() {
+            // Check if user has enough balance first
+            let checkingToast = null;
+            try {
+                checkingToast = toast('⌛ Checking wallet...', 'info');
+                _walletData = await api('/api/wallet/me');
+                if (checkingToast) checkingToast.remove(); // Remove immediately on success
+
+                const fee = sessionData ? sessionData.entry_fee : 0;
+                if (_walletData.real + _walletData.demo < fee) {
+                    return toast(`Insufficient balance. You need ₹${fee} but have ₹${_walletData.real + _walletData.demo}. Please deposit more in Wallet.`, 'error');
+                }
+
+                // Create PIN Modal dynamically
+                const modalId = 'pinModal';
+                if (!document.getElementById(modalId)) {
+                    const m = document.createElement('div');
+                    m.id = modalId;
+                    m.className = 'modal-overlay';
+                    m.style.zIndex = '100000';
+                    m.innerHTML = `
+                        <div class="modal-box" style="max-width:350px; text-align:center;">
+                            <h3 style="margin-bottom:8px;">🔐 Secure Join</h3>
+                            <p style="font-size:.82rem; color:var(--muted); margin-bottom:20px;">
+                                Total Deductible: <strong style="color:var(--gold);">₹${fee}</strong><br>
+                                Enter your 4-digit Wallet PIN to confirm.
+                            </p>
+                            <input type="password" id="walletPinInput" maxlength="4" placeholder="••••" 
+                                style="width:120px; text-align:center; font-size:2rem; letter-spacing:8px; padding:12px; background:rgba(0,0,0,0.3); border:2px solid var(--blue); border-radius:12px; color:#fff; margin-bottom:20px; outline:none;">
+                            <button class="btn btn-primary btn-full" id="confirmPinBtn" onclick="processWalletPay()">Confirm & Join →</button>
+                            <button class="btn btn-outline btn-full" style="margin-top:10px;" onclick="closeModal('pinModal')">Cancel</button>
+                        </div>`;
+                    document.body.appendChild(m);
+                }
+
+                document.getElementById(modalId).style.display = 'flex';
+                document.getElementById('walletPinInput').value = '';
+                document.getElementById('walletPinInput').focus();
+
+            } catch (e) {
+                if (checkingToast) checkingToast.remove();
+                toast('Could not load wallet data. Please check your internet or login again.', 'error');
+            }
+        }
+
+        async function processWalletPay() {
+            const pin = document.getElementById('walletPinInput').value;
+            if (!pin || pin.length !== 4) return toast('Please enter a 4-digit PIN', 'error');
+
+            const sid = new URLSearchParams(location.search).get('id');
+            const btn = document.getElementById('confirmPinBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
 
             try {
-                const res = await api('/api/payments/dummy-pay', 'POST', {
+                // Determine wallet type (prefer real if available, or ask? For now, automatic logical choice)
+                const fee = sessionData.entry_fee;
+                let type = 'real';
+                if (_walletData.real < fee && _walletData.demo >= fee) {
+                    type = 'demo';
+                }
+
+                const res = await api('/api/wallet/pay', 'POST', {
                     session_id: sid,
-                    utr: dummyUTR,
-                    amount: 5000
+                    wallet_type: type,
+                    pin: pin
                 });
 
-                // Show success then redirect to quiz
-                const overlay = document.createElement('div');
-                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;';
-                overlay.innerHTML = `
-                    <div style="font-size:3rem;">✅</div>
-                    <div style="color:#10b981;font-size:1.3rem;font-weight:900;">Dummy Payment Done!</div>
-                    <div style="color:#94a3b8;font-size:.9rem;">Session confirmed — Quiz 2 minute mein start hogi</div>
-                    <div style="color:#f59e0b;font-size:1rem;font-weight:700;">Quiz page pe ja raha hoon... 🚀</div>
-                `;
-                document.body.appendChild(overlay);
-
-                setTimeout(() => {
-                    window.location.href = '/quiz.html?id=' + sid;
-                }, 2000);
-
-            } catch (e) {
-                alert('❌ Dummy Pay Failed: ' + e.message);
-                if (btn) { btn.disabled = false; btn.querySelector('h4').textContent = 'Dummy Pay — Test Mode'; }
-            }
-        }
-
-        // ── WALLET PAY ────────────────────────────────────────────────────────────────
-        let _walletData = null;
-        async function openPayChoice() {
-            document.getElementById('payChoiceModal').style.display = 'flex';
-            // Load wallet balance
-            const label = document.getElementById('walletBalLabel');
-            const btn = document.getElementById('walletPayBtn');
-            if (label) label.textContent = 'Loading...';
-            try {
-                _walletData = await api('/api/wallet/me');
-                const fee = sessionData ? sessionData.entry_fee : 0;
-                if (label) label.textContent = `🎭 Demo: ₹${_walletData.demo} | 💵 Real: ₹${_walletData.real}`;
-                if (btn && fee > 0 && _walletData.demo < fee && _walletData.real < fee) {
-                    btn.style.opacity = '0.4';
-                    if (label) label.textContent = `⚠️ Insufficient balance (Need ₹${fee}) — Demo: ₹${_walletData.demo}, Real: ₹${_walletData.real}`;
-                } else if (btn) {
-                    btn.style.opacity = '1';
-                }
-            } catch (e) {
-                _walletData = null;
-                if (label) label.textContent = '❌ Balance load nahi hua — Token expire hua hai, dobara login karo';
-                if (btn) btn.style.opacity = '0.4';
-                // Auto re-login if 401
-                if (e && (e.message?.includes('401') || e.status === 401)) {
-                    localStorage.removeItem('token');
-                    setTimeout(() => { window.location.href = '/login.html'; }, 1500);
-                }
-            }
-        }
-
-        async function walletPay() {
-            if (!_walletData) { toast('Wallet balance load nahi hua', 'error'); return; }
-            const fee = sessionData ? sessionData.entry_fee : 0;
-            const sid = new URLSearchParams(location.search).get('id');
-
-            let walletType = 'demo';
-            if (_walletData.demo >= fee && _walletData.real >= fee) {
-                walletType = confirm('Wallet type choose karo:\nOK = 🎭 Demo  |  Cancel = 💵 Real') ? 'demo' : 'real';
-            } else if (_walletData.real >= fee) {
-                walletType = 'real';
-            } else if (_walletData.demo >= fee) {
-                walletType = 'demo';
-            } else {
-                return toast(`Insufficient balance. Demo: ₹${_walletData.demo}, Real: ₹${_walletData.real}. Need ₹${fee}`, 'error');
-            }
-
-            closeModal('payChoiceModal');
-            toast('💳 Wallet se payment ho rahi hai...', 'info');
-
-            try {
-                const res = await api('/api/wallet/pay', 'POST', { session_id: sid, wallet_type: walletType });
+                closeModal('pinModal');
                 showSuccess(res);
                 setTimeout(() => { render(); }, 1500);
             } catch (e) {
-                toast('❌ Wallet payment failed: ' + e.message, 'error');
+                toast('❌ Access Denied: ' + e.message, 'error');
+                btn.disabled = false;
+                btn.textContent = 'Confirm & Join →';
             }
         }
 

@@ -16,10 +16,10 @@ function makeReferralCode(name) {
 
 // ─── REGISTER ────────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, fullName, username, phone, refCode: ref_code_used } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+    if (!email || !password || !fullName || !username || !phone) {
+        return res.status(400).json({ error: 'All mandatory fields are required (Email, Password, Name, Username, Phone)' });
     }
 
     const emailLower = email.toLowerCase().trim();
@@ -27,24 +27,30 @@ router.post('/register', async (req, res) => {
         return res.status(400).json({ error: 'Email already registered' });
     }
 
+    const usernameTrimmed = username.trim();
+    if (data.users.find(u => u.username === usernameTrimmed)) {
+        return res.status(400).json({ error: 'Username already taken' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Auto-generate name from email (e.g., user@example.com -> user)
-    const name = emailLower.split('@')[0];
-
-    // Generate referral code (internal system requirement, though not exposed in UI)
+    // Generate referral code
     let refCode;
-    do { refCode = makeReferralCode(name); }
+    do { refCode = makeReferralCode(fullName); }
     while (data.users.find(u => u.referral_code === refCode));
 
     const user = {
         id: Date.now(),
         email: emailLower,
         password: hashedPassword,
-        name: name,
+        full_name: fullName.trim(),
+        username: usernameTrimmed,
+        phone: phone.trim(),
+        name: usernameTrimmed, // Backward compatibility for some frontend parts
         is_admin: 0,
         referral_code: refCode,
-        referred_by: null,
+        referred_by: ref_code_used || null,
+        quizzes_solved: 0,
         created_at: Math.floor(Date.now() / 1000)
     };
 
@@ -68,8 +74,8 @@ router.post('/register', async (req, res) => {
     });
 
     // Track referral
-    if (ref_code) {
-        const referrer = data.users.find(u => u.referral_code === ref_code);
+    if (ref_code_used) {
+        const referrer = data.users.find(u => u.referral_code === ref_code_used);
         if (referrer) {
             if (!data.referrals) data.referrals = [];
             data.referrals.push({

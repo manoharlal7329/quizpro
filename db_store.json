@@ -6,27 +6,29 @@
       "password": "$2b$10$P6Fn7xRkj/9EZgPoYu.Ca.6thydLw5yaIjkXMsHaasMgwwhABc18W",
       "name": "Manohar Lal Prajapati",
       "is_admin": 1,
-      "referral_code": "ADMT9PR"
+      "referral_code": "ADMT9PR",
+      "quizzes_solved": 1
     },
     {
-      "id": 1771869909793,
-      "email": "user5645@example.com",
-      "password": "$2b$10$wE8w.6u5s8.UvG2K9oY2X.b6Jt3Qf.1Vd2G3H4I5J6K7L8M9N0O1P",
-      "name": "User_5645",
+      "id": 1771964446478,
+      "email": "lc1229501@gmail.com",
+      "password": "$2b$10$ca7bgRqg2iknPBAzVDXrhORGltaFUM.N7Nfk88RlDsf.J.gPZomSa",
+      "full_name": "Laxman choudhary",
+      "username": "lucky",
+      "phone": "9587124896",
+      "name": "lucky",
       "is_admin": 0,
-      "referral_code": "UUUFUTB",
+      "referral_code": "LAXCJ5Z",
       "referred_by": null,
-      "created_at": 1771869909
+      "quizzes_solved": 0,
+      "created_at": 1771964446
     },
     {
-      "id": 1771873180014,
-      "email": "user4896@example.com",
-      "password": "$2b$10$wE8w.6u5s8.UvG2K9oY2X.b6Jt3Qf.1Vd2G3H4I5J6K7L8M9N0O1P",
-      "name": "User_4896",
-      "is_admin": 0,
-      "referral_code": "UUURP3U",
-      "referred_by": null,
-      "created_at": 1771873180
+      "id": 1771990452335,
+      "email": "verify@test.com",
+      "password": "$2a$10$gDY/uczdYiRa3NhAfiSkDew8OI6RYFxvpnsSX/Th/YGs/Q86kPKeO",
+      "name": "Verify User",
+      "is_admin": 0
     }
   ],
   "settings": {
@@ -56,395 +58,198 @@
       "color": "#ef4444",
       "icon": "🔴",
       "description": "Current Affairs & Advanced Topics"
-    },
-    {
-      "id": 1771874947483,
-      "name": "G.K. HINDI",
-      "icon": "",
-      "description": ""
     }
   ],
   "sessions": [
     {
-      "id": 1771875268762,
-      "category_id": 3,
-      "title": "BIGE SESTION",
-      "seat_limit": 100,
-      "seats_booked": 0,
-      "entry_fee": 500,
-      "quiz_delay_minutes": 120,
-      "status": "open",
-      "created_at": 1771875268
-    },
-    {
-      "id": 1771874985375,
+      "id": 1771960018676,
       "category_id": 1,
-      "title": "G.K. HINDI",
-      "seat_limit": 50,
-      "seats_booked": 0,
+      "title": "HINDI",
+      "seat_limit": 20,
+      "seats_booked": 20,
       "entry_fee": 100,
       "quiz_delay_minutes": 60,
-      "status": "open",
-      "created_at": 1771874985
+      "status": "confirmed",
+      "created_at": 1771960018,
+      "quiz_start_at": 1771990222,
+      "pdf_at": 1771989862
     }
   ],
-  "seats": [],
+  "seats": [
+    {
+      "id": 1771962548316,
+      "session_id": 1771960018676,
+      "user_id": 1,
+      "paid_at": 1771962548,
+      "payment_id": "WALLET_REAL_1771962548316"
+    },
+    {
+      "id": 1771963364885,
+      "session_id": 1771960018676,
+      "user_id": 1771962629634,
+      "paid_at": 1771963364,
+      "payment_id": "WALLET_REAL_1771963364885"
+    },
+    {
+      "id": 1771964778076,
+      "session_id": 1771960018676,
+      "user_id": 1771964446478,
+      "paid_at": 1771964778,
+      "payment_id": "WALLET_DEMO_1771964778076"
+    },
+    {
+      "id": 1771965851706,
+      "session_id": 1771960018676,
+      "user_id": 999,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851706"
+    },
+    {
+      "id": 1771965851707,
+      "session_id": 1771960018676,
+      "user_id": 1000,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851707"
+    },
+    {
+      "id": 1771965851708,
+      "session_id": 1771960018676,
+      "user_id": 1001,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851708"
+    },
+    {
+      "id": 1771965851709,
+      "session_id": 1771960018676,
+      "user_id": 1002,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851709"
+    },
+    {
+      "id": 1771965851710,
+      "session_id": 1771960018676,
+      "user_id": 1003,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851710"
+    },
+    {
+      "id": 1771965851711,
+      "session_id": 1771960018676,
+      "user_id": 1004,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851711"
+    },
+    {
+      "id": 1771965851712,
+      "session_id": 1771960018676,
+      "user_id": 1005,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851712"
+    },
+    {
+      "id": 1771965851713,
+      "session_id": 1771960018676,
+      "user_id": 1006,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851713"
+    },
+    {
+      "id": 1771965851714,
+      "session_id": 1771960018676,
+      "user_id": 1007,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851714"
+    },
+    {
+      "id": 1771965851715,
+      "session_id": 1771960018676,
+      "user_id": 1008,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851715"
+    },
+    {
+      "id": 1771965851716,
+      "session_id": 1771960018676,
+      "user_id": 1009,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851716"
+    },
+    {
+      "id": 1771965851717,
+      "session_id": 1771960018676,
+      "user_id": 1010,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851717"
+    },
+    {
+      "id": 1771965851718,
+      "session_id": 1771960018676,
+      "user_id": 1011,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851718"
+    },
+    {
+      "id": 1771965851719,
+      "session_id": 1771960018676,
+      "user_id": 1012,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851719"
+    },
+    {
+      "id": 1771965851720,
+      "session_id": 1771960018676,
+      "user_id": 1013,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851720"
+    },
+    {
+      "id": 1771965851721,
+      "session_id": 1771960018676,
+      "user_id": 1014,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851721"
+    },
+    {
+      "id": 1771965851722,
+      "session_id": 1771960018676,
+      "user_id": 1015,
+      "paid_at": 1771965851,
+      "payment_id": "SYSTEM_FILL_1771965851722"
+    },
+    {
+      "id": 1771990452336,
+      "session_id": 1771960018676,
+      "user_id": 1771990452335,
+      "paid_at": 1771990452,
+      "payment_id": "VERIFY_PAY_123"
+    }
+  ],
   "questions": [
     {
-      "id": 1771874999913.0046,
-      "session_id": 1771874985375,
-      "question_text": "भारत की राजधानी क्या है?",
-      "option_a": "मुंबई",
-      "option_b": "दिल्ली",
-      "option_c": "जयपुर",
-      "option_d": "लखनऊ",
-      "correct": "b",
-      "explanation": "भारत की राजधानी दिल्ली है।"
-    },
-    {
-      "id": 1771874999913.8381,
-      "session_id": 1771874985375,
-      "question_text": "भारत के पहले प्रधानमंत्री कौन थे?",
-      "option_a": "महात्मा गांधी",
-      "option_b": "जवाहरलाल नेहरू",
-      "option_c": "सुभाष चंद्र बोस",
-      "option_d": "राजेंद्र प्रसाद",
-      "correct": "b",
-      "explanation": "जवाहरलाल नेहरू पहले प्रधानमंत्री थे।"
-    },
-    {
-      "id": 1771874999913.1152,
-      "session_id": 1771874985375,
-      "question_text": "राष्ट्रीय पशु कौन सा है?",
-      "option_a": "हाथी",
-      "option_b": "शेर",
-      "option_c": "बाघ",
-      "option_d": "घोड़ा",
-      "correct": "c",
-      "explanation": "बाघ भारत का राष्ट्रीय पशु है।"
-    },
-    {
-      "id": 1771874999913.157,
-      "session_id": 1771874985375,
-      "question_text": "राष्ट्रीय पक्षी कौन सा है?",
-      "option_a": "मोर",
-      "option_b": "तोता",
-      "option_c": "कबूतर",
-      "option_d": "कोयल",
-      "correct": "a",
-      "explanation": "मोर राष्ट्रीय पक्षी है।"
-    },
-    {
-      "id": 1771874999913.2449,
-      "session_id": 1771874985375,
-      "question_text": "ताजमहल कहाँ स्थित है?",
-      "option_a": "दिल्ली",
-      "option_b": "आगरा",
-      "option_c": "जयपुर",
-      "option_d": "लखनऊ",
-      "correct": "b",
-      "explanation": "ताजमहल आगरा में है।"
-    },
-    {
-      "id": 1771874999913.0662,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 6?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.6375,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 7?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.0386,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 8?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.0925,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 9?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.9944,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 10?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.1638,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 11?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.735,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 12?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.302,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 13?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.185,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 14?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.0422,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 15?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.5315,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 16?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.5208,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 17?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.5134,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 18?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.8984,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 19?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.0515,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 20?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.872,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 21?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.2185,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 22?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.422,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 23?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.3738,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 24?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.3853,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 25?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.7585,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 26?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.4055,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 27?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.1934,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 28?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.9792,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 29?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771874999913.8967,
-      "session_id": 1771874985375,
-      "question_text": "भारत से जुड़ा सामान्य ज्ञान प्रश्न संख्या 30?",
-      "option_a": "विकल्प A",
-      "option_b": "विकल्प B",
-      "option_c": "विकल्प C",
-      "option_d": "विकल्प D",
-      "correct": "a",
-      "explanation": "यह एक अलग सामान्य ज्ञान प्रश्न है।"
-    },
-    {
-      "id": 1771875679059.1191,
-      "session_id": 1771875268762,
+      "id": 1771960056755.6465,
+      "session_id": 1771960018676,
       "question_text": "What is the capital of India?",
       "option_a": "Mumbai",
-      "option_b": "Delhi",
+      "option_b": "New Delhi",
       "option_c": "Kolkata",
       "option_d": "Chennai",
       "correct": "b",
       "explanation": "New Delhi is the capital."
     },
     {
-      "id": 1771875679059.2642,
-      "session_id": 1771875268762,
+      "id": 1771960056755.7122,
+      "session_id": 1771960018676,
       "question_text": "Which planet is known as the Red Planet?",
       "option_a": "Venus",
       "option_b": "Mars",
       "option_c": "Jupiter",
       "option_d": "Saturn",
       "correct": "b",
-      "explanation": "Mars is known as the Red Planet."
+      "explanation": "Mars is known as the Red Planet due to iron oxide."
     },
     {
-      "id": 1771875679059.9358,
-      "session_id": 1771875268762,
+      "id": 1771960056755.8054,
+      "session_id": 1771960018676,
       "question_text": "What is 5 + 7?",
       "option_a": "10",
       "option_b": "11",
@@ -454,41 +259,41 @@
       "explanation": "5 + 7 = 12"
     },
     {
-      "id": 1771875679059.8247,
-      "session_id": 1771875268762,
+      "id": 1771960056755.1084,
+      "session_id": 1771960018676,
       "question_text": "Who is the PM of India (2024)?",
       "option_a": "Rahul Gandhi",
       "option_b": "Amit Shah",
       "option_c": "Narendra Modi",
       "option_d": "Arvind Kejriwal",
       "correct": "c",
-      "explanation": "Narendra Modi is the current PM."
+      "explanation": "Narendra Modi is the current PM of India."
     },
     {
-      "id": 1771875679059.4238,
-      "session_id": 1771875268762,
+      "id": 1771960056755.0012,
+      "session_id": 1771960018676,
       "question_text": "Largest ocean in the world?",
       "option_a": "Atlantic",
       "option_b": "Indian",
       "option_c": "Pacific",
       "option_d": "Arctic",
       "correct": "c",
-      "explanation": "Pacific is the largest."
+      "explanation": "Pacific is the largest and deepest ocean."
     },
     {
-      "id": 1771875679059.1516,
-      "session_id": 1771875268762,
+      "id": 1771960056755.6843,
+      "session_id": 1771960018676,
       "question_text": "National Bird of India?",
       "option_a": "Peacock",
       "option_b": "Parrot",
       "option_c": "Eagle",
       "option_d": "Sparrow",
       "correct": "a",
-      "explanation": "Peacock is the national bird."
+      "explanation": "Peacock is the national bird of India."
     },
     {
-      "id": 1771875679059.623,
-      "session_id": 1771875268762,
+      "id": 1771960056755.0833,
+      "session_id": 1771960018676,
       "question_text": "What is 100 / 4?",
       "option_a": "20",
       "option_b": "25",
@@ -498,194 +303,287 @@
       "explanation": "100 divided by 4 is 25."
     },
     {
-      "id": 1771875679059.6812,
-      "session_id": 1771875268762,
-      "question_text": "Which gas do humans breathe?",
+      "id": 1771960056755.9478,
+      "session_id": 1771960018676,
+      "question_text": "Which gas do humans breathe primarily?",
       "option_a": "Oxygen",
-      "option_b": "CO2",
-      "option_c": "Nitrogen",
+      "option_b": "Nitrogen",
+      "option_c": "CO2",
       "option_d": "Helium",
       "correct": "a",
-      "explanation": "Humans breathe oxygen."
+      "explanation": "Humans breathe oxygen specifically."
     },
     {
-      "id": 1771875679059.7354,
-      "session_id": 1771875268762,
+      "id": 1771960056755.818,
+      "session_id": 1771960018676,
       "question_text": "Smallest state of India?",
       "option_a": "Sikkim",
       "option_b": "Goa",
-      "option_c": "Punjab",
-      "option_d": "Haryana",
+      "option_c": "Tripura",
+      "option_d": "Kerala",
       "correct": "b",
-      "explanation": "Goa is the smallest state."
+      "explanation": "Goa is the smallest state by area."
     },
     {
-      "id": 1771875679059.5513,
-      "session_id": 1771875268762,
+      "id": 1771960056755.1387,
+      "session_id": 1771960018676,
       "question_text": "Current year?",
       "option_a": "2023",
       "option_b": "2024",
       "option_c": "2025",
       "option_d": "2026",
       "correct": "d",
-      "explanation": "Current year is 2026."
+      "explanation": "Current year is 2026 in this system."
     },
     {
-      "id": 1771875679059.5918,
-      "session_id": 1771875268762,
+      "id": 1771960056755.48,
+      "session_id": 1771960018676,
       "question_text": "Symbol of Gold?",
       "option_a": "Au",
       "option_b": "Ag",
       "option_c": "Fe",
-      "option_d": "Cu",
+      "option_d": "Hg",
       "correct": "a",
-      "explanation": "Au stands for Gold."
+      "explanation": "Au (Aurum) is the symbol for Gold."
     },
     {
-      "id": 1771875679059.4568,
-      "session_id": 1771875268762,
+      "id": 1771960056755.7952,
+      "session_id": 1771960018676,
       "question_text": "Brain of computer?",
       "option_a": "RAM",
       "option_b": "CPU",
       "option_c": "HDD",
       "option_d": "Monitor",
       "correct": "b",
-      "explanation": "CPU is the brain."
+      "explanation": "CPU is the brain of the computer."
     },
     {
-      "id": 1771875679059.1814,
-      "session_id": 1771875268762,
+      "id": 1771960056755.7046,
+      "session_id": 1771960018676,
       "question_text": "How many colors in Rainbow?",
       "option_a": "5",
       "option_b": "6",
       "option_c": "7",
       "option_d": "8",
       "correct": "c",
-      "explanation": "There are 7 colors."
+      "explanation": "There are 7 distinct colors in a rainbow."
     },
     {
-      "id": 1771875679059.4062,
-      "session_id": 1771875268762,
-      "question_text": "Fastest animal?",
+      "id": 1771960056755.302,
+      "session_id": 1771960018676,
+      "question_text": "Fastest animal on land?",
       "option_a": "Lion",
       "option_b": "Tiger",
       "option_c": "Cheetah",
-      "option_d": "Deer",
+      "option_d": "Horse",
       "correct": "c",
-      "explanation": "Cheetah is fastest."
+      "explanation": "Cheetah is the fastest land animal."
     },
     {
-      "id": 1771875679059.6787,
-      "session_id": 1771875268762,
+      "id": 1771960056755.8823,
+      "session_id": 1771960018676,
       "question_text": "Capital of Rajasthan?",
       "option_a": "Jodhpur",
       "option_b": "Jaipur",
       "option_c": "Udaipur",
-      "option_d": "Bikaner",
+      "option_d": "Ajmer",
       "correct": "b",
-      "explanation": "Jaipur is the capital."
+      "explanation": "Jaipur is the Pink City and capital of Rajasthan."
     },
     {
-      "id": 1771875679059.9336,
-      "session_id": 1771875268762,
+      "id": 1771960056755.6497,
+      "session_id": 1771960018676,
       "question_text": "Festival of Colors?",
       "option_a": "Diwali",
       "option_b": "Holi",
       "option_c": "Eid",
       "option_d": "Christmas",
       "correct": "b",
-      "explanation": "Holi is the festival of colors."
+      "explanation": "Holi is the traditional festival of colors."
     },
     {
-      "id": 1771875679059.324,
-      "session_id": 1771875268762,
+      "id": 1771960056755.2305,
+      "session_id": 1771960018676,
       "question_text": "1KG is how many Grams?",
       "option_a": "100",
       "option_b": "500",
       "option_c": "1000",
       "option_d": "2000",
       "correct": "c",
-      "explanation": "1kg = 1000g."
+      "explanation": "1 kilogram is equal to 1000 grams."
     },
     {
-      "id": 1771875679059.0522,
-      "session_id": 1771875268762,
+      "id": 1771960056755.7517,
+      "session_id": 1771960018676,
       "question_text": "Sun rises in the...?",
       "option_a": "North",
       "option_b": "South",
       "option_c": "East",
       "option_d": "West",
       "correct": "c",
-      "explanation": "Sun rises in the East."
+      "explanation": "The Earth rotates such that the sun appears in the East."
     },
     {
-      "id": 1771875679059.4019,
-      "session_id": 1771875268762,
-      "question_text": "Prime Minister of UK?",
+      "id": 1771960056755.0168,
+      "session_id": 1771960018676,
+      "question_text": "Current Prime Minister of UK?",
       "option_a": "Rishi Sunak",
       "option_b": "Keir Starmer",
       "option_c": "Boris Johnson",
-      "option_d": "None",
+      "option_d": "Tony Blair",
       "correct": "b",
-      "explanation": "Keir Starmer is current PM."
+      "explanation": "Keir Starmer is the current PM of UK."
     },
     {
-      "id": 1771875679059.7585,
-      "session_id": 1771875268762,
-      "question_text": "Who invented Bulb?",
+      "id": 1771960056755.9595,
+      "session_id": 1771960018676,
+      "question_text": "Who invented the Light Bulb?",
       "option_a": "Newton",
       "option_b": "Einstein",
       "option_c": "Tesla",
       "option_d": "Edison",
       "correct": "d",
-      "explanation": "Edison invented the light bulb."
+      "explanation": "Thomas Edison is credited with the invention."
     }
   ],
-  "quiz_attempts": [],
+  "quiz_attempts": [
+    {
+      "id": 1771968938627,
+      "session_id": 1771960018676,
+      "user_id": 1,
+      "answers": "{\"1771960056755.0012\":\"a\",\"1771960056755.0168\":\"a\",\"1771960056755.0833\":\"a\",\"1771960056755.1084\":\"a\",\"1771960056755.1387\":\"a\",\"1771960056755.2305\":\"a\",\"1771960056755.302\":\"a\",\"1771960056755.48\":\"a\",\"1771960056755.6465\":\"a\",\"1771960056755.6497\":\"a\",\"1771960056755.6843\":\"a\",\"1771960056755.7046\":\"a\",\"1771960056755.7122\":\"a\",\"1771960056755.7517\":\"a\",\"1771960056755.9595\":\"a\",\"1771960056755.9478\":\"a\",\"1771960056755.7952\":\"a\",\"1771960056755.8054\":\"a\",\"1771960056755.818\":\"a\",\"1771960056755.8823\":\"a\"}",
+      "timings": "{\"1771960056755.0012\":2448,\"1771960056755.0168\":758,\"1771960056755.0833\":232,\"1771960056755.1084\":683,\"1771960056755.1387\":589,\"1771960056755.2305\":234,\"1771960056755.302\":371,\"1771960056755.48\":235,\"1771960056755.6465\":207,\"1771960056755.6497\":309,\"1771960056755.6843\":362,\"1771960056755.7046\":317,\"1771960056755.7122\":335,\"1771960056755.7517\":371,\"1771960056755.9595\":213,\"1771960056755.9478\":485,\"1771960056755.7952\":363,\"1771960056755.8054\":378,\"1771960056755.818\":394,\"1771960056755.8823\":350}",
+      "score": 3,
+      "total_ms": 9634,
+      "submitted_at": 1771968938,
+      "rank": 1
+    }
+  ],
   "payments": [],
   "wallets": [
     {
-      "user_id": 1771869909793,
-      "demo": 500,
-      "real": 0
-    },
-    {
-      "user_id": 1771873180014,
-      "demo": 500,
-      "real": 0
-    },
-    {
-      "user_id": 1771645788511,
-      "demo": 500,
-      "real": 0
-    },
-    {
       "user_id": 1,
       "demo": 1000,
-      "real": 0
+      "win_bal": 200,
+      "dep_bal": 1000,
+      "pin": "7976"
+    },
+    {
+      "user_id": 1771962629634,
+      "demo": 1000,
+      "dep_bal": 0,
+      "win_bal": 0,
+      "pin": "1234"
+    },
+    {
+      "user_id": 1771964446478,
+      "demo": 0,
+      "win_bal": 0,
+      "dep_bal": 0,
+      "pin": "2006"
     }
   ],
   "wallet_txns": [
     {
-      "id": 1771869909793,
-      "user_id": 1771869909793,
-      "wallet": "demo",
+      "id": 1771959149985,
+      "user_id": 1,
+      "wallet": "real",
       "type": "credit",
       "amount": 100,
-      "note": "🎁 Welcome bonus",
-      "at": 1771869909
+      "note": "💰 Wallet Deposit (ID: SIM_PAY_1771959149342)",
+      "at": 1771959149
     },
     {
-      "id": 1771873180014,
-      "user_id": 1771873180014,
+      "id": 1771959169680,
+      "user_id": 1,
+      "wallet": "real",
+      "type": "credit",
+      "amount": 100,
+      "note": "💰 Wallet Deposit (ID: SIM_PAY_1771959169000)",
+      "at": 1771959169
+    },
+    {
+      "id": 1771959804683,
+      "user_id": 1,
+      "wallet": "real",
+      "type": "credit",
+      "amount": 100,
+      "note": "💰 Wallet Deposit (ID: SIM_PAY_1771959804561)",
+      "at": 1771959804
+    },
+    {
+      "id": 1771959818211,
+      "user_id": 1,
+      "wallet": "real",
+      "type": "credit",
+      "amount": 1000,
+      "note": "💰 Wallet Deposit (ID: SIM_PAY_1771959817997)",
+      "at": 1771959818
+    },
+    {
+      "id": 1771962548832,
+      "user_id": 1,
+      "wallet": "real",
+      "type": "debit",
+      "amount": 100,
+      "note": "Seat booked: HINDI",
+      "at": 1771962548
+    },
+    {
+      "id": 1771963332164,
+      "user_id": 1771962629634,
+      "wallet": "real",
+      "type": "credit",
+      "amount": 100,
+      "note": "💰 Wallet Deposit (ID: SIM_PAY_1771963331451)",
+      "at": 1771963331
+    },
+    {
+      "id": 1771963365447,
+      "user_id": 1771962629634,
+      "wallet": "real",
+      "type": "debit",
+      "amount": 100,
+      "note": "Seat booked: HINDI",
+      "at": 1771963364
+    },
+    {
+      "id": 1771964446478,
+      "user_id": 1771964446478,
       "wallet": "demo",
       "type": "credit",
       "amount": 100,
       "note": "🎁 Welcome bonus",
-      "at": 1771873180
+      "at": 1771964446
+    },
+    {
+      "id": 1771964778660,
+      "user_id": 1771964446478,
+      "wallet": "demo",
+      "type": "debit",
+      "amount": 100,
+      "note": "Seat booked: HINDI",
+      "at": 1771964778
     }
   ],
   "referrals": [],
   "transactions": [],
-  "badges": []
+  "badges": [
+    {
+      "user_id": 1,
+      "badge_id": "first_win",
+      "name": "First Win 🥇",
+      "icon": "🥇",
+      "desc": "Won rank #1 in a session",
+      "earned_at": 1771968938
+    },
+    {
+      "user_id": 1,
+      "badge_id": "top3",
+      "name": "Podium Finisher 🏆",
+      "icon": "🏆",
+      "desc": "Finished in top 3",
+      "earned_at": 1771968938
+    }
+  ]
 }
