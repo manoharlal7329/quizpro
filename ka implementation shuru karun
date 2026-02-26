@@ -1,0 +1,799 @@
+[33mcommit 53d712f2e30b6d09d0fc599c587c105a29bf0baa[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Manohar Lal <manoharlala02911@gmail.com>
+Date:   Thu Feb 26 02:35:35 2026 +0530
+
+    Disable simulation mode and force Cashfree PROD
+
+[1mdiff --git a/routes/wallet.js b/routes/wallet.js[m
+[1mindex 61ac5d0..545f773 100644[m
+[1m--- a/routes/wallet.js[m
+[1m+++ b/routes/wallet.js[m
+[36m@@ -17,7 +17,7 @@[m [mconst { Cashfree, CFEnvironment } = require('cashfree-pg');[m
+ const cf = new Cashfree();[m
+ cf.XClientId = CF_CLIENT_ID;[m
+ cf.XClientSecret = CF_SECRET_KEY;[m
+[31m-cf.XEnvironment = (CF_ENV === 'PROD' || CF_ENV === 'production') ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;[m
+[32m+[m[32mcf.XEnvironment = (CF_ENV === 'PROD') ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;[m
+ cf.XApiVersion = "2023-08-01";[m
+ [m
+ const { getWallet, addTxn } = require('./wallet_utils');[m
+[36m@@ -141,6 +141,11 @@[m [mrouter.post('/set-pin', authMiddleware, (req, res) => {[m
+ // ── POST /api/wallet/deposit ─────────────────────────────────────────────────[m
+ // Create a Cashfree order to add funds[m
+ router.post('/deposit', authMiddleware, async (req, res) => {[m
+[32m+[m[32m    // Force PROD check[m
+[32m+[m[32m    if (process.env.CF_ENV !== 'PROD') {[m
+[32m+[m[32m        return res.status(500).json({ error: 'System is not in PRODUCTION mode. Payment rejected.' });[m
+[32m+[m[32m    }[m
+[32m+[m
+     const { amount } = req.body;[m
+     if (!amount || amount < 10) return res.status(400).json({ error: 'Minimum deposit is ₹10' });[m
+ [m
+
+[33mcommit 7351bd3b9ca1fb1bd64559311cb721e2d317f6dc[m
+Author: Manohar Lal <manoharlala02911@gmail.com>
+Date:   Thu Feb 26 02:00:25 2026 +0530
+
+    fix: wallet + cashfree prod
+
+[1mdiff --git a/routes/wallet.js b/routes/wallet.js[m
+[1mindex b981cbb..61ac5d0 100644[m
+[1m--- a/routes/wallet.js[m
+[1m+++ b/routes/wallet.js[m
+[36m@@ -9,16 +9,16 @@[m [mconst CF_CLIENT_ID = process.env.CF_CLIENT_ID || '';[m
+ const CF_SECRET_KEY = process.env.CF_SECRET_KEY || '';[m
+ const CF_ENV = process.env.CF_ENV || 'SANDBOX'; // 'SANDBOX' or 'PROD'[m
+ [m
+[31m-let Cashfree;[m
+[31m-try {[m
+[31m-    const { Cashfree: CF } = require('cashfree-pg');[m
+[31m-    Cashfree = CF;[m
+[31m-    Cashfree.XClientId = CF_CLIENT_ID;[m
+[31m-    Cashfree.XClientSecret = CF_SECRET_KEY;[m
+[31m-    Cashfree.XEnvironment = CF_ENV === 'PROD' ? Cashfree.Environment.PRODUCTION : Cashfree.Environment.SANDBOX;[m
+[31m-} catch (e) {[m
+[31m-    console.warn('[Wallet] Cashfree package not installed or config error:', e.message);[m
+[31m-}[m
+[32m+[m[32mconst { Cashfree, CFEnvironment } = require('cashfree-pg');[m
+[32m+[m
+[32m+[m[32m// Initialize Cashfree SDK[m
+[32m+[m[32m// The Cashfree instance should be initialized once and reused.[m
+[32m+[m[32m// The XClientId, XClientSecret, and XEnvironment properties are set directly on the instance.[m
+[32m+[m[32mconst cf = new Cashfree();[m
+[32m+[m[32mcf.XClientId = CF_CLIENT_ID;[m
+[32m+[m[32mcf.XClientSecret = CF_SECRET_KEY;[m
+[32m+[m[32mcf.XEnvironment = (CF_ENV === 'PROD' || CF_ENV === 'production') ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;[m
+[32m+[m[32mcf.XApiVersion = "2023-08-01";[m
+ [m
+ const { getWallet, addTxn } = require('./wallet_utils');[m
+ [m
+[36m@@ -144,7 +144,7 @@[m [mrouter.post('/deposit', authMiddleware, async (req, res) => {[m
+     const { amount } = req.body;[m
+     if (!amount || amount < 10) return res.status(400).json({ error: 'Minimum deposit is ₹10' });[m
+ [m
+[31m-    if (Cashfree) {[m
+[32m+[m[32m    if (cf) {[m
+         try {[m
+             const user = (data.users || []).find(u => String(u.id) === String(req.user.id));[m
+             if (!user) return res.status(404).json({ error: 'User not found' });[m
+[36m@@ -163,7 +163,7 @@[m [mrouter.post('/deposit', authMiddleware, async (req, res) => {[m
+                 }[m
+             };[m
+ [m
+[31m-            const response = await Cashfree.PGCreateOrder("2023-08-01", request);[m
+[32m+[m[32m            const response = await cf.PGCreateOrder(request);[m
+             const orderData = response.data;[m
+ [m
+             return res.json({[m
+[36m@@ -187,9 +187,9 @@[m [mrouter.post('/confirm-deposit', authMiddleware, async (req, res) => {[m
+     const { order_id } = req.body;[m
+     if (!order_id) return res.status(400).json({ error: 'Order ID is required' });[m
+ [m
+[31m-    if (Cashfree) {[m
+[32m+[m[32m    if (cf) {[m
+         try {[m
+[31m-            const response = await Cashfree.PGOrderFetchPayments("2023-08-01", order_id);[m
+[32m+[m[32m            const response = await cf.PGOrderFetchPayments(order_id);[m
+             const payments = response.data;[m
+ [m
+             // Check if any payment for this order is successful[m
+
+[33mcommit 1c45dd416cc63b9a36322051e594b4cb859a88fb[m
+Author: Manohar Lal <manoharlala02911@gmail.com>
+Date:   Thu Feb 26 00:28:50 2026 +0530
+
+    Cashfree live integration, wallet fix, webhook added
+
+[1mdiff --git a/routes/wallet.js b/routes/wallet.js[m
+[1mindex 18cb423..b981cbb 100644[m
+[1m--- a/routes/wallet.js[m
+[1m+++ b/routes/wallet.js[m
+[36m@@ -4,14 +4,20 @@[m [mconst { data, save } = require('../database/db');[m
+ const authMiddleware = require('../middleware/auth');[m
+ const crypto = require('crypto');[m
+ [m
+[31m-// Razorpay config[m
+[31m-const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';[m
+[31m-const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';[m
+[31m-const RZP_REAL = RZP_KEY_ID.startsWith('rzp_') && !RZP_KEY_ID.includes('PLACEHOLDER');[m
+[31m-[m
+[31m-let Razorpay;[m
+[31m-if (RZP_REAL) {[m
+[31m-    try { Razorpay = require('razorpay'); } catch (e) { console.warn('[Wallet] Razorpay package not installed'); }[m
+[32m+[m[32m// Cashfree config[m
+[32m+[m[32mconst CF_CLIENT_ID = process.env.CF_CLIENT_ID || '';[m
+[32m+[m[32mconst CF_SECRET_KEY = process.env.CF_SECRET_KEY || '';[m
+[32m+[m[32mconst CF_ENV = process.env.CF_ENV || 'SANDBOX'; // 'SANDBOX' or 'PROD'[m
+[32m+[m
+[32m+[m[32mlet Cashfree;[m
+[32m+[m[32mtry {[m
+[32m+[m[32m    const { Cashfree: CF } = require('cashfree-pg');[m
+[32m+[m[32m    Cashfree = CF;[m
+[32m+[m[32m    Cashfree.XClientId = CF_CLIENT_ID;[m
+[32m+[m[32m    Cashfree.XClientSecret = CF_SECRET_KEY;[m
+[32m+[m[32m    Cashfree.XEnvironment = CF_ENV === 'PROD' ? Cashfree.Environment.PRODUCTION : Cashfree.Environment.SANDBOX;[m
+[32m+[m[32m} catch (e) {[m
+[32m+[m[32m    console.warn('[Wallet] Cashfree package not installed or config error:', e.message);[m
+ }[m
+ [m
+ const { getWallet, addTxn } = require('./wallet_utils');[m
+[36m@@ -133,75 +139,89 @@[m [mrouter.post('/set-pin', authMiddleware, (req, res) => {[m
+ });[m
+ [m
+ // ── POST /api/wallet/deposit ─────────────────────────────────────────────────[m
+[31m-// Create a Razorpay order (or Simulation order) to add funds[m
+[32m+[m[32m// Create a Cashfree order to add funds[m
+ router.post('/deposit', authMiddleware, async (req, res) => {[m
+[31m-    const { amount } = req.body; // Amount in INR[m
+[32m+[m[32m    const { amount } = req.body;[m
+     if (!amount || amount < 10) return res.status(400).json({ error: 'Minimum deposit is ₹10' });[m
+ [m
+[31m-    if (RZP_REAL && Razorpay) {[m
+[32m+[m[32m    if (Cashfree) {[m
+         try {[m
+[31m-            const rzp = new Razorpay({ key_id: RZP_KEY_ID, key_secret: RZP_KEY_SECRET });[m
+[31m-            const order = await rzp.orders.create({[m
+[31m-                amount: amount * 100, // paise[m
+[31m-                currency: 'INR',[m
+[31m-                receipt: `wallet_${req.user.id}_${Date.now()}`,[m
+[31m-                notes: { user_id: String(req.user.id), type: 'wallet_deposit' }[m
+[31m-            });[m
+[32m+[m[32m            const user = (data.users || []).find(u => String(u.id) === String(req.user.id));[m
+[32m+[m[32m            if (!user) return res.status(404).json({ error: 'User not found' });[m
+[32m+[m
+[32m+[m[32m            const request = {[m
+[32m+[m[32m                "order_amount": Number(amount),[m
+[32m+[m[32m                "order_currency": "INR",[m
+[32m+[m[32m                "order_id": `order_${req.user.id}_${Date.now()}`,[m
+[32m+[m[32m                "customer_details": {[m
+[32m+[m[32m                    "customer_id": String(user.id),[m
+[32m+[m[32m                    "customer_phone": user.phone || "9999999999",[m
+[32m+[m[32m                    "customer_email": user.email || "user@example.com"[m
+[32m+[m[32m                },[m
+[32m+[m[32m                "order_meta": {[m
+[32m+[m[32m                    "return_url": `${req.headers.origin}/wallet.html?order_id={order_id}`[m
+[32m+[m[32m                }[m
+[32m+[m[32m            };[m
+[32m+[m
+[32m+[m[32m            const response = await Cashfree.PGCreateOrder("2023-08-01", request);[m
+[32m+[m[32m            const orderData = response.data;[m
+ [m
+             return res.json({[m
+[31m-                order_id: order.id,[m
+[31m-                amount: order.amount,[m
+[31m-                currency: 'INR',[m
+[31m-                key: RZP_KEY_ID[m
+[32m+[m[32m                payment_session_id: orderData.payment_session_id,[m
+[32m+[m[32m                order_id: orderData.order_id,[m
+[32m+[m[32m                amount: orderData.order_amount,[m
+[32m+[m[32m                currency: orderData.order_currency[m
+             });[m
+         } catch (e) {[m
+[31m-            console.error('[Wallet] Order create error:', e.message);[m
+[32m+[m[32m            console.error('[Wallet] Cashfree Order create error:', e.response?.data || e.message);[m
+             return res.status(500).json({ error: 'Failed to create deposit order' });[m
+         }[m
+     }[m
+ [m
+[31m-    // 🏎️ SIMULATION MODE (when real keys are missing)[m
+[31m-    console.log(`[Wallet] Using Simulation Mode for user ${req.user.id}`);[m
+[31m-    res.json({[m
+[31m-        simulation: true,[m
+[31m-        order_id: `sim_order_${Date.now()}`,[m
+[31m-        amount: amount * 100,[m
+[31m-        currency: 'INR',[m
+[31m-        key: 'SIMULATION_KEY'[m
+[31m-    });[m
+[32m+[m[32m    return res.status(500).json({ error: 'Cashfree Payment Gateway is not configured.' });[m
+ });[m
+ [m
+ // ── POST /api/wallet/confirm-deposit ──────────────────────────────────────────[m
+[31m-// Verify Razorpay payment (or Simulation token) and credit real wallet[m
+[32m+[m[32m// Verify Cashfree payment and credit real wallet[m
+ router.post('/confirm-deposit', authMiddleware, async (req, res) => {[m
+[31m-    const { order_id, payment_id, razorpay_signature, amount, simulation } = req.body;[m
+[32m+[m[32m    const { order_id } = req.body;[m
+[32m+[m[32m    if (!order_id) return res.status(400).json({ error: 'Order ID is required' });[m
+ [m
+[31m-    if (simulation === true) {[m
+[31m-        if (!order_id.startsWith('sim_order_')) {[m
+[31m-            return res.status(400).json({ error: 'Invalid simulation request' });[m
+[31m-        }[m
+[31m-        console.log(`[Wallet] Simulation Deposit Approved for ${req.user.id}`);[m
+[31m-    } else if (RZP_REAL && razorpay_signature) {[m
+[31m-        const body = order_id + '|' + payment_id;[m
+[31m-        const expectedSig = crypto.createHmac('sha256', RZP_KEY_SECRET).update(body).digest('hex');[m
+[32m+[m[32m    if (Cashfree) {[m
+[32m+[m[32m        try {[m
+[32m+[m[32m            const response = await Cashfree.PGOrderFetchPayments("2023-08-01", order_id);[m
+[32m+[m[32m            const payments = response.data;[m
+ [m
+[31m-        if (expectedSig !== razorpay_signature) {[m
+[31m-            return res.status(400).json({ error: 'Invalid payment signature' });[m
+[31m-        }[m
+[31m-    } else {[m
+[31m-        return res.status(400).json({ error: 'Signature verification required or simulation missing' });[m
+[31m-    }[m
+[32m+[m[32m            // Check if any payment for this order is successful[m
+[32m+[m[32m            const successPayment = (payments || []).find(p => p.payment_status === 'SUCCESS');[m
+ [m
+[31m-    const wallet = getWallet(req.user.id);[m
+[31m-    const depositAmount = Number(amount);[m
+[32m+[m[32m            if (!successPayment) {[m
+[32m+[m[32m                return res.status(400).json({ error: 'Payment not successful' });[m
+[32m+[m[32m            }[m
+ [m
+[31m-    // 🏷️ 100% Credit to dep_bal (Unrotated)[m
+[31m-    wallet.dep_bal += depositAmount;[m
+[32m+[m[32m            const wallet = getWallet(req.user.id);[m
+[32m+[m[32m            const depositAmount = Number(successPayment.order_amount);[m
+ [m
+[31m-    addTxn(req.user.id, 'real', 'credit', depositAmount, `💰 Wallet Deposit (ID: ${payment_id})`);[m
+[32m+[m[32m            // Double credit check (using order_id as a unique marker in txns)[m
+[32m+[m[32m            const alreadyCredited = (data.wallet_txns || []).find(t => t.note && t.note.includes(order_id));[m
+[32m+[m[32m            if (alreadyCredited) {[m
+[32m+[m[32m                return res.json({ success: true, message: 'Already credited', new_balance: wallet.dep_bal + wallet.win_bal });[m
+[32m+[m[32m            }[m
+ [m
+[31m-    save();[m
+[31m-    res.json({ success: true, new_balance: wallet.dep_bal + wallet.win_bal });[m
+[32m+[m[32m            // 🏷️ 100% Credit to dep_bal (Unrotated)[m
+[32m+[m[32m            wallet.dep_bal += depositAmount;[m
+[32m+[m
+[32m+[m[32m            addTxn(req.user.id, 'real', 'credit', depositAmount, `💰 Wallet Deposit (ID: ${order_id})`);[m
+[32m+[m
+[32m+[m[32m            save();[m
+[32m+[m[32m            return res.json({ success: true, new_balance: wallet.dep_bal + wallet.win_bal });[m
+[32m+[m[32m        } catch (e) {[m
+[32m+[m[32m            console.error('[Wallet] Cashfree Verify error:', e.response?.data || e.message);[m
+[32m+[m[32m            return res.status(500).json({ error: 'Failed to verify payment' });[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return res.status(400).json({ error: 'Cashfree not configured' });[m
+ });[m
+ [m
+ [m
+[36m@@ -218,12 +238,8 @@[m [mrouter.post('/admin/topup', authMiddleware, (req, res) => {[m
+     if (!targetUser) return res.status(404).json({ error: 'User not found' });[m
+ [m
+     const wallet = getWallet(user_id);[m
+[31m-    const type = wallet_type === 'real' ? 'real' : 'demo';[m
+[31m-    if (type === 'real') {[m
+[31m-        wallet.win_bal += Number(amount); // Admin topups are treated as winnings/withdrawable[m
+[31m-    } else {[m
+[31m-        wallet.demo += Number(amount);[m
+[31m-    }[m
+[32m+[m[32m    const type = 'real';[m
+[32m+[m[32m    wallet.win_bal += Number(amount); // Admin topups are treated as winnings/withdrawable[m
+ [m
+     addTxn(user_id, type, 'credit', Number(amount), note || `Admin topup by ${liveUser.name}`);[m
+ [m
+[36m@@ -242,7 +258,6 @@[m [mrouter.get('/admin/list', authMiddleware, (req, res) => {[m
+             id: u.id,[m
+             mobile: u.mobile,[m
+             name: u.name,[m
+[31m-            demo: w.demo,[m
+             real: w.dep_bal + w.win_bal,[m
+             dep_bal: w.dep_bal,[m
+             win_bal: w.win_bal[m
+
+[33mcommit 54e2e1e2e43f331efbd51c307b74dfb1fb917cf2[m
+Author: Manohar Lal <manoharlala02911@gmail.com>
+Date:   Wed Feb 25 09:15:22 2026 +0530
+
+    Switch to Email & Password login, update admin & user flows
+
+[1mdiff --git a/routes/wallet.js b/routes/wallet.js[m
+[1mindex 9950d88..18cb423 100644[m
+[1m--- a/routes/wallet.js[m
+[1m+++ b/routes/wallet.js[m
+[36m@@ -2,36 +2,30 @@[m [mconst express = require('express');[m
+ const router = express.Router();[m
+ const { data, save } = require('../database/db');[m
+ const authMiddleware = require('../middleware/auth');[m
+[32m+[m[32mconst crypto = require('crypto');[m
+ [m
+[31m-// ── Helper: get or create wallet ─────────────────────────────────────────────[m
+[31m-function getWallet(userId) {[m
+[31m-    if (!data.wallets) data.wallets = [];[m
+[31m-    let w = data.wallets.find(w => String(w.user_id) === String(userId));[m
+[31m-    if (!w) {[m
+[31m-        w = { user_id: userId, demo: 0, real: 0 };[m
+[31m-        data.wallets.push(w);[m
+[31m-    }[m
+[31m-    return w;[m
+[31m-}[m
+[32m+[m[32m// Razorpay config[m
+[32m+[m[32mconst RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';[m
+[32m+[m[32mconst RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';[m
+[32m+[m[32mconst RZP_REAL = RZP_KEY_ID.startsWith('rzp_') && !RZP_KEY_ID.includes('PLACEHOLDER');[m
+ [m
+[31m-// ── Helper: record transaction ────────────────────────────────────────────────[m
+[31m-function addTxn(userId, wallet, type, amount, note) {[m
+[31m-    if (!data.wallet_txns) data.wallet_txns = [];[m
+[31m-    data.wallet_txns.push({[m
+[31m-        id: Date.now() + Math.floor(Math.random() * 999),[m
+[31m-        user_id: userId,[m
+[31m-        wallet,       // 'demo' or 'real'[m
+[31m-        type,         // 'credit' or 'debit'[m
+[31m-        amount,[m
+[31m-        note,[m
+[31m-        at: Math.floor(Date.now() / 1000)[m
+[31m-    });[m
+[32m+[m[32mlet Razorpay;[m
+[32m+[m[32mif (RZP_REAL) {[m
+[32m+[m[32m    try { Razorpay = require('razorpay'); } catch (e) { console.warn('[Wallet] Razorpay package not installed'); }[m
+ }[m
+ [m
+[32m+[m[32mconst { getWallet, addTxn } = require('./wallet_utils');[m
+[32m+[m
+[32m+[m
+ // ── GET /api/wallet/me ────────────────────────────────────────────────────────[m
+ router.get('/me', authMiddleware, (req, res) => {[m
+     const w = getWallet(req.user.id);[m
+[31m-    res.json({ demo: w.demo, real: w.real });[m
+[32m+[m[32m    res.json({[m
+[32m+[m[32m        demo: w.demo,[m
+[32m+[m[32m        real: w.dep_bal + w.win_bal, // Total visible balance[m
+[32m+[m[32m        withdrawable: w.win_bal,     // Hidden from main view, used for withdrawal limit[m
+[32m+[m[32m        has_pin: !!w.pin[m
+[32m+[m[32m    });[m
+ });[m
+ [m
+ // ── GET /api/wallet/txns ──────────────────────────────────────────────────────[m
+[36m@@ -46,7 +40,7 @@[m [mrouter.get('/txns', authMiddleware, (req, res) => {[m
+ // ── POST /api/wallet/pay ─────────────────────────────────────────────────────[m
+ // Deduct from wallet and book a session seat[m
+ router.post('/pay', authMiddleware, (req, res) => {[m
+[31m-    const { session_id, wallet_type } = req.body; // wallet_type: 'demo' or 'real'[m
+[32m+[m[32m    const { session_id, wallet_type, pin } = req.body; // wallet_type: 'demo' or 'real'[m
+     const userId = req.user.id;[m
+ [m
+     const session = (data.sessions || []).find(s => s.id == session_id);[m
+[36m@@ -62,14 +56,28 @@[m [mrouter.post('/pay', authMiddleware, (req, res) => {[m
+     const type = wallet_type === 'real' ? 'real' : 'demo';[m
+     const fee = session.entry_fee;[m
+ [m
+[31m-    if (wallet[type] < fee) {[m
+[31m-        return res.status(400).json({[m
+[31m-            error: `Insufficient ${type} balance. Have ₹${wallet[type]}, need ₹${fee}`[m
+[31m-        });[m
+[32m+[m[32m    if (type === 'real') {[m
+[32m+[m[32m        if (!wallet.pin) return res.status(400).json({ error: 'Please set your Wallet PIN first in the Wallet page.' });[m
+[32m+[m[32m        if (String(wallet.pin) !== String(pin)) return res.status(403).json({ error: 'Incorrect Wallet PIN' });[m
+[32m+[m
+[32m+[m[32m        const totalReal = wallet.dep_bal + wallet.win_bal;[m
+[32m+[m[32m        if (totalReal < fee) {[m
+[32m+[m[32m            return res.status(400).json({ error: `Insufficient balance. Need ₹${fee}` });[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        // 🔄 ROTATE LOGIC: Use dep_bal (unrotated) first, then win_bal[m
+[32m+[m[32m        if (wallet.dep_bal >= fee) {[m
+[32m+[m[32m            wallet.dep_bal -= fee;[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            const remainder = fee - wallet.dep_bal;[m
+[32m+[m[32m            wallet.dep_bal = 0;[m
+[32m+[m[32m            wallet.win_bal -= remainder;[m
+[32m+[m[32m        }[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m        if (wallet.demo < fee) return res.status(400).json({ error: `Insufficient demo balance` });[m
+[32m+[m[32m        wallet.demo -= fee;[m
+     }[m
+ [m
+[31m-    // Deduct[m
+[31m-    wallet[type] -= fee;[m
+     addTxn(userId, type, 'debit', fee, `Seat booked: ${session.title}`);[m
+ [m
+     // Create seat[m
+[36m@@ -113,6 +121,90 @@[m [mrouter.post('/pay', authMiddleware, (req, res) => {[m
+ });[m
+ [m
+ [m
+[32m+[m[32m// ── POST /api/wallet/set-pin ─────────────────────────────────────────────────[m
+[32m+[m[32mrouter.post('/set-pin', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const { pin } = req.body;[m
+[32m+[m[32m    if (!pin || !/^\d{4}$/.test(pin)) return res.status(400).json({ error: 'PIN must be exactly 4 digits' });[m
+[32m+[m
+[32m+[m[32m    const wallet = getWallet(req.user.id);[m
+[32m+[m[32m    wallet.pin = String(pin);[m
+[32m+[m[32m    save();[m
+[32m+[m[32m    res.json({ success: true, message: 'Wallet PIN set successfully' });[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// ── POST /api/wallet/deposit ─────────────────────────────────────────────────[m
+[32m+[m[32m// Create a Razorpay order (or Simulation order) to add funds[m
+[32m+[m[32mrouter.post('/deposit', authMiddleware, async (req, res) => {[m
+[32m+[m[32m    const { amount } = req.body; // Amount in INR[m
+[32m+[m[32m    if (!amount || amount < 10) return res.status(400).json({ error: 'Minimum deposit is ₹10' });[m
+[32m+[m
+[32m+[m[32m    if (RZP_REAL && Razorpay) {[m
+[32m+[m[32m        try {[m
+[32m+[m[32m            const rzp = new Razorpay({ key_id: RZP_KEY_ID, key_secret: RZP_KEY_SECRET });[m
+[32m+[m[32m            const order = await rzp.orders.create({[m
+[32m+[m[32m                amount: amount * 100, // paise[m
+[32m+[m[32m                currency: 'INR',[m
+[32m+[m[32m                receipt: `wallet_${req.user.id}_${Date.now()}`,[m
+[32m+[m[32m                notes: { user_id: String(req.user.id), type: 'wallet_deposit' }[m
+[32m+[m[32m            });[m
+[32m+[m
+[32m+[m[32m            return res.json({[m
+[32m+[m[32m                order_id: order.id,[m
+[32m+[m[32m                amount: order.amount,[m
+[32m+[m[32m                currency: 'INR',[m
+[32m+[m[32m                key: RZP_KEY_ID[m
+[32m+[m[32m            });[m
+[32m+[m[32m        } catch (e) {[m
+[32m+[m[32m            console.error('[Wallet] Order create error:', e.message);[m
+[32m+[m[32m            return res.status(500).json({ error: 'Failed to create deposit order' });[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // 🏎️ SIMULATION MODE (when real keys are missing)[m
+[32m+[m[32m    console.log(`[Wallet] Using Simulation Mode for user ${req.user.id}`);[m
+[32m+[m[32m    res.json({[m
+[32m+[m[32m        simulation: true,[m
+[32m+[m[32m        order_id: `sim_order_${Date.now()}`,[m
+[32m+[m[32m        amount: amount * 100,[m
+[32m+[m[32m        currency: 'INR',[m
+[32m+[m[32m        key: 'SIMULATION_KEY'[m
+[32m+[m[32m    });[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// ── POST /api/wallet/confirm-deposit ──────────────────────────────────────────[m
+[32m+[m[32m// Verify Razorpay payment (or Simulation token) and credit real wallet[m
+[32m+[m[32mrouter.post('/confirm-deposit', authMiddleware, async (req, res) => {[m
+[32m+[m[32m    const { order_id, payment_id, razorpay_signature, amount, simulation } = req.body;[m
+[32m+[m
+[32m+[m[32m    if (simulation === true) {[m
+[32m+[m[32m        if (!order_id.startsWith('sim_order_')) {[m
+[32m+[m[32m            return res.status(400).json({ error: 'Invalid simulation request' });[m
+[32m+[m[32m        }[m
+[32m+[m[32m        console.log(`[Wallet] Simulation Deposit Approved for ${req.user.id}`);[m
+[32m+[m[32m    } else if (RZP_REAL && razorpay_signature) {[m
+[32m+[m[32m        const body = order_id + '|' + payment_id;[m
+[32m+[m[32m        const expectedSig = crypto.createHmac('sha256', RZP_KEY_SECRET).update(body).digest('hex');[m
+[32m+[m
+[32m+[m[32m        if (expectedSig !== razorpay_signature) {[m
+[32m+[m[32m            return res.status(400).json({ error: 'Invalid payment signature' });[m
+[32m+[m[32m        }[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m        return res.status(400).json({ error: 'Signature verification required or simulation missing' });[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    const wallet = getWallet(req.user.id);[m
+[32m+[m[32m    const depositAmount = Number(amount);[m
+[32m+[m
+[32m+[m[32m    // 🏷️ 100% Credit to dep_bal (Unrotated)[m
+[32m+[m[32m    wallet.dep_bal += depositAmount;[m
+[32m+[m
+[32m+[m[32m    addTxn(req.user.id, 'real', 'credit', depositAmount, `💰 Wallet Deposit (ID: ${payment_id})`);[m
+[32m+[m
+[32m+[m[32m    save();[m
+[32m+[m[32m    res.json({ success: true, new_balance: wallet.dep_bal + wallet.win_bal });[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m
+ // ── POST /api/wallet/admin/topup ─────────────────────────────────────────────[m
+ // Admin credits demo or real balance to any user[m
+ router.post('/admin/topup', authMiddleware, (req, res) => {[m
+[36m@@ -127,11 +219,16 @@[m [mrouter.post('/admin/topup', authMiddleware, (req, res) => {[m
+ [m
+     const wallet = getWallet(user_id);[m
+     const type = wallet_type === 'real' ? 'real' : 'demo';[m
+[31m-    wallet[type] += Number(amount);[m
+[32m+[m[32m    if (type === 'real') {[m
+[32m+[m[32m        wallet.win_bal += Number(amount); // Admin topups are treated as winnings/withdrawable[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m        wallet.demo += Number(amount);[m
+[32m+[m[32m    }[m
+[32m+[m
+     addTxn(user_id, type, 'credit', Number(amount), note || `Admin topup by ${liveUser.name}`);[m
+ [m
+     save();[m
+[31m-    res.json({ success: true, user: targetUser.mobile, wallet_type: type, new_balance: wallet[type] });[m
+[32m+[m[32m    res.json({ success: true, user: targetUser.mobile, wallet_type: type, new_balance: type === 'real' ? (wallet.dep_bal + wallet.win_bal) : wallet.demo });[m
+ });[m
+ [m
+ // ── GET /api/wallet/admin/list ────────────────────────────────────────────────[m
+[36m@@ -141,14 +238,22 @@[m [mrouter.get('/admin/list', authMiddleware, (req, res) => {[m
+ [m
+     const result = (data.users || []).map(u => {[m
+         const w = getWallet(u.id);[m
+[31m-        return { id: u.id, mobile: u.mobile, name: u.name, demo: w.demo, real: w.real };[m
+[32m+[m[32m        return {[m
+[32m+[m[32m            id: u.id,[m
+[32m+[m[32m            mobile: u.mobile,[m
+[32m+[m[32m            name: u.name,[m
+[32m+[m[32m            demo: w.demo,[m
+[32m+[m[32m            real: w.dep_bal + w.win_bal,[m
+[32m+[m[32m            dep_bal: w.dep_bal,[m
+[32m+[m[32m            win_bal: w.win_bal[m
+[32m+[m[32m        };[m
+     });[m
+ [m
+     res.json(result);[m
+ });[m
+ [m
+ // ── POST /api/wallet/admin/credit-prize ──────────────────────────────────────[m
+[31m-// Credit prize money to real wallet (called by results route)[m
+[32m+[m[32m// Credit prize money to real wallet (Full 100%)[m
+ router.post('/admin/credit-prize', authMiddleware, (req, res) => {[m
+     const liveUser = (data.users || []).find(u => u.id == req.user.id);[m
+     if (!liveUser || !liveUser.is_admin) return res.status(403).json({ error: 'Admin only' });[m
+[36m@@ -158,7 +263,7 @@[m [mrouter.post('/admin/credit-prize', authMiddleware, (req, res) => {[m
+ [m
+     prizes.forEach(p => {[m
+         const wallet = getWallet(p.user_id);[m
+[31m-        wallet.real += p.amount;[m
+[32m+[m[32m        wallet.win_bal += p.amount; // Prizes go to winning balance[m
+         addTxn(p.user_id, 'real', 'credit', p.amount, `🏆 Prize #${p.rank} — ${p.session_title}`);[m
+     });[m
+ [m
+[36m@@ -166,6 +271,60 @@[m [mrouter.post('/admin/credit-prize', authMiddleware, (req, res) => {[m
+     res.json({ success: true, credited: prizes.length });[m
+ });[m
+ [m
+[32m+[m[32m// ── POST /api/wallet/withdraw ────────────────────────────────────────────────[m
+[32m+[m[32m// Request a withdrawal (Apply 30% TDS here)[m
+[32m+[m[32mrouter.post('/withdraw', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const { amount, upi_id, pin } = req.body;[m
+[32m+[m[32m    if (!amount || amount < 100) return res.status(400).json({ error: 'Minimum withdrawal is ₹100' });[m
+[32m+[m[32m    if (!upi_id) return res.status(400).json({ error: 'UPI ID is required' });[m
+[32m+[m
+[32m+[m[32m    const wallet = getWallet(req.user.id);[m
+[32m+[m[32m    if (!wallet.pin) return res.status(400).json({ error: 'Please set your Wallet PIN first.' });[m
+[32m+[m[32m    if (String(wallet.pin) !== String(pin)) return res.status(403).json({ error: 'Incorrect Wallet PIN' });[m
+[32m+[m
+[32m+[m[32m    const withdrawalAmt = Number(amount);[m
+[32m+[m
+[32m+[m[32m    if (wallet.win_bal < withdrawalAmt) {[m
+[32m+[m[32m        return res.status(400).json({ error: 'Insufficient withdrawable balance. You must play quizzes to convert deposits into winnings.' });[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // 🏷️ APPLY 30% TDS (Tax Deducted at Source on withdrawal)[m
+[32m+[m[32m    const tdsAmount = Math.floor(withdrawalAmt * 0.30);[m
+[32m+[m[32m    const netPayout = withdrawalAmt - tdsAmount;[m
+[32m+[m
+[32m+[m[32m    // Deduct from win_bal[m
+[32m+[m[32m    wallet.win_bal -= withdrawalAmt;[m
+[32m+[m
+[32m+[m[32m    // Record transactions[m
+[32m+[m[32m    addTxn(req.user.id, 'real', 'debit', withdrawalAmt, `📤 Withdrawal Request (${upi_id})`);[m
+[32m+[m[32m    addTxn(req.user.id, 'real', 'credit', tdsAmount, `🏛️ TDS Adjustment (Will be paid to Govt)`); // This is slightly confusing, let's just record the net.[m
+[32m+[m[32m    // Actually, it's better to record:[m[41m [m
+[32m+[m[32m    // Debit withdrawal (full)[m
+[32m+[m[32m    // Note says (Includes 30% TDS: Rs X. Final Net Payout: Rs Y)[m
+[32m+[m
+[32m+[m[32m    // Store request for admin to process[m
+[32m+[m[32m    if (!data.withdrawals) data.withdrawals = [];[m
+[32m+[m[32m    const request = {[m
+[32m+[m[32m        id: Date.now(),[m
+[32m+[m[32m        user_id: req.user.id,[m
+[32m+[m[32m        amount: withdrawalAmt,[m
+[32m+[m[32m        tds: tdsAmount,[m
+[32m+[m[32m        net: netPayout,[m
+[32m+[m[32m        upi_id,[m
+[32m+[m[32m        status: 'pending',[m
+[32m+[m[32m        at: Math.floor(Date.now() / 1000)[m
+[32m+[m[32m    };[m
+[32m+[m[32m    data.withdrawals.push(request);[m
+[32m+[m
+[32m+[m[32m    save();[m
+[32m+[m[32m    res.json({[m
+[32m+[m[32m        success: true,[m
+[32m+[m[32m        net_amount: netPayout,[m
+[32m+[m[32m        tds_amount: tdsAmount,[m
+[32m+[m[32m        message: `Withdrawal request for ₹${netPayout} (after ₹${tdsAmount} TDS) placed successfully.`[m
+[32m+[m[32m    });[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m
+ module.exports = router;[m
+[31m-module.exports.getWallet = getWallet;[m
+[31m-module.exports.addTxn = addTxn;[m
+[41m+[m
+
+[33mcommit 011e23ed53bd3ff3ba356c998b86f599d700eed6[m
+Author: Manohar Lal <manoharlal7329@gmail.com>
+Date:   Tue Feb 24 02:22:42 2026 +0530
+
+    Initial QuizPro full setup
+
+[1mdiff --git a/routes/wallet.js b/routes/wallet.js[m
+[1mnew file mode 100644[m
+[1mindex 0000000..9950d88[m
+[1m--- /dev/null[m
+[1m+++ b/routes/wallet.js[m
+[36m@@ -0,0 +1,171 @@[m
+[32m+[m[32mconst express = require('express');[m
+[32m+[m[32mconst router = express.Router();[m
+[32m+[m[32mconst { data, save } = require('../database/db');[m
+[32m+[m[32mconst authMiddleware = require('../middleware/auth');[m
+[32m+[m
+[32m+[m[32m// ── Helper: get or create wallet ─────────────────────────────────────────────[m
+[32m+[m[32mfunction getWallet(userId) {[m
+[32m+[m[32m    if (!data.wallets) data.wallets = [];[m
+[32m+[m[32m    let w = data.wallets.find(w => String(w.user_id) === String(userId));[m
+[32m+[m[32m    if (!w) {[m
+[32m+[m[32m        w = { user_id: userId, demo: 0, real: 0 };[m
+[32m+[m[32m        data.wallets.push(w);[m
+[32m+[m[32m    }[m
+[32m+[m[32m    return w;[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m// ── Helper: record transaction ────────────────────────────────────────────────[m
+[32m+[m[32mfunction addTxn(userId, wallet, type, amount, note) {[m
+[32m+[m[32m    if (!data.wallet_txns) data.wallet_txns = [];[m
+[32m+[m[32m    data.wallet_txns.push({[m
+[32m+[m[32m        id: Date.now() + Math.floor(Math.random() * 999),[m
+[32m+[m[32m        user_id: userId,[m
+[32m+[m[32m        wallet,       // 'demo' or 'real'[m
+[32m+[m[32m        type,         // 'credit' or 'debit'[m
+[32m+[m[32m        amount,[m
+[32m+[m[32m        note,[m
+[32m+[m[32m        at: Math.floor(Date.now() / 1000)[m
+[32m+[m[32m    });[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32m// ── GET /api/wallet/me ────────────────────────────────────────────────────────[m
+[32m+[m[32mrouter.get('/me', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const w = getWallet(req.user.id);[m
+[32m+[m[32m    res.json({ demo: w.demo, real: w.real });[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// ── GET /api/wallet/txns ──────────────────────────────────────────────────────[m
+[32m+[m[32mrouter.get('/txns', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const txns = (data.wallet_txns || [])[m
+[32m+[m[32m        .filter(t => String(t.user_id) === String(req.user.id))[m
+[32m+[m[32m        .sort((a, b) => b.at - a.at)[m
+[32m+[m[32m        .slice(0, 30);[m
+[32m+[m[32m    res.json(txns);[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// ── POST /api/wallet/pay ─────────────────────────────────────────────────────[m
+[32m+[m[32m// Deduct from wallet and book a session seat[m
+[32m+[m[32mrouter.post('/pay', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const { session_id, wallet_type } = req.body; // wallet_type: 'demo' or 'real'[m
+[32m+[m[32m    const userId = req.user.id;[m
+[32m+[m
+[32m+[m[32m    const session = (data.sessions || []).find(s => s.id == session_id);[m
+[32m+[m[32m    if (!session) return res.status(404).json({ error: 'Session not found' });[m
+[32m+[m[32m    if (session.status !== 'open') return res.status(400).json({ error: 'Session not open' });[m
+[32m+[m[32m    if (session.seats_booked >= session.seat_limit) return res.status(400).json({ error: 'Seats full' });[m
+[32m+[m
+[32m+[m[32m    // Prevent double booking[m
+[32m+[m[32m    const already = (data.seats || []).find(s => s.session_id == session_id && String(s.user_id) === String(userId));[m
+[32m+[m[32m    if (already) return res.status(400).json({ error: 'Already booked' });[m
+[32m+[m
+[32m+[m[32m    const wallet = getWallet(userId);[m
+[32m+[m[32m    const type = wallet_type === 'real' ? 'real' : 'demo';[m
+[32m+[m[32m    const fee = session.entry_fee;[m
+[32m+[m
+[32m+[m[32m    if (wallet[type] < fee) {[m
+[32m+[m[32m        return res.status(400).json({[m
+[32m+[m[32m            error: `Insufficient ${type} balance. Have ₹${wallet[type]}, need ₹${fee}`[m
+[32m+[m[32m        });[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    // Deduct[m
+[32m+[m[32m    wallet[type] -= fee;[m
+[32m+[m[32m    addTxn(userId, type, 'debit', fee, `Seat booked: ${session.title}`);[m
+[32m+[m
+[32m+[m[32m    // Create seat[m
+[32m+[m[32m    if (!data.seats) data.seats = [];[m
+[32m+[m[32m    const seat = { id: Date.now(), session_id: Number(session_id), user_id: userId, paid_at: Math.floor(Date.now() / 1000), payment_id: `WALLET_${type.toUpperCase()}_${Date.now()}` };[m
+[32m+[m[32m    data.seats.push(seat);[m
+[32m+[m[32m    session.seats_booked = (session.seats_booked || 0) + 1;[m
+[32m+[m
+[32m+[m[32m    const result = { success: true, seat_id: seat.id, wallet_type: type, balance_after: wallet[type] };[m
+[32m+[m
+[32m+[m[32m    // Auto-confirm if full[m
+[32m+[m[32m    if (session.seats_booked >= session.seat_limit) {[m
+[32m+[m[32m        const delaySeconds = (session.quiz_delay_minutes || 60) * 60;[m
+[32m+[m[32m        session.status = 'confirmed';[m
+[32m+[m[32m        session.quiz_start_at = Math.floor(Date.now() / 1000) + delaySeconds;[m
+[32m+[m[32m        session.pdf_at = session.quiz_start_at - 1800; // PDF unlocks 30 min before quiz[m
+[32m+[m[32m        session.prize_pool = Math.floor(session.entry_fee * session.seat_limit * 0.75);[m
+[32m+[m[32m        session.platform_cut = Math.floor(session.entry_fee * session.seat_limit * 0.25);[m
+[32m+[m[32m        result.session_confirmed = true;[m
+[32m+[m[32m        result.quiz_start_at = session.quiz_start_at;[m
+[32m+[m[32m        result.pdf_at = session.pdf_at;[m
+[32m+[m[32m        console.log(`✅ Session ${session.id} CONFIRMED via wallet — Quiz in ${session.quiz_delay_minutes || 60} min`);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    save();[m
+[32m+[m
+[32m+[m[32m    // SSE broadcast — notify all session viewers[m
+[32m+[m[32m    try {[m
+[32m+[m[32m        const sessionsRouter = require('./sessions');[m
+[32m+[m[32m        if (sessionsRouter.broadcastSession) {[m
+[32m+[m[32m            sessionsRouter.broadcastSession(String(session_id), {[m
+[32m+[m[32m                seats_booked: session.seats_booked,[m
+[32m+[m[32m                status: session.status,[m
+[32m+[m[32m                quiz_start_at: session.quiz_start_at || null,[m
+[32m+[m[32m                pdf_at: session.pdf_at || null[m
+[32m+[m[32m            });[m
+[32m+[m[32m        }[m
+[32m+[m[32m    } catch (e) { }[m
+[32m+[m
+[32m+[m[32m    res.json(result);[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m
+[32m+[m[32m// ── POST /api/wallet/admin/topup ─────────────────────────────────────────────[m
+[32m+[m[32m// Admin credits demo or real balance to any user[m
+[32m+[m[32mrouter.post('/admin/topup', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const liveUser = (data.users || []).find(u => u.id == req.user.id);[m
+[32m+[m[32m    if (!liveUser || !liveUser.is_admin) return res.status(403).json({ error: 'Admin only' });[m
+[32m+[m
+[32m+[m[32m    const { user_id, wallet_type, amount, note } = req.body;[m
+[32m+[m[32m    if (!user_id || !wallet_type || !amount || amount <= 0) return res.status(400).json({ error: 'Invalid params' });[m
+[32m+[m
+[32m+[m[32m    const targetUser = (data.users || []).find(u => String(u.id) === String(user_id));[m
+[32m+[m[32m    if (!targetUser) return res.status(404).json({ error: 'User not found' });[m
+[32m+[m
+[32m+[m[32m    const wallet = getWallet(user_id);[m
+[32m+[m[32m    const type = wallet_type === 'real' ? 'real' : 'demo';[m
+[32m+[m[32m    wallet[type] += Number(amount);[m
+[32m+[m[32m    addTxn(user_id, type, 'credit', Number(amount), note || `Admin topup by ${liveUser.name}`);[m
+[32m+[m
+[32m+[m[32m    save();[m
+[32m+[m[32m    res.json({ success: true, user: targetUser.mobile, wallet_type: type, new_balance: wallet[type] });[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// ── GET /api/wallet/admin/list ────────────────────────────────────────────────[m
+[32m+[m[32mrouter.get('/admin/list', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const liveUser = (data.users || []).find(u => u.id == req.user.id);[m
+[32m+[m[32m    if (!liveUser || !liveUser.is_admin) return res.status(403).json({ error: 'Admin only' });[m
+[32m+[m
+[32m+[m[32m    const result = (data.users || []).map(u => {[m
+[32m+[m[32m        const w = getWallet(u.id);[m
+[32m+[m[32m        return { id: u.id, mobile: u.mobile, name: u.name, demo: w.demo, real: w.real };[m
+[32m+[m[32m    });[m
+[32m+[m
+[32m+[m[32m    res.json(result);[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32m// ── POST /api/wallet/admin/credit-prize ──────────────────────────────────────[m
+[32m+[m[32m// Credit prize money to real wallet (called by results route)[m
+[32m+[m[32mrouter.post('/admin/credit-prize', authMiddleware, (req, res) => {[m
+[32m+[m[32m    const liveUser = (data.users || []).find(u => u.id == req.user.id);[m
+[32m+[m[32m    if (!liveUser || !liveUser.is_admin) return res.status(403).json({ error: 'Admin only' });[m
+[32m+[m
+[32m+[m[32m    const prizes = req.body.prizes; // [{ user_id, amount, session_title, rank }][m
+[32m+[m[32m    if (!Array.isArray(prizes)) return res.status(400).json({ error: 'prizes array required' });[m
+[32m+[m
+[32m+[m[32m    prizes.forEach(p => {[m
+[32m+[m[32m        const wallet = getWallet(p.user_id);[m
+[32m+[m[32m        wallet.real += p.amount;[m
+[32m+[m[32m        addTxn(p.user_id, 'real', 'credit', p.amount, `🏆 Prize #${p.rank} — ${p.session_title}`);[m
+[32m+[m[32m    });[m
+[32m+[m
+[32m+[m[32m    save();[m
+[32m+[m[32m    res.json({ success: true, credited: prizes.length });[m
+[32m+[m[32m});[m
+[32m+[m
+[32m+[m[32mmodule.exports = router;[m
+[32m+[m[32mmodule.exports.getWallet = getWallet;[m
+[32m+[m[32mmodule.exports.addTxn = addTxn;[m

@@ -141,6 +141,7 @@
                     <a href="#" onclick="showPanel('users',this)">👤 Users</a>
                     <a href="#" onclick="showPanel('wallets',this)">💰 Wallets</a>
                     <a href="#" onclick="showPanel('rewards',this)">🎁 Rewards</a>
+                    <a href="/admin_system.html">🛡️ System Health</a>
                 </div>
 
                 <!-- Content -->
@@ -260,6 +261,21 @@
                                     </div>
                                     <p style="font-size:.75rem; color:var(--muted); text-align:center;">
                                         Required Columns: <strong>question, a, b, c, d, correct, explanation</strong>
+                                    </p>
+                                </div>
+
+                                <div class="card" style="margin-bottom:20px;">
+                                    <h3 style="margin-bottom:14px;">📋 Copy from Another Session</h3>
+                                    <div class="form-group">
+                                        <label>Source Session</label>
+                                        <select id="copySourceSelect">
+                                            <option value="">-- Select Source Session --</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-gold btn-full" onclick="copyQuestions()">Copy Questions
+                                        →</button>
+                                    <p style="font-size:.7rem; color:var(--muted); margin-top:10px; text-align:center;">
+                                        ⚠️ This will REPLACE all questions in the current session.
                                     </p>
                                 </div>
 
@@ -386,7 +402,6 @@
                                 <div class="form-group">
                                     <label>Wallet Type</label>
                                     <select id="topupType">
-                                        <option value="demo">🎭 Demo Money</option>
                                         <option value="real">💵 Real Money</option>
                                     </select>
                                 </div>
@@ -558,7 +573,28 @@
         async function loadSessionsForQ() {
             const sessions = await api('/api/admin/sessions');
             const sel = document.getElementById('qSessionSelect');
-            sel.innerHTML = '<option value="">-- Select Session --</option>' + sessions.map(s => `<option value="${s.id}">#${s.id} ${s.title}</option>`).join('');
+            const sourceSel = document.getElementById('copySourceSelect');
+            const options = sessions.map(s => `<option value="${s.id}">#${s.id} ${s.title}</option>`).join('');
+            sel.innerHTML = '<option value="">-- Select Session --</option>' + options;
+            sourceSel.innerHTML = '<option value="">-- Select Source Session --</option>' + options;
+        }
+
+        async function copyQuestions() {
+            const sid = document.getElementById('qSessionSelect').value;
+            const sourceId = document.getElementById('copySourceSelect').value;
+            if (!sid || !sourceId) return toast('Current session and Source session are both required!', 'error');
+            if (sid === sourceId) return toast('Source and Target cannot be the same!', 'error');
+
+            if (!confirm('Are you sure you want to COPY all questions? Existing questions in this session will be DELETED.')) return;
+
+            toast('Copying questions...', 'info');
+            try {
+                const res = await api(`/api/admin/sessions/${sid}/copy-questions`, 'POST', { source_id: sourceId });
+                toast(`✅ ${res.count} questions copied successfully!`, 'success');
+                loadSessionQuestions();
+            } catch (e) {
+                toast('❌ Copy failed: ' + e.message, 'error');
+            }
         }
 
         async function loadSessionQuestions() {
@@ -718,7 +754,6 @@
                                     </td>
                                     <td>
                                         <div style="color:var(--green); font-weight:700;">₹${u.wallet_real} <span style="font-size:.7rem; color:var(--muted);">Real</span></div>
-                                        <div style="color:var(--blue); font-size:.75rem;">₹${u.wallet_demo} <span style="font-size:.7rem; color:var(--muted);">Demo</span></div>
                                     </td>
                                     <td>
                                         ${u.id == 1 ? '-' : `
@@ -874,13 +909,12 @@
             if (!wallets.length) { document.getElementById('walletsTable').innerHTML = '<p style="color:var(--muted);">No users yet</p>'; return; }
             document.getElementById('walletsTable').innerHTML = `
                 <table>
-                    <thead><tr><th>Mobile</th><th>Name</th><th>🎭 Demo</th><th>💵 Real</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Mobile</th><th>Name</th><th>💵 Real Balance</th><th>Action</th></tr></thead>
                     <tbody>
                     ${wallets.map(w => `
                         <tr>
                             <td>${w.mobile}</td>
                             <td>${w.name || '—'}</td>
-                            <td style="color:#60a5fa;font-weight:700;">₹${w.demo}</td>
                             <td style="color:#10b981;font-weight:700;">₹${w.real}</td>
                             <td>
                                 <button class="btn btn-outline" style="padding:4px 10px;font-size:.75rem;" onclick="quickTopup('${w.id}', '${w.mobile}')">+ Add</button>

@@ -181,81 +181,95 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Payment Success Modal -->
-    <div id="successModal" class="modal-overlay" style="display:none;">
-        <div class="modal-box" style="text-align:center;">
-            <div style="font-size:3rem;">🎉</div>
-            <h3 id="successTitle">Seat Booked Successfully!</h3>
-            <p style="color:var(--muted); margin:12px 0;" id="successMsg">Your entry fee is paid. You'll get a
-                notification when the session is confirmed.</p>
-            <div id="successDetails" style="margin:16px 0;"></div>
-            <button class="btn btn-primary btn-full" onclick="closeModal('successModal')">OK</button>
-        </div>
-    </div>
-
-    <!-- Session Confirmed Modal -->
-    <div id="confirmedModal" class="modal-overlay" style="display:none;">
-        <div class="modal-box" style="text-align:center;">
-            <div style="font-size:3rem; margin-bottom:12px;">🎊</div>
-            <h3 style="color:var(--green);">Session Confirmed!</h3>
-            <div id="confirmedDetails" style="margin:18px 0; line-height:1.6; font-size:.9rem;">
-                <!-- Filled via JS -->
+        <div class="modal" id="payChoiceModal">
+            <div class="modal-content" style="max-width:340px;">
+                <h3>Select Payment Method</h3>
+                <p style="color:var(--muted); font-size:.85rem; margin-bottom:20px;">Choose how you want to pay</p>
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <button class="btn btn-primary btn-full" onclick="payWithApp()" style="background:#111827;">
+                        💳 Cashfree (UPI/Cards)
+                    </button>
+                </div>
+                <button class="btn btn-outline btn-full" style="margin-top:12px; border:none; color:var(--muted);"
+                    onclick="closeModal('payChoiceModal')">Cancel</button>
             </div>
-            <button class="btn btn-gold btn-full" onclick="closeModal('confirmedModal')">OK</button>
         </div>
-    </div>
 
-    <!-- Success/Confirm Modals are kept -->
+        <!-- Payment Success Modal -->
+        <div id="successModal" class="modal-overlay" style="display:none;">
+            <div class="modal-box" style="text-align:center;">
+                <div style="font-size:3rem;">🎉</div>
+                <h3 id="successTitle">Seat Booked Successfully!</h3>
+                <p style="color:var(--muted); margin:12px 0;" id="successMsg">Your entry fee is paid. You'll get a
+                    notification when the session is confirmed.</p>
+                <div id="successDetails" style="margin:16px 0;"></div>
+                <button class="btn btn-primary btn-full" onclick="closeModal('successModal')">OK</button>
+            </div>
+        </div>
+
+        <!-- Session Confirmed Modal -->
+        <div id="confirmedModal" class="modal-overlay" style="display:none;">
+            <div class="modal-box" style="text-align:center;">
+                <div style="font-size:3rem; margin-bottom:12px;">🎊</div>
+                <h3 style="color:var(--green);">Session Confirmed!</h3>
+                <div id="confirmedDetails" style="margin:18px 0; line-height:1.6; font-size:.9rem;">
+                    <!-- Filled via JS -->
+                </div>
+                <button class="btn btn-gold btn-full" onclick="closeModal('confirmedModal')">OK</button>
+            </div>
+        </div>
+
+        <!-- Success/Confirm Modals are kept -->
 
 
-    <div id="toast"></div>
-    <script src="/js/common.js"></script>
-    <script>
-        requireLogin();
-        const params = new URLSearchParams(location.search);
-        const sessionId = params.get('id');
-        let sessionData = null;
-        let hasSeat = false;
-        let evtSource = null;
+        <div id="toast"></div>
+        <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+        <script src="/js/common.js"></script>
+        <script>
+            requireLogin();
+            const params = new URLSearchParams(location.search);
+            const sessionId = params.get('id');
+            let sessionData = null;
+            let hasSeat = false;
+            let evtSource = null;
 
 
-        async function load() {
-            if (!sessionId) { window.location.href = '/dashboard.html'; return; }
-            try {
-                sessionData = await api(`/api/sessions/${sessionId}`);
-                const seatCheck = await api(`/api/sessions/${sessionId}/my-seat`).catch(() => ({ has_seat: false }));
-                hasSeat = seatCheck.has_seat;
-                initSSE(); // Start real-time updates
-                render();
-                document.getElementById('content').style.display = 'block';
-            } catch (e) {
-                document.getElementById('content').innerHTML =
-                    `<div style="text-align:center;padding:60px 20px;">
+            async function load() {
+                if (!sessionId) { window.location.href = '/dashboard.html'; return; }
+                try {
+                    sessionData = await api(`/api/sessions/${sessionId}`);
+                    const seatCheck = await api(`/api/sessions/${sessionId}/my-seat`).catch(() => ({ has_seat: false }));
+                    hasSeat = seatCheck.has_seat;
+                    initSSE(); // Start real-time updates
+                    render();
+                    document.getElementById('content').style.display = 'block';
+                } catch (e) {
+                    document.getElementById('content').innerHTML =
+                        `<div style="text-align:center;padding:60px 20px;">
                         <div style="font-size:3rem;margin-bottom:12px;">⚠️</div>
                         <h3 style="color:var(--muted);">Session load nahi hua</h3>
                         <p style="color:var(--muted);font-size:.85rem;margin:8px 0 20px;">${e.message}</p>
                         <button class="btn btn-outline" onclick="load()">🔄 Retry</button>
                         <a href="/dashboard.html" class="btn btn-primary" style="margin-left:10px;">← Dashboard</a>
                     </div>`;
-                document.getElementById('content').style.display = 'block';
-            } finally {
-                hideLoading('loadingState'); // ALWAYS hide spinner
+                    document.getElementById('content').style.display = 'block';
+                } finally {
+                    hideLoading('loadingState'); // ALWAYS hide spinner
+                }
             }
-        }
 
-        function render() {
-            const s = sessionData;
-            const pct = Math.round((s.seats_booked / s.seat_limit) * 100);
-            const seatsLeft = s.seat_limit - s.seats_booked;
-            const prizePool = Math.floor(s.entry_fee * s.seat_limit * 0.75);
-            const platformCut = Math.floor(s.entry_fee * s.seat_limit * 0.25);
+            function render() {
+                const s = sessionData;
+                const pct = Math.round((s.seats_booked / s.seat_limit) * 100);
+                const seatsLeft = s.seat_limit - s.seats_booked;
+                const prizePool = Math.floor(s.entry_fee * s.seat_limit * 0.75);
+                const platformCut = Math.floor(s.entry_fee * s.seat_limit * 0.25);
 
-            document.title = s.title + ' — QuizPro';
+                document.title = s.title + ' — QuizPro';
 
-            // Header
-            document.getElementById('sessionHeader').innerHTML = `
+                // Header
+                document.getElementById('sessionHeader').innerHTML = `
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
           <span class="badge badge-${s.level === 'beginner' ? 'green' : s.level === 'intermediate' ? 'gold' : 'red'}">${s.category_name}</span>
           <span class="badge badge-blue">${s.seat_limit} seats</span>
@@ -270,8 +284,8 @@
         </div>
         <h3 style="margin-bottom:16px; font-weight:700;">📋 Quiz Questions (${s.questions?.length || 0})</h3>`;
 
-            // Questions
-            document.getElementById('questionsList').innerHTML = (s.questions || []).map((q, i) => `
+                // Questions
+                document.getElementById('questionsList').innerHTML = (s.questions || []).map((q, i) => `
         <div class="q-card">
           <div class="q-num">Question ${i + 1} of ${s.questions.length}</div>
           <div class="q-text">${q.question_text}</div>
@@ -284,9 +298,9 @@
           <div class="q-lock">🔒 Book your seat to unlock answers and live quiz.</div>
         </div>`).join('');
 
-            // Booking card
-            const statusColor = { open: 'blue', confirmed: 'green', live: 'red', completed: 'violet' }[s.status] || 'blue';
-            document.getElementById('bookingCard').innerHTML = `
+                // Booking card
+                const statusColor = { open: 'blue', confirmed: 'green', live: 'red', completed: 'violet' }[s.status] || 'blue';
+                document.getElementById('bookingCard').innerHTML = `
         <div style="text-align:center; margin-bottom:20px;">
           <div style="font-size:2.2rem; font-weight:900; color:var(--gold);">₹${s.entry_fee}</div>
           <div style="font-size:.82rem; color:var(--muted);">Entry Fee</div>
@@ -315,20 +329,20 @@
             </tr></thead>
             <tbody>
               ${(() => {
-                    const arr = [
-                        { r: '🥇 1st', pct: 0.25 }, { r: '🥈 2nd', pct: 0.15 }, { r: '🥉 3rd', pct: 0.11 },
-                        { r: '4th', pct: 0.09 }, { r: '5th', pct: 0.08 }, { r: '6th', pct: 0.07 },
-                        { r: '7th', pct: 0.05 }, { r: '8th', pct: 0.045 }, { r: '9th', pct: 0.04 },
-                        { r: '10th', pct: 0.035 }, { r: '11th', pct: 0.025 }, { r: '12th', pct: 0.02 },
-                        { r: '13th', pct: 0.015 }, { r: '14th', pct: 0.01 }, { r: '15th', pct: 0.01 }
-                    ].map(d => ({ r: d.r, a: Math.floor(prizePool * d.pct) }));
-                    const rem = prizePool - arr.reduce((s, p) => s + p.a, 0);
-                    arr[0].a += rem; // add to 1st rank so order stays strictly decreasing
-                    return arr.map(p => `<tr style="border-bottom:1px solid var(--border);">
+                        const arr = [
+                            { r: '🥇 1st', pct: 0.25 }, { r: '🥈 2nd', pct: 0.15 }, { r: '🥉 3rd', pct: 0.11 },
+                            { r: '4th', pct: 0.09 }, { r: '5th', pct: 0.08 }, { r: '6th', pct: 0.07 },
+                            { r: '7th', pct: 0.05 }, { r: '8th', pct: 0.045 }, { r: '9th', pct: 0.04 },
+                            { r: '10th', pct: 0.035 }, { r: '11th', pct: 0.025 }, { r: '12th', pct: 0.02 },
+                            { r: '13th', pct: 0.015 }, { r: '14th', pct: 0.01 }, { r: '15th', pct: 0.01 }
+                        ].map(d => ({ r: d.r, a: Math.floor(prizePool * d.pct) }));
+                        const rem = prizePool - arr.reduce((s, p) => s + p.a, 0);
+                        arr[0].a += rem; // add to 1st rank so order stays strictly decreasing
+                        return arr.map(p => `<tr style="border-bottom:1px solid var(--border);">
                     <td style="padding:5px 10px;">${p.r}</td>
                     <td style="padding:5px 10px; text-align:right; color:var(--gold); font-weight:700;">₹${p.a.toLocaleString()}</td>
                   </tr>`).join('');
-                })()}
+                    })()}
             </tbody>
           </table>
           <div style="padding:8px 12px; font-size:.7rem; color:var(--muted); border-top:1px solid var(--border);">
@@ -338,39 +352,39 @@
 
         <div style="margin:12px 0; padding:10px 12px; border-radius:10px; background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.2); font-size:.8rem; color:var(--muted);">
           🔒 Session starts only when ALL seats are filled<br>
-          📘 PDF access 30 min before quiz<br>
+          📘 Study material access 30 min before quiz<br>
           ✅ Ranking by Score → Speed (no luck!)
         </div>
 
         ${hasSeat ? `
           <div class="alert alert-success">✅ ${s.status === 'confirmed' || s.status === 'live' ? 'Session is confirmed!' : 'Seat booked successfully! Waiting for full booking...'}</div>
           ${(() => {
-                        const now = Math.floor(Date.now() / 1000);
-                        const isConfirmed = s.status === 'confirmed' || s.status === 'live';
-                        const pdfAvailable = s.quiz_start_at && (now >= (s.quiz_start_at - 1800));
+                            const now = Math.floor(Date.now() / 1000);
+                            const isConfirmed = s.status === 'confirmed' || s.status === 'live';
+                            const pdfAvailable = s.quiz_start_at && (now >= (s.quiz_start_at - 1800));
 
-                        let pdfBtnAction = '';
-                        if (isConfirmed && pdfAvailable) {
-                            pdfBtnAction = `window.location='/study.html?id=${sessionId}'`;
-                        } else if (isConfirmed) {
-                            const waitRem = (s.quiz_start_at - 1800) - now;
-                            const waitMin = Math.ceil(waitRem / 60);
-                            pdfBtnAction = `toast('📘 PDF opens in ${waitMin} minutes! Stay alert.', 'info')`;
-                        } else {
-                            pdfBtnAction = `toast('PDF will unlock as soon as ALL seats are booked.', 'info')`;
-                        }
+                            let pdfBtnAction = '';
+                            if (isConfirmed && pdfAvailable) {
+                                pdfBtnAction = `window.location='/study.html?id=${sessionId}'`;
+                            } else if (isConfirmed) {
+                                const waitRem = (s.quiz_start_at - 1800) - now;
+                                const waitMin = Math.ceil(waitRem / 60);
+                                pdfBtnAction = `toast('📘 PDF opens in ${waitMin} minutes! Stay alert.', 'info')`;
+                            } else {
+                                pdfBtnAction = `toast('PDF will unlock as soon as ALL seats are booked.', 'info')`;
+                            }
 
-                        return `
+                            return `
                     <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
                         <!-- PDF Button: Always visible for paid users -->
                         <button class="btn btn-success btn-full" style="padding:14px; font-weight:700;" onclick="${pdfBtnAction}">
-                            📘 Open Study Material & PDF
+                            📘 Open Study Material
                         </button>
 
                         ${isConfirmed ? `<a href="/quiz.html?id=${sessionId}" class="btn btn-gold btn-full" style="padding:14px; font-weight:700;">🔥 LIVE QUIZ ENTRANCE</a>` : ''}
                     </div>
                 `;
-                    })()}
+                        })()}
         ` : s.status === 'open' ? `
           <button class="btn btn-primary btn-full" id="bookBtn" onclick="openPayChoice()" style="margin-top:4px; font-size:1rem; padding:14px;">
             🔐 Join Quiz from Wallet — ₹${s.entry_fee}
@@ -378,230 +392,182 @@
           <p style="font-size:.75rem; color:var(--muted); text-align:center; margin-top:10px;">🔒 Secured by 4-Digit Wallet PIN</p>
         ` : `<div class="alert alert-info">This session is ${s.status}. No seats available.</div>`}`;
 
-            // Moved SSE to initSSE() 
+                // Moved SSE to initSSE() 
 
-        }
+            }
 
-        function initSSE() {
-            if (evtSource) return; // Already connected
-            evtSource = new EventSource(`/api/sessions/${sessionId}/events`);
-            evtSource.onmessage = (e) => {
-                const update = JSON.parse(e.data);
-                const oldStatus = sessionData.status;
-                sessionData.seats_booked = update.seats_booked;
-                sessionData.status = update.status;
-                if (update.quiz_start_at) sessionData.quiz_start_at = update.quiz_start_at;
+            function initSSE() {
+                if (evtSource) return; // Already connected
+                evtSource = new EventSource(`/api/sessions/${sessionId}/events`);
+                evtSource.onmessage = (e) => {
+                    const update = JSON.parse(e.data);
+                    const oldStatus = sessionData.status;
+                    sessionData.seats_booked = update.seats_booked;
+                    sessionData.status = update.status;
+                    if (update.quiz_start_at) sessionData.quiz_start_at = update.quiz_start_at;
 
-                // 🎊 SHOW CONFIRMED POPUP if status changed to confirmed
-                if (oldStatus === 'open' && update.status === 'confirmed' && hasSeat) {
-                    showConfirmedPopup(update);
-                }
+                    // 🎊 SHOW CONFIRMED POPUP if status changed to confirmed
+                    if (oldStatus === 'open' && update.status === 'confirmed' && hasSeat) {
+                        showConfirmedPopup(update);
+                    }
 
-                // 🚀 AUTO-REDIRECT when quiz goes LIVE
-                if (update.status === 'live') {
-                    if (hasSeat) {
-                        // Show countdown and redirect
-                        document.body.innerHTML = `
+                    // 🚀 AUTO-REDIRECT when quiz goes LIVE
+                    if (update.status === 'live') {
+                        if (hasSeat) {
+                            // Show countdown and redirect
+                            document.body.innerHTML = `
                           <div style="position:fixed;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
                             <div style="font-size:4rem; margin-bottom:16px; animation:pulse 1s infinite;">⚡</div>
                             <h1 style="color:#f59e0b;font-size:2rem;margin-bottom:8px;">🔥 QUIZ STARTED!</h1>
                             <p style="color:#94a3b8;margin-bottom:24px;">Redirecting in <span id="cdCount">3</span> seconds...</p>
                             <a href="/quiz.html?id=${sessionId}" class="btn btn-gold" style="padding:14px 32px;font-size:1.1rem;">🔥 START QUIZ</a>
                           </div>`;
-                        let cd = 3;
-                        const cdInt = setInterval(() => {
-                            const el = document.getElementById('cdCount');
-                            if (el) el.textContent = --cd;
-                            if (cd <= 0) { clearInterval(cdInt); window.location.href = `/quiz.html?id=${sessionId}`; }
-                        }, 1000);
+                            let cd = 3;
+                            const cdInt = setInterval(() => {
+                                const el = document.getElementById('cdCount');
+                                if (el) el.textContent = --cd;
+                                if (cd <= 0) { clearInterval(cdInt); window.location.href = `/quiz.html?id=${sessionId}`; }
+                            }, 1000);
+                        } else {
+                            toast('🔥 Quiz has STARTED! Book a seat to participate.', 'error');
+                            render();
+                        }
                     } else {
-                        toast('🔥 Quiz has STARTED! Book a seat to participate.', 'error');
                         render();
                     }
-                } else {
-                    render();
-                }
-            };
-        }
-
-        // Advance Notification Logic
-        let _notified30 = false;
-        function checkAdvanceNotifications() {
-            if (!hasSeat || !sessionData || !sessionData.quiz_start_at || _notified30) return;
-            const now = Math.floor(Date.now() / 1000);
-            const remaining = sessionData.quiz_start_at - now;
-
-            // Trigger 30 minutes before
-            if (remaining <= 1800 && remaining > 0) {
-                _notified30 = true;
-                showConfirmedPopup(sessionData, "30_MIN_WARNING");
-            }
-        }
-        setInterval(checkAdvanceNotifications, 30000); // Check every 30s
-
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        // openPayChoice is also defined later (wallet version overrides) — keep simple version as fallback
-        function previewToast() { if (!hasSeat) toast('Book your seat to unlock answers and live quiz.', 'info'); }
-
-        // ── RAZORPAY CHECKOUT (UPI App via Razorpay SDK) ───────────────────────────────────
-        async function payWithApp() {
-            closeModal('payChoiceModal');
-            toast('Payment prepare ho rahi hai...', 'info');
-            try {
-                const order = await api('/api/payments/create-order', 'POST', { session_id: sessionId });
-
-                // Demo mode (no Razorpay key)
-                if (order.demo) {
-                    toast('❌ Razorpay test key missing. Dummy Pay use karo ya UTR enter karo.', 'error');
-                    confirmPayment();
-                    return;
-                }
-
-                // Load Razorpay SDK if not loaded
-                if (!window.Razorpay) {
-                    await new Promise((resolve, reject) => {
-                        const s = document.createElement('script');
-                        s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-                        s.onload = resolve; s.onerror = reject;
-                        document.head.appendChild(s);
-                    });
-                }
-
-                const user = getUser() || {};
-                const options = {
-                    key: order.key,
-                    amount: order.amount,
-                    currency: 'INR',
-                    name: 'QuizPro',
-                    description: `Session Entry Fee`,
-                    order_id: order.order_id,
-                    prefill: { contact: user.email || '' },
-                    theme: { color: '#f59e0b' },
-                    handler: async function (response) {
-                        toast('⏳ Payment verify ho raha hai...', 'info');
-                        try {
-                            const result = await api('/api/payments/verify', 'POST', {
-                                order_id: response.razorpay_order_id,
-                                payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature,
-                                session_id: sessionId
-                            });
-                            showSuccess(result);
-                            setTimeout(() => render(), 1500);
-                        } catch (e) {
-                            toast('❌ Payment verify failed: ' + e.message, 'error');
-                        }
-                    },
-                    modal: { ondismiss: () => toast('Payment cancelled. Try again.', 'info') }
                 };
-
-                const rzp = new window.Razorpay(options);
-                rzp.on('payment.failed', (resp) => toast('❌ Payment failed: ' + resp.error.description, 'error'));
-                rzp.open();
-
-            } catch (e) {
-                toast('❌ Error: ' + e.message, 'error');
-                // Fallback to UPI deeplink
-                const upiUrl = `upi://pay?pa=${encodeURIComponent('manoharlala02911-1@okicici')}&pn=QuizPro&am=${sessionData.entry_fee}&cu=INR&tn=QuizPro`;
-                window.location.href = upiUrl;
-            }
-        }
-
-        function showQR() {
-            document.getElementById('qrAmount').textContent = `₹${sessionData.entry_fee}`;
-            closeModal('payChoiceModal');
-            document.getElementById('qrModal').style.display = 'flex';
-        }
-
-        async function confirmPayment() {
-            const utr = document.getElementById('utrInput').value.trim();
-            // Accept 8-20 alphanumeric characters (covers all Indian banks)
-            if (!/^[a-zA-Z0-9]{8,20}$/.test(utr)) {
-                return toast('Please enter a valid UTR / Ref No. (8–20 characters)', 'error');
             }
 
-            toast('Verifying transaction...', 'info');
-            try {
-                const order = await api('/api/payments/create-order', 'POST', { session_id: sessionId });
-                const result = await api('/api/payments/verify', 'POST', {
-                    order_id: order.order_id,
-                    payment_id: 'upi_qr_' + utr, // Prefix with upi_qr_ for tracking
-                    session_id: sessionId
-                });
-                closeModal('qrModal');
-                showSuccess(result);
-            } catch (e) {
-                toast(e.message, 'error');
-            }
-        }
+            // Advance Notification Logic
+            let _notified30 = false;
+            function checkAdvanceNotifications() {
+                if (!hasSeat || !sessionData || !sessionData.quiz_start_at || _notified30) return;
+                const now = Math.floor(Date.now() / 1000);
+                const remaining = sessionData.quiz_start_at - now;
 
-        function showSuccess(result) {
-            let details = '';
-            if (result.session_confirmed) {
-                const quizTime = new Date(result.quiz_start_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const pdfTime = new Date((result.quiz_start_at - 1800) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                details = `<div class="alert alert-success" style="text-align:left; font-size:.85rem;">
+                // Trigger 30 minutes before
+                if (remaining <= 1800 && remaining > 0) {
+                    _notified30 = true;
+                    showConfirmedPopup(sessionData, "30_MIN_WARNING");
+                }
+            }
+            setInterval(checkAdvanceNotifications, 30000); // Check every 30s
+
+            function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+            // openPayChoice is also defined later (wallet version overrides) — keep simple version as fallback
+            function previewToast() { if (!hasSeat) toast('Book your seat to unlock answers and live quiz.', 'info'); }
+
+            // ── CASHFREE CHECKOUT ───────────────────────────────────
+            async function payWithApp() {
+                toast('Payment prepare ho rahi hai...', 'info');
+                try {
+                    const orderData = await api('/api/payments/create-order', 'POST', { session_id: sessionId });
+
+                    const cashfree = Cashfree({
+                        mode: "production" // HARDENED: Always use production in live app
+                    });
+
+                    cashfree.checkout({
+                        paymentSessionId: orderData.payment_session_id,
+                    });
+
+                } catch (e) {
+                    toast('❌ Error: ' + e.message, 'error');
+                }
+            }
+
+            // Initial Check for Redirect from Cashfree (Direct Pay)
+            const redirectOrderId = params.get('order_id');
+            if (redirectOrderId && !hasSeat) {
+                handleDirectVerify(redirectOrderId);
+            }
+
+            async function handleDirectVerify(orderId) {
+                toast('⌛ Verifying payment... ', 'info');
+                try {
+                    const verify = await api('/api/payments/verify', 'POST', {
+                        order_id: orderId,
+                        session_id: sessionId
+                    });
+                    if (verify.booked) {
+                        toast('✅ Payment SUCCESS', 'success');
+                        showSuccess(verify);
+                        setTimeout(() => location.reload(), 2000);
+                    }
+                } catch (e) {
+                    toast('Verification Failed: ' + e.message, 'error');
+                }
+            }
+
+
+
+            function showSuccess(result) {
+                let details = '';
+                if (result.session_confirmed) {
+                    const quizTime = new Date(result.quiz_start_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const pdfTime = new Date((result.quiz_start_at - 1800) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    details = `<div class="alert alert-success" style="text-align:left; font-size:.85rem;">
                               🎉 Session is FULLY BOOKED!<br>
-                              📘 PDF available at: <strong>${pdfTime}</strong><br>
+                              📘 Study Material available at: <strong>${pdfTime}</strong><br>
                               ⚡ Quiz starts at: <strong>${quizTime}</strong>
                            </div>`;
-                document.getElementById('successTitle').textContent = 'Seat Booked & Confirmed!';
-                document.getElementById('successMsg').textContent = 'Congratulations! The session is now ready.';
-            } else {
-                details = `<div class="alert alert-info">Seat booked! Waiting for ${result.seats_remaining} more seat(s) to fill.</div>`;
-            }
-            document.getElementById('successDetails').innerHTML = details;
-            document.getElementById('successModal').style.display = 'flex';
-        }
-
-        function showConfirmedPopup(data, type = "SESSION_READY") {
-            const quizTime = new Date(data.quiz_start_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const pdfTime = new Date((data.quiz_start_at - 1800) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            let popupCount = 0;
-            const MAX_POPUPS = 10;
-
-            // Vibrate phone (mobile devices)
-            if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 800]);
-
-            // Play alert beep using Web Audio API
-            function playBeep() {
-                try {
-                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    [0, 0.15, 0.30].forEach(t => {
-                        const o = ctx.createOscillator();
-                        const g = ctx.createGain();
-                        o.connect(g); g.connect(ctx.destination);
-                        o.frequency.value = 880;
-                        g.gain.setValueAtTime(0.6, ctx.currentTime + t);
-                        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.12);
-                        o.start(ctx.currentTime + t);
-                        o.stop(ctx.currentTime + t + 0.12);
-                    });
-                } catch (e) { }
+                    document.getElementById('successTitle').textContent = 'Seat Booked & Confirmed!';
+                    document.getElementById('successMsg').textContent = 'Congratulations! The session is now ready.';
+                } else {
+                    details = `<div class="alert alert-info">Seat booked! Waiting for ${result.seats_remaining} more seat(s) to fill.</div>`;
+                }
+                document.getElementById('successDetails').innerHTML = details;
+                document.getElementById('successModal').style.display = 'flex';
             }
 
-            function showPopup() {
-                if (popupCount >= MAX_POPUPS) return;
-                popupCount++;
-                playBeep();
-                if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+            function showConfirmedPopup(data, type = "SESSION_READY") {
+                const quizTime = new Date(data.quiz_start_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const pdfTime = new Date((data.quiz_start_at - 1800) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                let popupCount = 0;
+                const MAX_POPUPS = 10;
 
-                // Build full-screen aggressive popup
-                const overlay = document.createElement('div');
-                overlay.id = 'aggressivePopup';
-                overlay.style.cssText = `
+                // Vibrate phone (mobile devices)
+                if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 800]);
+
+                // Play alert beep using Web Audio API
+                function playBeep() {
+                    try {
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        [0, 0.15, 0.30].forEach(t => {
+                            const o = ctx.createOscillator();
+                            const g = ctx.createGain();
+                            o.connect(g); g.connect(ctx.destination);
+                            o.frequency.value = 880;
+                            g.gain.setValueAtTime(0.6, ctx.currentTime + t);
+                            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.12);
+                            o.start(ctx.currentTime + t);
+                            o.stop(ctx.currentTime + t + 0.12);
+                        });
+                    } catch (e) { }
+                }
+
+                function showPopup() {
+                    if (popupCount >= MAX_POPUPS) return;
+                    popupCount++;
+                    playBeep();
+                    if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+
+                    // Build full-screen aggressive popup
+                    const overlay = document.createElement('div');
+                    overlay.id = 'aggressivePopup';
+                    overlay.style.cssText = `
                     position:fixed; inset:0; z-index:99999;
                     background:rgba(0,0,0,0.95);
                     display:flex; align-items:center; justify-content:center;
                     animation: flashBg 0.5s ease;
                 `;
 
-                const title = type === "30_MIN_WARNING" ? "STUDY NOW! (30m Left)" : "SESSION CONFIRMED!";
-                const subTxt = type === "30_MIN_WARNING"
-                    ? "Quiz shuru hone mein sirf 30 min bache hain! Study material open ho gaya hai."
-                    : "Saari seats bhar gayi! Quiz & PDF ready hai!";
+                    const title = type === "30_MIN_WARNING" ? "STUDY NOW! (30m Left)" : "SESSION CONFIRMED!";
+                    const subTxt = type === "30_MIN_WARNING"
+                        ? "Quiz shuru hone mein sirf 30 min bache hain! Study material open ho gaya hai."
+                        : "Saari seats bhar gayi! Quiz & Study Material ready hai!";
 
-                overlay.innerHTML = `
+                    overlay.innerHTML = `
                     <div style="
                         background: linear-gradient(135deg,#1a1a2e,#16213e);
                         border: 3px solid #f59e0b;
@@ -633,75 +599,75 @@
                         ">📘 START STUDYING NOW →</button>
                     </div>
                 `;
-                document.body.appendChild(overlay);
+                    document.body.appendChild(overlay);
 
-                // If user dismisses without OK, re-show after 5 sec
-                if (popupCount < MAX_POPUPS) {
-                    setTimeout(() => {
-                        const el = document.getElementById('aggressivePopup');
-                        if (el && !el.dataset.confirmed) {
-                            el.remove();
-                            showPopup();
-                        }
-                    }, 5000);
+                    // If user dismisses without OK, re-show after 5 sec
+                    if (popupCount < MAX_POPUPS) {
+                        setTimeout(() => {
+                            const el = document.getElementById('aggressivePopup');
+                            if (el && !el.dataset.confirmed) {
+                                el.remove();
+                                showPopup();
+                            }
+                        }, 5000);
+                    }
                 }
-            }
 
-            window.handlePopupOK = function () {
-                const el = document.getElementById('aggressivePopup');
-                if (el) { el.dataset.confirmed = '1'; el.remove(); }
-                // ✅ Auto-open PDF after OK
-                window.location.href = `/study.html?id=${sessionId}`;
-            };
+                window.handlePopupOK = function () {
+                    const el = document.getElementById('aggressivePopup');
+                    if (el) { el.dataset.confirmed = '1'; el.remove(); }
+                    // ✅ Auto-open PDF after OK
+                    window.location.href = `/study.html?id=${sessionId}`;
+                };
 
-            // Add CSS animations
-            if (!document.getElementById('popupStyles')) {
-                const style = document.createElement('style');
-                style.id = 'popupStyles';
-                style.textContent = `
+                // Add CSS animations
+                if (!document.getElementById('popupStyles')) {
+                    const style = document.createElement('style');
+                    style.id = 'popupStyles';
+                    style.textContent = `
                     @keyframes popIn { from { transform:scale(0.5); opacity:0; } to { transform:scale(1); opacity:1; } }
                     @keyframes flashBg { 0%,100% { background:rgba(0,0,0,0.95); } 50% { background:rgba(245,158,11,0.15); } }
                     @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.1); } }
                 `;
-                document.head.appendChild(style);
-            }
-
-            showPopup(); // Show first popup immediately
-        }
-
-
-
-
-        // ── WALLET-ONLY JOIN FLOW (WITH PIN) ──────────────────────────────────────────
-        let _walletData = null;
-        function openPayChoice() {
-            const fee = sessionData ? sessionData.entry_fee : 0;
-            if (confirm(`Do you want to join this quiz? ₹${fee} will be deducted from your wallet.\n\nClick OK to continue and enter your PIN.`)) {
-                showPinModal();
-            }
-        }
-
-        async function showPinModal() {
-            // Check if user has enough balance first
-            let checkingToast = null;
-            try {
-                checkingToast = toast('⌛ Checking wallet...', 'info');
-                _walletData = await api('/api/wallet/me');
-                if (checkingToast) checkingToast.remove(); // Remove immediately on success
-
-                const fee = sessionData ? sessionData.entry_fee : 0;
-                if (_walletData.real + _walletData.demo < fee) {
-                    return toast(`Insufficient balance. You need ₹${fee} but have ₹${_walletData.real + _walletData.demo}. Please deposit more in Wallet.`, 'error');
+                    document.head.appendChild(style);
                 }
 
-                // Create PIN Modal dynamically
-                const modalId = 'pinModal';
-                if (!document.getElementById(modalId)) {
-                    const m = document.createElement('div');
-                    m.id = modalId;
-                    m.className = 'modal-overlay';
-                    m.style.zIndex = '100000';
-                    m.innerHTML = `
+                showPopup(); // Show first popup immediately
+            }
+
+
+
+
+            // ── WALLET-ONLY JOIN FLOW (WITH PIN) ──────────────────────────────────────────
+            let _walletData = null;
+            function openPayChoice() {
+                const fee = sessionData ? sessionData.entry_fee : 0;
+                if (confirm(`Do you want to join this quiz? ₹${fee} will be deducted from your wallet.\n\nClick OK to continue and enter your PIN.`)) {
+                    showPinModal();
+                }
+            }
+
+            async function showPinModal() {
+                // Check if user has enough balance first
+                let checkingToast = null;
+                try {
+                    checkingToast = toast('⌛ Checking wallet...', 'info');
+                    _walletData = await api('/api/wallet/me');
+                    if (checkingToast) checkingToast.remove(); // Remove immediately on success
+
+                    const fee = sessionData ? sessionData.entry_fee : 0;
+                    if (_walletData.real + _walletData.demo < fee) {
+                        return toast(`Insufficient balance. You need ₹${fee} but have ₹${_walletData.real + _walletData.demo}. Please deposit more in Wallet.`, 'error');
+                    }
+
+                    // Create PIN Modal dynamically
+                    const modalId = 'pinModal';
+                    if (!document.getElementById(modalId)) {
+                        const m = document.createElement('div');
+                        m.id = modalId;
+                        m.className = 'modal-overlay';
+                        m.style.zIndex = '100000';
+                        m.innerHTML = `
                         <div class="modal-box" style="max-width:350px; text-align:center;">
                             <h3 style="margin-bottom:8px;">🔐 Secure Join</h3>
                             <p style="font-size:.82rem; color:var(--muted); margin-bottom:20px;">
@@ -713,58 +679,58 @@
                             <button class="btn btn-primary btn-full" id="confirmPinBtn" onclick="processWalletPay()">Confirm & Join →</button>
                             <button class="btn btn-outline btn-full" style="margin-top:10px;" onclick="closeModal('pinModal')">Cancel</button>
                         </div>`;
-                    document.body.appendChild(m);
+                        document.body.appendChild(m);
+                    }
+
+                    document.getElementById(modalId).style.display = 'flex';
+                    document.getElementById('walletPinInput').value = '';
+                    document.getElementById('walletPinInput').focus();
+
+                } catch (e) {
+                    if (checkingToast) checkingToast.remove();
+                    toast('Could not load wallet data. Please check your internet or login again.', 'error');
                 }
-
-                document.getElementById(modalId).style.display = 'flex';
-                document.getElementById('walletPinInput').value = '';
-                document.getElementById('walletPinInput').focus();
-
-            } catch (e) {
-                if (checkingToast) checkingToast.remove();
-                toast('Could not load wallet data. Please check your internet or login again.', 'error');
             }
-        }
 
-        async function processWalletPay() {
-            const pin = document.getElementById('walletPinInput').value;
-            if (!pin || pin.length !== 4) return toast('Please enter a 4-digit PIN', 'error');
+            async function processWalletPay() {
+                const pin = document.getElementById('walletPinInput').value;
+                if (!pin || pin.length !== 4) return toast('Please enter a 4-digit PIN', 'error');
 
-            const sid = new URLSearchParams(location.search).get('id');
-            const btn = document.getElementById('confirmPinBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Processing...';
+                const sid = new URLSearchParams(location.search).get('id');
+                const btn = document.getElementById('confirmPinBtn');
+                btn.disabled = true;
+                btn.textContent = '⏳ Processing...';
 
-            try {
-                // Determine wallet type (prefer real if available, or ask? For now, automatic logical choice)
-                const fee = sessionData.entry_fee;
-                let type = 'real';
-                if (_walletData.real < fee && _walletData.demo >= fee) {
-                    type = 'demo';
+                try {
+                    // Determine wallet type (prefer real if available, or ask? For now, automatic logical choice)
+                    const fee = sessionData.entry_fee;
+                    let type = 'real';
+                    if (_walletData.real < fee && _walletData.demo >= fee) {
+                        type = 'demo';
+                    }
+
+                    const res = await api('/api/wallet/pay', 'POST', {
+                        session_id: sid,
+                        wallet_type: type,
+                        pin: pin
+                    });
+
+                    closeModal('pinModal');
+                    showSuccess(res);
+                    setTimeout(() => { render(); }, 1500);
+                } catch (e) {
+                    toast('❌ Access Denied: ' + e.message, 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Confirm & Join →';
                 }
-
-                const res = await api('/api/wallet/pay', 'POST', {
-                    session_id: sid,
-                    wallet_type: type,
-                    pin: pin
-                });
-
-                closeModal('pinModal');
-                showSuccess(res);
-                setTimeout(() => { render(); }, 1500);
-            } catch (e) {
-                toast('❌ Access Denied: ' + e.message, 'error');
-                btn.disabled = false;
-                btn.textContent = 'Confirm & Join →';
             }
-        }
 
-        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+            function logout() { localStorage.clear(); window.location.href = '/login.html'; }
 
 
-        load();
-        renderFooter();
-    </script>
+            load();
+            renderFooter();
+        </script>
 </body>
 
 </html>

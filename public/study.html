@@ -130,7 +130,7 @@
         <div class="container" style="padding-top:40px; max-width:760px;">
             <div id="lockedState" class="locked-overlay" style="display:none;">
                 <div class="icon">🔒</div>
-                <h2 style="margin-bottom:8px;">PDF Not Available Yet</h2>
+                <h2 style="margin-bottom:8px;">Study Material Not Available Yet</h2>
                 <p style="color:var(--muted);" id="lockedMsg">Study material will be available 30 minutes before the
                     quiz.</p>
                 <div id="lockedTimer" style="margin-top:16px; font-size:1.4rem; font-weight:700; color:var(--gold);">
@@ -233,13 +233,7 @@
           ${q.explanation ? `<div class="explanation" style="margin-top:10px;">💡 ${q.explanation}</div>` : ''}
         </div>`).join('') || '<p style="color:var(--muted);">Questions loading... Open the PDF link from email.</p>';
 
-            // Show download PDF link
-            document.getElementById('studyContent').insertAdjacentHTML('beforeend', `
-        <div style="text-align:center; margin-top:12px; margin-bottom:30px;">
-          <a href="/api/sessions/${sessionId}/pdf?token=${getToken()}" target="_blank" class="btn btn-outline" style="padding:10px 24px;">
-            📄 Download PDF with Answers
-          </a>
-        </div>`);
+            // PDF Download removed as per request
         }
 
         function startQuizCountdown(quizStartAt) {

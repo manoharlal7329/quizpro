@@ -4,15 +4,23 @@ const { data, save } = require('../database/db');
 const authMiddleware = require('../middleware/auth');
 const crypto = require('crypto');
 
-// Razorpay config
-const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
-const RZP_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
-const RZP_REAL = RZP_KEY_ID.startsWith('rzp_') && !RZP_KEY_ID.includes('PLACEHOLDER');
+// Cashfree config
+const CF_CLIENT_ID = process.env.CF_CLIENT_ID || '';
+const CF_SECRET_KEY = process.env.CF_SECRET_KEY || '';
+const CF_ENV = process.env.CF_ENV || 'SANDBOX'; // 'SANDBOX' or 'PROD'
 
-let Razorpay;
-if (RZP_REAL) {
-    try { Razorpay = require('razorpay'); } catch (e) { console.warn('[Wallet] Razorpay package not installed'); }
-}
+const { Cashfree, CFEnvironment } = require('cashfree-pg');
+
+// Initialize Cashfree SDK
+// The Cashfree instance should be initialized once and reused.
+// The XClientId, XClientSecret, and XEnvironment properties are set directly on the instance.
+const cf = new Cashfree();
+cf.XClientId = CF_CLIENT_ID;
+cf.XClientSecret = CF_SECRET_KEY;
+// HARDENED: Strictly use PRODUCTION for Live keys
+cf.XEnvironment = CFEnvironment.PRODUCTION;
+cf.XApiVersion = "2023-08-01";
+console.log('💳 [CASHFREE] Wallet payment instance forced to PRODUCTION mode.');
 
 const { getWallet, addTxn } = require('./wallet_utils');
 
@@ -133,75 +141,94 @@ router.post('/set-pin', authMiddleware, (req, res) => {
 });
 
 // ── POST /api/wallet/deposit ─────────────────────────────────────────────────
-// Create a Razorpay order (or Simulation order) to add funds
+// Create a Cashfree order to add funds
 router.post('/deposit', authMiddleware, async (req, res) => {
-    const { amount } = req.body; // Amount in INR
+    // Force PROD check
+    if (process.env.CF_ENV !== 'PROD') {
+        return res.status(500).json({ error: 'System is not in PRODUCTION mode. Payment rejected.' });
+    }
+
+    const { amount } = req.body;
     if (!amount || amount < 10) return res.status(400).json({ error: 'Minimum deposit is ₹10' });
 
-    if (RZP_REAL && Razorpay) {
+    if (cf) {
         try {
-            const rzp = new Razorpay({ key_id: RZP_KEY_ID, key_secret: RZP_KEY_SECRET });
-            const order = await rzp.orders.create({
-                amount: amount * 100, // paise
-                currency: 'INR',
-                receipt: `wallet_${req.user.id}_${Date.now()}`,
-                notes: { user_id: String(req.user.id), type: 'wallet_deposit' }
-            });
+            const user = (data.users || []).find(u => String(u.id) === String(req.user.id));
+            if (!user) return res.status(404).json({ error: 'User not found' });
+
+            const request = {
+                "order_amount": Number(amount),
+                "order_currency": "INR",
+                "order_id": `order_${req.user.id}_${Date.now()}`,
+                "customer_details": {
+                    "customer_id": String(user.id),
+                    "customer_phone": user.phone || "9999999999",
+                    "customer_email": user.email || "user@example.com"
+                },
+                "order_meta": {
+                    "return_url": `${req.headers.origin}/wallet.html?order_id={order_id}`
+                }
+            };
+
+            const response = await cf.PGCreateOrder(request);
+            const orderData = response.data;
 
             return res.json({
-                order_id: order.id,
-                amount: order.amount,
-                currency: 'INR',
-                key: RZP_KEY_ID
+                payment_session_id: orderData.payment_session_id,
+                order_id: orderData.order_id,
+                amount: orderData.order_amount,
+                currency: orderData.order_currency
             });
         } catch (e) {
-            console.error('[Wallet] Order create error:', e.message);
+            console.error('[Wallet] Cashfree Order create error:', e.response?.data || e.message);
             return res.status(500).json({ error: 'Failed to create deposit order' });
         }
     }
 
-    // 🏎️ SIMULATION MODE (when real keys are missing)
-    console.log(`[Wallet] Using Simulation Mode for user ${req.user.id}`);
-    res.json({
-        simulation: true,
-        order_id: `sim_order_${Date.now()}`,
-        amount: amount * 100,
-        currency: 'INR',
-        key: 'SIMULATION_KEY'
-    });
+    return res.status(500).json({ error: 'Cashfree Payment Gateway is not configured.' });
 });
 
 // ── POST /api/wallet/confirm-deposit ──────────────────────────────────────────
-// Verify Razorpay payment (or Simulation token) and credit real wallet
+// Verify Cashfree payment and credit real wallet
 router.post('/confirm-deposit', authMiddleware, async (req, res) => {
-    const { order_id, payment_id, razorpay_signature, amount, simulation } = req.body;
+    const { order_id } = req.body;
+    if (!order_id) return res.status(400).json({ error: 'Order ID is required' });
 
-    if (simulation === true) {
-        if (!order_id.startsWith('sim_order_')) {
-            return res.status(400).json({ error: 'Invalid simulation request' });
-        }
-        console.log(`[Wallet] Simulation Deposit Approved for ${req.user.id}`);
-    } else if (RZP_REAL && razorpay_signature) {
-        const body = order_id + '|' + payment_id;
-        const expectedSig = crypto.createHmac('sha256', RZP_KEY_SECRET).update(body).digest('hex');
+    if (cf) {
+        try {
+            const response = await cf.PGOrderFetchPayments(order_id);
+            const payments = response.data;
 
-        if (expectedSig !== razorpay_signature) {
-            return res.status(400).json({ error: 'Invalid payment signature' });
+            // Check if any payment for this order is successful
+            const successPayment = (payments || []).find(p => p.payment_status === 'SUCCESS');
+
+            if (!successPayment) {
+                return res.status(400).json({ error: 'Payment not successful' });
+            }
+
+            const wallet = getWallet(req.user.id);
+            const depositAmount = Number(successPayment.order_amount);
+
+            // Double credit check (using order_id as a unique marker in txns)
+            const alreadyCredited = (data.wallet_txns || []).find(t => t.note && t.note.includes(order_id));
+            if (alreadyCredited) {
+                return res.json({ success: true, message: 'Already credited', new_balance: wallet.dep_bal + wallet.win_bal });
+            }
+
+            // 🏷️ 100% Credit to dep_bal (Unrotated)
+            wallet.dep_bal += depositAmount;
+
+            addTxn(req.user.id, 'real', 'credit', depositAmount, `💰 Wallet Deposit (ID: ${order_id})`);
+
+            save();
+            return res.json({ success: true, new_balance: wallet.dep_bal + wallet.win_bal });
+        } catch (e) {
+            console.error('[Wallet] Cashfree Verify error:', e.response?.data || e.message);
+            return res.status(500).json({ error: 'Failed to verify payment' });
         }
-    } else {
-        return res.status(400).json({ error: 'Signature verification required or simulation missing' });
     }
 
-    const wallet = getWallet(req.user.id);
-    const depositAmount = Number(amount);
-
-    // 🏷️ 100% Credit to dep_bal (Unrotated)
-    wallet.dep_bal += depositAmount;
-
-    addTxn(req.user.id, 'real', 'credit', depositAmount, `💰 Wallet Deposit (ID: ${payment_id})`);
-
-    save();
-    res.json({ success: true, new_balance: wallet.dep_bal + wallet.win_bal });
+    return res.status(400).json({ error: 'Cashfree not configured' });
 });
 
 
@@ -218,12 +245,8 @@ router.post('/admin/topup', authMiddleware, (req, res) => {
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
     const wallet = getWallet(user_id);
-    const type = wallet_type === 'real' ? 'real' : 'demo';
-    if (type === 'real') {
-        wallet.win_bal += Number(amount); // Admin topups are treated as winnings/withdrawable
-    } else {
-        wallet.demo += Number(amount);
-    }
+    const type = 'real';
+    wallet.win_bal += Number(amount); // Admin topups are treated as winnings/withdrawable
 
     addTxn(user_id, type, 'credit', Number(amount), note || `Admin topup by ${liveUser.name}`);
 
@@ -242,7 +265,6 @@ router.get('/admin/list', authMiddleware, (req, res) => {
             id: u.id,
             mobile: u.mobile,
             name: u.name,
-            demo: w.demo,
             real: w.dep_bal + w.win_bal,
             dep_bal: w.dep_bal,
             win_bal: w.win_bal

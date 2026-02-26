@@ -16,7 +16,17 @@ async function api(url, method = 'GET', body = null) {
     } catch (e) {
         throw new Error('Network error — server se connect nahi ho pa raha. Server chal raha hai?');
     }
+
     const data = await res.json().catch(() => ({}));
+
+    if (res.status === 401) {
+        console.warn('[AUTH] 401 Unauthorized detected. Clearing session.');
+        localStorage.clear();
+        if (!window.location.pathname.includes('login.html')) {
+            window.location.href = '/login.html?error=session_expired';
+        }
+    }
+
     if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), data);
     return data;
 }

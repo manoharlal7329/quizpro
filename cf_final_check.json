@@ -1,0 +1,7 @@
+{
+  "has_XClientId": false,
+  "has_PGCreateOrder": true,
+  "has_PGOrderFetchPayments": true,
+  "env_sandbox": 1,
+  "env_production": 2
+}

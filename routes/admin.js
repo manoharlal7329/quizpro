@@ -193,6 +193,32 @@ router.delete('/sessions/:id', authMiddleware, adminOnly, (req, res) => {
   res.json({ success: true });
 });
 
+// ─── SESSIONS — COPY QUESTIONS ────────────────────────────────────────────────
+router.post('/sessions/:id/copy-questions', authMiddleware, adminOnly, (req, res) => {
+  const targetId = Number(req.params.id);
+  const { source_id } = req.body;
+
+  if (!source_id) return res.status(400).json({ error: 'source_id required' });
+
+  const sourceQuestions = (data.questions || []).filter(q => Number(q.session_id) === Number(source_id));
+  if (!sourceQuestions.length) return res.status(404).json({ error: 'Source session questions not found' });
+
+  // Clear existing questions in target session first
+  data.questions = (data.questions || []).filter(q => Number(q.session_id) !== targetId);
+
+  // Copy questions with new IDs
+  const copied = sourceQuestions.map(q => ({
+    ...q,
+    id: Date.now() + Math.random(),
+    session_id: targetId
+  }));
+
+  data.questions.push(...copied);
+  save();
+
+  res.json({ success: true, count: copied.length });
+});
+
 // ─── QUESTIONS — EXCEL UPLOAD ─────────────────────────────────────────────────
 router.post('/questions/upload', authMiddleware, adminOnly, upload.single('file'), (req, res) => {
   try {
@@ -340,6 +366,72 @@ router.post('/rewards', authMiddleware, adminOnly, (req, res) => {
 // ─── REWARDS — LIST ───────────────────────────────────────────────────────────
 router.get('/rewards', authMiddleware, adminOnly, (req, res) => {
   res.json((data.rewards || []).sort((a, b) => b.at - a.at));
+});
+
+// ─── SYSTEM HEALTH & NOTES ───────────────────────────────────────────────────
+router.get('/system-health', authMiddleware, adminOnly, (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const dbPath = path.join(__dirname, '..', 'db_store.json');
+
+  let dbSize = 0;
+  if (fs.existsSync(dbPath)) {
+    dbSize = fs.statSync(dbPath).size;
+  }
+
+  const health = {
+    status: 'Operational',
+    time: new Date().toISOString(),
+    env: {
+      CF_ENV: process.env.CF_ENV || 'Not Set',
+      PAYMENT_GATEWAY: process.env.PAYMENT_GATEWAY || 'Not Set',
+      SIMULATION_MODE: process.env.SIMULATION_MODE || 'Not Set',
+      CLIENT_ID_PRESENT: !!process.env.CF_CLIENT_ID,
+      SECRET_KEY_PRESENT: !!process.env.CF_SECRET_KEY,
+      JWT_SECRET_PRESENT: !!process.env.JWT_SECRET
+    },
+    database: {
+      size_kb: Math.round(dbSize / 1024),
+      users: (data.users || []).length,
+      sessions: (data.sessions || []).length,
+      questions: (data.questions || []).length,
+      backups_found: fs.readdirSync(path.join(__dirname, '..')).filter(f => f.includes('db_store.json.bak')).length
+    },
+    payments: {
+      total_txns: (data.wallet_txns || []).length,
+      recent_deposits: (data.wallet_txns || []).filter(t => t.note && t.note.includes('Deposit')).slice(-10)
+    },
+    common_errors: [
+      {
+        error: "Failed to create deposit order",
+        solution: "Check CF_CLIENT_ID and CF_SECRET_KEY in .env. Ensure they are correct and CF_ENV is set to PROD for Live keys."
+      },
+      {
+        error: "Invalid token / Dashboard load failed",
+        solution: "Clear browser localStorage and login again. Ensure JWT_SECRET is set in .env."
+      },
+      {
+        error: "SIMULATION MODE Alert",
+        solution: "Ensure SIMULATION_MODE=false in .env and Cashfree instance is initialized with CFEnvironment.PRODUCTION."
+      }
+    ]
+  };
+
+  res.json(health);
+});
+
+router.get('/notes', authMiddleware, adminOnly, (req, res) => {
+  res.json(data.system_notes || { plan: '', reminders: [] });
+});
+
+router.post('/notes', authMiddleware, adminOnly, (req, res) => {
+  const { plan, reminders } = req.body;
+  data.system_notes = {
+    plan: plan || '',
+    reminders: Array.isArray(reminders) ? reminders : []
+  };
+  save();
+  res.json({ success: true, message: 'Notes saved successfully' });
 });
 
 module.exports = router;

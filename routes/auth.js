@@ -56,22 +56,21 @@ router.post('/register', async (req, res) => {
 
     data.users.push(user);
 
-    // Welcome demo wallet bonus
+    // Initialize empty wallets for the user
     if (!data.wallets) data.wallets = [];
     if (!data.wallet_txns) data.wallet_txns = [];
-    const bonus = Number(process.env.WELCOME_DEMO_BONUS) || 100;
+
     let wallet = data.wallets.find(w => String(w.user_id) === String(user.id));
-    if (!wallet) { wallet = { user_id: user.id, demo: 0, real: 0 }; data.wallets.push(wallet); }
-    wallet.demo += bonus;
-    data.wallet_txns.push({
-        id: Date.now(),
-        user_id: user.id,
-        wallet: 'demo',
-        type: 'credit',
-        amount: bonus,
-        note: '🎁 Welcome bonus',
-        at: Math.floor(Date.now() / 1000)
-    });
+    if (!wallet) {
+        wallet = {
+            user_id: user.id,
+            demo: 0,
+            dep_bal: 0,
+            win_bal: 0,
+            pin: null
+        };
+        data.wallets.push(wallet);
+    }
 
     // Track referral
     if (ref_code_used) {
@@ -126,7 +125,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
         { id: user.id, email: user.email, is_admin: user.is_admin },
-        process.env.JWT_SECRET || 'fallback_secret_key_dont_use_in_production',
+        process.env.JWT_SECRET,
         { expiresIn: '7d' }
     );
 

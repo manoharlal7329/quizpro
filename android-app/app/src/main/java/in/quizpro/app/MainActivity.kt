@@ -18,9 +18,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
 
-    // ✅ PRODUCTION: Replace with your live domain
-    private val APP_URL = "https://www.quizpro.in"
-    // 🧪 TESTING (ngrok): Uncomment below and comment above
+    // ✅ PRODUCTION: Points to your Render domain
+    private val APP_URL = "https://quizpro-takb.onrender.com"
+    // 🧪 TESTING (Localhost via tunnel): Uncomment below if needed
     // private val APP_URL = "https://xxxx-xxxx.ngrok-free.app"
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
                         true
                     }
                     // All our domain URLs stay in app
-                    url.startsWith(APP_URL) || url.startsWith("https://www.quizpro.in") -> false
+                    url.startsWith(APP_URL) || url.startsWith("https://quizpro-takb.onrender.com") -> false
                     // External URLs open in browser
                     else -> {
                         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
