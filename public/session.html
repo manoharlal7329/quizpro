@@ -188,7 +188,7 @@
                 <p style="color:var(--muted); font-size:.85rem; margin-bottom:20px;">Choose how you want to pay</p>
                 <div style="display:flex; flex-direction:column; gap:12px;">
                     <button class="btn btn-primary btn-full" onclick="payWithApp()" style="background:#111827;">
-                        💳 Cashfree (UPI/Cards)
+                        💳 Razorpay (UPI/Cards)
                     </button>
                 </div>
                 <button class="btn btn-outline btn-full" style="margin-top:12px; border:none; color:var(--muted);"
@@ -224,7 +224,6 @@
 
 
         <div id="toast"></div>
-        <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
         <script src="/js/common.js"></script>
         <script>
             requireLogin();
@@ -457,45 +456,66 @@
             // openPayChoice is also defined later (wallet version overrides) — keep simple version as fallback
             function previewToast() { if (!hasSeat) toast('Book your seat to unlock answers and live quiz.', 'info'); }
 
-            // ── CASHFREE CHECKOUT ───────────────────────────────────
+            // ── RAZORPAY CHECKOUT (UPI App via Razorpay SDK) ───────────────────────────────────
             async function payWithApp() {
                 toast('Payment prepare ho rahi hai...', 'info');
                 try {
-                    const orderData = await api('/api/payments/create-order', 'POST', { session_id: sessionId });
+                    const order = await api('/api/payments/create-order', 'POST', { session_id: sessionId });
 
-                    const cashfree = Cashfree({
-                        mode: "production" // HARDENED: Always use production in live app
-                    });
+                    // Demo mode (no Razorpay key)
+                    if (order.demo) {
+                        toast('❌ Razorpay test key missing. Dummy Pay use karo ya UTR enter karo.', 'error');
+                        confirmPayment();
+                        return;
+                    }
 
-                    cashfree.checkout({
-                        paymentSessionId: orderData.payment_session_id,
-                    });
+                    // Load Razorpay SDK if not loaded
+                    if (!window.Razorpay) {
+                        await new Promise((resolve, reject) => {
+                            const s = document.createElement('script');
+                            s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                            s.onload = resolve; s.onerror = reject;
+                            document.head.appendChild(s);
+                        });
+                    }
+
+                    const user = getUser() || {};
+                    const options = {
+                        key: order.key,
+                        amount: order.amount,
+                        currency: 'INR',
+                        name: 'QuizPro',
+                        description: `Session Entry Fee`,
+                        order_id: order.order_id,
+                        prefill: { contact: user.email || '' },
+                        theme: { color: '#f59e0b' },
+                        handler: async function (response) {
+                            toast('⏳ Payment verify ho raha hai...', 'info');
+                            try {
+                                const result = await api('/api/payments/verify', 'POST', {
+                                    order_id: response.razorpay_order_id,
+                                    payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    session_id: sessionId
+                                });
+                                showSuccess(result);
+                                setTimeout(() => render(), 1500);
+                            } catch (e) {
+                                toast('❌ Payment verify failed: ' + e.message, 'error');
+                            }
+                        },
+                        modal: { ondismiss: () => toast('Payment cancelled. Try again.', 'info') }
+                    };
+
+                    const rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', (resp) => toast('❌ Payment failed: ' + resp.error.description, 'error'));
+                    rzp.open();
 
                 } catch (e) {
                     toast('❌ Error: ' + e.message, 'error');
-                }
-            }
-
-            // Initial Check for Redirect from Cashfree (Direct Pay)
-            const redirectOrderId = params.get('order_id');
-            if (redirectOrderId && !hasSeat) {
-                handleDirectVerify(redirectOrderId);
-            }
-
-            async function handleDirectVerify(orderId) {
-                toast('⌛ Verifying payment... ', 'info');
-                try {
-                    const verify = await api('/api/payments/verify', 'POST', {
-                        order_id: orderId,
-                        session_id: sessionId
-                    });
-                    if (verify.booked) {
-                        toast('✅ Payment SUCCESS', 'success');
-                        showSuccess(verify);
-                        setTimeout(() => location.reload(), 2000);
-                    }
-                } catch (e) {
-                    toast('Verification Failed: ' + e.message, 'error');
+                    // Fallback to UPI deeplink
+                    const upiUrl = `upi://pay?pa=${encodeURIComponent('manoharlala02911-2@okaxis')}&pn=QuizPro&am=${sessionData.entry_fee}&cu=INR&tn=QuizPro`;
+                    window.location.href = upiUrl;
                 }
             }
 

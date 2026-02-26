@@ -1,6 +1,0 @@
-{
-  "webhookMethods": [
-    "PGVerifyWebhookSignature"
-  ],
-  "staticMethods": []
-}

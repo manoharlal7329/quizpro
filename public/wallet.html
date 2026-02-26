@@ -200,7 +200,7 @@
                 <div class="deposit-section">
                     <h3 style="margin-bottom: 8px;">💳 Add Money</h3>
                     <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Instant deposit using
-                        UPI/Cashfree</p>
+                        UPI/Razorpay</p>
 
                     <div class="amt-input-wrap">
                         <span>₹</span>
@@ -317,7 +317,7 @@
     </div>
 
     <div id="toast"></div>
-    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="/js/common.js"></script>
     <script>
         requireLogin();
@@ -420,31 +420,6 @@
             }
         }
 
-        // Initial Check for Redirect from Cashfree
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirectOrderId = urlParams.get('order_id');
-        if (redirectOrderId) {
-            handleRedirectVerification(redirectOrderId);
-        }
-
-        async function handleRedirectVerification(orderId) {
-            toast('⌛ Verifying payment... ', 'info');
-            try {
-                const verify = await api('/api/wallet/confirm-deposit', 'POST', { order_id: orderId });
-                if (verify.success) {
-                    toast('✅ Payment SUCCESS', 'success');
-                    setTimeout(() => {
-                        toast('💰 Wallet updated', 'success');
-                        loadData();
-                    }, 1000);
-                    // Clean URL
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
-            } catch (e) {
-                toast('Verification Failed: ' + e.message, 'error');
-            }
-        }
-
         async function startDeposit() {
             const amt = parseInt(document.getElementById('depositAmt').value);
             if (!amt || amt < 10) return toast('Min deposit is ₹10', 'error');
@@ -454,19 +429,48 @@
             btn.textContent = '⏳ Initializing...';
 
             try {
-                const orderData = await api('/api/wallet/deposit', 'POST', { amount: amt });
+                const order = await api('/api/wallet/deposit', 'POST', { amount: amt });
 
-                const cashfree = Cashfree({
-                    mode: "production" // HARDENED: Always use production in live app
-                });
+                if (order.simulation) {
+                    toast('❌ Payment gateway not configured. Please use Razorpay or contact Admin.', 'error');
+                    return;
+                }
 
-                // Cashfree checkout will redirect back to wallet.html with order_id
-                cashfree.checkout({
-                    paymentSessionId: orderData.payment_session_id,
-                });
+                const options = {
+                    key: order.key,
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: 'QuizPro Wallet',
+                    description: 'Adding funds to wallet',
+                    order_id: order.order_id,
+                    handler: async function (res) {
+                        toast('⌛ Verifying payment... ', 'info');
+                        try {
+                            const verify = await api('/api/wallet/confirm-deposit', 'POST', {
+                                order_id: order.order_id,
+                                payment_id: res.razorpay_payment_id,
+                                razorpay_signature: res.razorpay_signature,
+                                amount: amt
+                            });
+                            if (verify.success) {
+                                toast('✅ Wallet updated successfully!', 'success');
+                                loadData();
+                            }
+                        } catch (e) {
+                            toast('Verification Failed: ' + e.message, 'error');
+                        }
+                    },
+                    prefill: {
+                        email: getUser()?.email || ''
+                    },
+                    theme: { color: '#6366f1' }
+                };
 
+                const rzp = new Razorpay(options);
+                rzp.open();
             } catch (e) {
                 toast(e.message, 'error');
+            } finally {
                 btn.disabled = false;
                 btn.textContent = 'Add Money →';
             }
@@ -480,3 +484,4 @@
 </body>
 
 </html>
+<script>window.APP_ENV=" PROD\;</script>

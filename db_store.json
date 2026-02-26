@@ -5,7 +5,6 @@
       "email": "manoharlala02911@gmail.com",
       "password": "$2b$10$P6Fn7xRkj/9EZgPoYu.Ca.6thydLw5yaIjkXMsHaasMgwwhABc18W",
       "name": "Manohar Lal Prajapati",
-      "phone": "9999999999",
       "is_admin": 1,
       "referral_code": "ADMT9PR",
       "quizzes_solved": 1
@@ -56,269 +55,40 @@
   ],
   "sessions": [
     {
-      "id": 1771960018676,
-      "category_id": 1,
-      "title": "HINDI",
-      "seat_limit": 20,
-      "seats_booked": 4,
-      "entry_fee": 100,
-      "quiz_delay_minutes": 60,
-      "status": "confirmed",
-      "created_at": 1771960018,
-      "quiz_start_at": 1772033241,
-      "pdf_at": 1772032881
+      "id": 1772135312539,
+      "category_id": 2,
+      "title": "🚀 MEGA GRAND LAUNCH",
+      "seat_limit": 100,
+      "seats_booked": 0,
+      "entry_fee": 50,
+      "quiz_delay_minutes": 1440,
+      "status": "open",
+      "created_at": 1772135312
     }
   ],
-  "seats": [
-    {
-      "id": 1771962548316,
-      "session_id": 1771960018676,
-      "user_id": 1,
-      "paid_at": 1771962548,
-      "payment_id": "WALLET_REAL_1771962548316"
-    },
-    {
-      "id": 1771963364885,
-      "session_id": 1771960018676,
-      "user_id": 1771962629634,
-      "paid_at": 1771963364,
-      "payment_id": "WALLET_REAL_1771963364885"
-    },
-    {
-      "id": 1771990452336,
-      "session_id": 1771960018676,
-      "user_id": 1771990452335,
-      "paid_at": 1771990452,
-      "payment_id": "VERIFY_PAY_123"
-    },
-    {
-      "id": 1772032168423,
-      "session_id": 1771960018676,
-      "user_id": 1772032168422,
-      "paid_at": 1772032168,
-      "payment_id": "VERIFY_PAY_123"
-    }
-  ],
+  "seats": [],
   "questions": [
     {
-      "id": 1771960056755.6465,
-      "session_id": 1771960018676,
-      "question_text": "What is the capital of India?",
-      "option_a": "Mumbai",
-      "option_b": "New Delhi",
-      "option_c": "Kolkata",
-      "option_d": "Chennai",
-      "correct": "b",
-      "explanation": "New Delhi is the capital."
-    },
-    {
-      "id": 1771960056755.7122,
-      "session_id": 1771960018676,
-      "question_text": "Which planet is known as the Red Planet?",
-      "option_a": "Venus",
-      "option_b": "Mars",
-      "option_c": "Jupiter",
-      "option_d": "Saturn",
-      "correct": "b",
-      "explanation": "Mars is known as the Red Planet due to iron oxide."
-    },
-    {
-      "id": 1771960056755.8054,
-      "session_id": 1771960018676,
-      "question_text": "What is 5 + 7?",
-      "option_a": "10",
-      "option_b": "11",
-      "option_c": "12",
-      "option_d": "13",
+      "id": 1772135312540,
+      "session_id": 1772135312539,
+      "question_text": "What is the capital of France?",
+      "option_a": "Berlin",
+      "option_b": "Madrid",
+      "option_c": "Paris",
+      "option_d": "Rome",
       "correct": "c",
-      "explanation": "5 + 7 = 12"
+      "explanation": "Paris is the capital of France."
     },
     {
-      "id": 1771960056755.1084,
-      "session_id": 1771960018676,
-      "question_text": "Who is the PM of India (2024)?",
-      "option_a": "Rahul Gandhi",
-      "option_b": "Amit Shah",
-      "option_c": "Narendra Modi",
-      "option_d": "Arvind Kejriwal",
+      "id": 1772135312541,
+      "session_id": 1772135312539,
+      "question_text": "Which planet is known as the Blue Planet?",
+      "option_a": "Mars",
+      "option_b": "Venus",
+      "option_c": "Earth",
+      "option_d": "Jupiter",
       "correct": "c",
-      "explanation": "Narendra Modi is the current PM of India."
-    },
-    {
-      "id": 1771960056755.0012,
-      "session_id": 1771960018676,
-      "question_text": "Largest ocean in the world?",
-      "option_a": "Atlantic",
-      "option_b": "Indian",
-      "option_c": "Pacific",
-      "option_d": "Arctic",
-      "correct": "c",
-      "explanation": "Pacific is the largest and deepest ocean."
-    },
-    {
-      "id": 1771960056755.6843,
-      "session_id": 1771960018676,
-      "question_text": "National Bird of India?",
-      "option_a": "Peacock",
-      "option_b": "Parrot",
-      "option_c": "Eagle",
-      "option_d": "Sparrow",
-      "correct": "a",
-      "explanation": "Peacock is the national bird of India."
-    },
-    {
-      "id": 1771960056755.0833,
-      "session_id": 1771960018676,
-      "question_text": "What is 100 / 4?",
-      "option_a": "20",
-      "option_b": "25",
-      "option_c": "30",
-      "option_d": "40",
-      "correct": "b",
-      "explanation": "100 divided by 4 is 25."
-    },
-    {
-      "id": 1771960056755.9478,
-      "session_id": 1771960018676,
-      "question_text": "Which gas do humans breathe primarily?",
-      "option_a": "Oxygen",
-      "option_b": "Nitrogen",
-      "option_c": "CO2",
-      "option_d": "Helium",
-      "correct": "a",
-      "explanation": "Humans breathe oxygen specifically."
-    },
-    {
-      "id": 1771960056755.818,
-      "session_id": 1771960018676,
-      "question_text": "Smallest state of India?",
-      "option_a": "Sikkim",
-      "option_b": "Goa",
-      "option_c": "Tripura",
-      "option_d": "Kerala",
-      "correct": "b",
-      "explanation": "Goa is the smallest state by area."
-    },
-    {
-      "id": 1771960056755.1387,
-      "session_id": 1771960018676,
-      "question_text": "Current year?",
-      "option_a": "2023",
-      "option_b": "2024",
-      "option_c": "2025",
-      "option_d": "2026",
-      "correct": "d",
-      "explanation": "Current year is 2026 in this system."
-    },
-    {
-      "id": 1771960056755.48,
-      "session_id": 1771960018676,
-      "question_text": "Symbol of Gold?",
-      "option_a": "Au",
-      "option_b": "Ag",
-      "option_c": "Fe",
-      "option_d": "Hg",
-      "correct": "a",
-      "explanation": "Au (Aurum) is the symbol for Gold."
-    },
-    {
-      "id": 1771960056755.7952,
-      "session_id": 1771960018676,
-      "question_text": "Brain of computer?",
-      "option_a": "RAM",
-      "option_b": "CPU",
-      "option_c": "HDD",
-      "option_d": "Monitor",
-      "correct": "b",
-      "explanation": "CPU is the brain of the computer."
-    },
-    {
-      "id": 1771960056755.7046,
-      "session_id": 1771960018676,
-      "question_text": "How many colors in Rainbow?",
-      "option_a": "5",
-      "option_b": "6",
-      "option_c": "7",
-      "option_d": "8",
-      "correct": "c",
-      "explanation": "There are 7 distinct colors in a rainbow."
-    },
-    {
-      "id": 1771960056755.302,
-      "session_id": 1771960018676,
-      "question_text": "Fastest animal on land?",
-      "option_a": "Lion",
-      "option_b": "Tiger",
-      "option_c": "Cheetah",
-      "option_d": "Horse",
-      "correct": "c",
-      "explanation": "Cheetah is the fastest land animal."
-    },
-    {
-      "id": 1771960056755.8823,
-      "session_id": 1771960018676,
-      "question_text": "Capital of Rajasthan?",
-      "option_a": "Jodhpur",
-      "option_b": "Jaipur",
-      "option_c": "Udaipur",
-      "option_d": "Ajmer",
-      "correct": "b",
-      "explanation": "Jaipur is the Pink City and capital of Rajasthan."
-    },
-    {
-      "id": 1771960056755.6497,
-      "session_id": 1771960018676,
-      "question_text": "Festival of Colors?",
-      "option_a": "Diwali",
-      "option_b": "Holi",
-      "option_c": "Eid",
-      "option_d": "Christmas",
-      "correct": "b",
-      "explanation": "Holi is the traditional festival of colors."
-    },
-    {
-      "id": 1771960056755.2305,
-      "session_id": 1771960018676,
-      "question_text": "1KG is how many Grams?",
-      "option_a": "100",
-      "option_b": "500",
-      "option_c": "1000",
-      "option_d": "2000",
-      "correct": "c",
-      "explanation": "1 kilogram is equal to 1000 grams."
-    },
-    {
-      "id": 1771960056755.7517,
-      "session_id": 1771960018676,
-      "question_text": "Sun rises in the...?",
-      "option_a": "North",
-      "option_b": "South",
-      "option_c": "East",
-      "option_d": "West",
-      "correct": "c",
-      "explanation": "The Earth rotates such that the sun appears in the East."
-    },
-    {
-      "id": 1771960056755.0168,
-      "session_id": 1771960018676,
-      "question_text": "Current Prime Minister of UK?",
-      "option_a": "Rishi Sunak",
-      "option_b": "Keir Starmer",
-      "option_c": "Boris Johnson",
-      "option_d": "Tony Blair",
-      "correct": "b",
-      "explanation": "Keir Starmer is the current PM of UK."
-    },
-    {
-      "id": 1771960056755.9595,
-      "session_id": 1771960018676,
-      "question_text": "Who invented the Light Bulb?",
-      "option_a": "Newton",
-      "option_b": "Einstein",
-      "option_c": "Tesla",
-      "option_d": "Edison",
-      "correct": "d",
-      "explanation": "Thomas Edison is credited with the invention."
+      "explanation": "Earth is 70% water, giving it a blue look from space."
     }
   ],
   "quiz_attempts": [],
@@ -327,8 +97,8 @@
     {
       "user_id": 1,
       "demo": 0,
-      "win_bal": 200,
-      "dep_bal": 1000,
+      "win_bal": 0,
+      "dep_bal": 0,
       "pin": "7976"
     },
     {
@@ -346,44 +116,9 @@
       "pin": "2006"
     }
   ],
-  "wallet_txns": [
-    {
-      "id": 1771962548832,
-      "user_id": 1,
-      "wallet": "real",
-      "type": "debit",
-      "amount": 100,
-      "note": "Seat booked: HINDI",
-      "at": 1771962548
-    },
-    {
-      "id": 1771963365447,
-      "user_id": 1771962629634,
-      "wallet": "real",
-      "type": "debit",
-      "amount": 100,
-      "note": "Seat booked: HINDI",
-      "at": 1771963364
-    }
-  ],
+  "wallet_txns": [],
   "referrals": [],
   "transactions": [],
-  "badges": [
-    {
-      "user_id": 1,
-      "badge_id": "first_win",
-      "name": "First Win 🥇",
-      "icon": "🥇",
-      "desc": "Won rank #1 in a session",
-      "earned_at": 1771968938
-    },
-    {
-      "user_id": 1,
-      "badge_id": "top3",
-      "name": "Podium Finisher 🏆",
-      "icon": "🏆",
-      "desc": "Finished in top 3",
-      "earned_at": 1771968938
-    }
-  ]
+  "badges": [],
+  "withdrawals": []
 }

@@ -1,10 +1,136 @@
 <!DOCTYPE html>
-<html>
-<head><title>Terms & Conditions - QuizPro</title></head>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Terms & Conditions — QuizPro</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+        .legal-body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+
+        .legal-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+        }
+
+        .legal-card h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--blue), var(--violet));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .legal-card h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 32px 0 12px;
+            color: var(--text);
+        }
+
+        .legal-card p {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
+        }
+
+        .legal-card ul {
+            margin-bottom: 24px;
+            padding-left: 20px;
+        }
+
+        .legal-card li {
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .last-updated {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-bottom: 40px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: var(--red);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
 <body>
-<h1>Terms & Conditions</h1>
-<p>By using QuizPro, users agree to fair participation.</p>
-<p>Any misuse, cheating, or fraud may result in account suspension.</p>
-<p>QuizPro reserves the right to update rules and pricing.</p>
+    <nav class="navbar">
+        <a href="/" class="logo">⚡ QuizPro</a>
+        <div class="nav-links">
+            <a href="/dashboard.html">Dashboard</a>
+            <a href="/contact.html">Support</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="legal-body">
+            <span class="last-updated">Last Updated: February 27, 2026</span>
+            <div class="legal-card">
+                <h1>📜 Terms & Conditions</h1>
+                <p>Welcome to <strong>QuizPro</strong>. By accessing our platform, you agree to comply with and be bound
+                    by the following terms and conditions. Please read them carefully.</p>
+
+                <h2>1. Eligibility</h2>
+                <p>You must be at least 18 years old or have parental consent to participate in quizzes on this
+                    platform. Users from regions where skill-based gaming with entry fees is prohibited are not allowed
+                    to join paid sessions.</p>
+
+                <h2>2. Fair Participation & Anti-Cheating</h2>
+                <div class="warning-box">
+                    🚨 Any form of cheating, use of multiple accounts, or automated bots will result in an immediate
+                    permanent ban and forfeiture of any wallet balance.
+                </div>
+                <p>Users are expected to play fairly. We use advanced telemetry to monitor quiz sessions for suspicious
+                    behavior.</p>
+
+                <h2>3. Fees and Payments</h2>
+                <ul>
+                    <li>Entry fees for sessions are clearly stated before joining.</li>
+                    <li>Payments are processed instantly through Razorpay.</li>
+                    <li>Wallet balances (Deposits) must be used to play quizzes and cannot be withdrawn directly without
+                        participating.</li>
+                </ul>
+
+                <h2>4. Prize Distribution</h2>
+                <p>Prizes are calculated based on the leaderboard rankings at the end of each session. Rankings are
+                    determined by both <strong>accuracy</strong> and <strong>speed</strong>. Prizes are credited to the
+                    "Winnings" wallet, which can be withdrawn to UPI.</p>
+
+                <h2>5. Platform Rights</h2>
+                <p>QuizPro reserves the right to cancel or postpone sessions due to technical errors or low
+                    participation. In such cases, all entry fees will be refunded to the user's wallet.</p>
+
+                <h2>6. Legal Compliance</h2>
+                <p>QuizPro is a platform for <strong>Games of Skill</strong>. Participation involves significant
+                    knowledge, attention, and speed, which differentiates it from gambling or games of chance.</p>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>

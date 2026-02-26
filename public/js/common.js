@@ -1,5 +1,12 @@
 /* ── COMMON JS — Shared utility functions for all pages ── */
 
+// ─── PWA Service Worker Registration ──────────────────────────
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => { });
+    });
+}
+
 // ─── API HELPER ───────────────────────────────────────────────
 async function api(url, method = 'GET', body = null) {
     const opts = {
@@ -16,17 +23,7 @@ async function api(url, method = 'GET', body = null) {
     } catch (e) {
         throw new Error('Network error — server se connect nahi ho pa raha. Server chal raha hai?');
     }
-
     const data = await res.json().catch(() => ({}));
-
-    if (res.status === 401) {
-        console.warn('[AUTH] 401 Unauthorized detected. Clearing session.');
-        localStorage.clear();
-        if (!window.location.pathname.includes('login.html')) {
-            window.location.href = '/login.html?error=session_expired';
-        }
-    }
-
     if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), data);
     return data;
 }

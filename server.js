@@ -4,11 +4,7 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Webhook-Signature', 'X-Webhook-Timestamp']
-}));
+app.use(cors());
 app.use(express.json());
 
 // ─── STATIC FILES — HTML pages must NOT be cached ─────────────────────────────
@@ -41,7 +37,6 @@ app.use('/api/admin-auth', require('./routes/adminAuth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
-app.use('/api/cashfree', require('./routes/cashfree'));
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
@@ -65,15 +60,18 @@ const PORT = process.env.PORT || 9988;
 const server = app.listen(PORT, '0.0.0.0', () => {
     const ip = require('os').networkInterfaces();
     const localIP = Object.values(ip).flat().find(i => i.family === 'IPv4' && !i.internal)?.address || 'localhost';
-    console.log(`🚀 QuizPro Server running on Port ${PORT}`);
-    console.log(`🌍 Production URL: https://quizpro-takb.onrender.com`);
-    console.log(`🔥 Cashfree ENV: ${process.env.CF_ENV}`);
-    console.log(`🔥 Payment Gateway: ${process.env.PAYMENT_GATEWAY}`);
-    console.log(`🛡️ Simulation Mode: ${process.env.SIMULATION_MODE === 'false' ? 'DISABLED (LIVE)' : 'ENABLED (TEST)'}`);
-    console.log(`🔥 Cashfree Client ID present: ${!!process.env.CF_CLIENT_ID}`);
-    console.log(`🔥 Cashfree Secret present: ${!!process.env.CF_SECRET_KEY}`);
-    console.log(`🛡️ JWT_SECRET present: ${!!process.env.JWT_SECRET}`);
-    console.log(`🔗 Webhook: Listening at /api/cashfree/webhook\n`);
+    const rzpKey = process.env.RAZORPAY_KEY_ID || '';
+    const rzpStatus = rzpKey.startsWith('rzp_') ? (rzpKey.startsWith('rzp_live') ? '✅ LIVE' : '🧪 TEST') : '⚠️ NOT SET';
+    let rzpPkg = '✅ Installed';
+    try { require.resolve('razorpay'); } catch (e) { rzpPkg = '❌ Missing (npm install razorpay)'; }
+
+    console.log(`\n🚀 QuizPro LIVE!`);
+    console.log(`🖥️  Local:   http://localhost:${PORT}`);
+    console.log(`📱  Network: http://${localIP}:${PORT}  ← Phone ke liye`);
+    console.log(`👤  Admin:   http://localhost:${PORT}/admin.html`);
+    console.log(`🔒  Legal:   /privacy | /terms | /refund | /contact`);
+    console.log(`💳  Gateway:  ${process.env.PAYMENT_GATEWAY || 'RAZORPAY'} | Razorpay: ${rzpStatus} | Pkg: ${rzpPkg}`);
+    console.log(`📲  OTP: ${process.env.OTP_PROVIDER || 'console'} | Demo: ${process.env.DEMO_OTP_MODE === 'true' ? 'ON (1234)' : 'OFF'}\n`);
 });
 
 server.on('error', (e) => {

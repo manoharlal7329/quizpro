@@ -40,7 +40,7 @@ router.post("/login", async (req, res) => {
         email: ADMIN.email,
         name: ADMIN.name
       },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'fallback_secret_key_dont_use_in_production',
       { expiresIn: "7d" }
     );
 
