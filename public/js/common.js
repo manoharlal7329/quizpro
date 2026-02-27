@@ -90,14 +90,14 @@ function renderFooter() {
     footer.innerHTML = `
     <div class="container footer-wrap">
         <div class="footer-social">
-            <a href="https://www.instagram.com/lucky_bhambhu?igsh=MXgyaHZmNGlhdDR0bA%3D%3D&utm_source=qr" target="_blank" class="btn btn-insta">📸 Follow on Instagram</a>
-            <a href="https://www.youtube.com/@laxmanfunzonen" target="_blank" class="btn btn-youtube">▶️ Watch on YouTube</a>
+            <a href="https://www.instagram.com/quiz_pro_24?igsh=MXd4cmY0bzh6NjBvcA==" target="_blank" class="btn btn-insta">📸 Follow on Instagram</a>
+            <a href="https://youtube.com/@therealjourney-t4j?si=76G9-CnV98EwG6e5" target="_blank" class="btn btn-youtube">▶️ Watch on YouTube</a>
         </div>
         <p class="trust-line">
             Follow us on Instagram &amp; YouTube for updates, learning tips, and announcements.
-            <br><strong>⚡ QuizPro</strong> is a 100% Skill-Based platform. Not gambling.
+            <br><strong>⚡ QuizPro Winner</strong> is a 100% Skill-Based platform. Not gambling.
         </p>
-        <div class="copyright">© ${new Date().getFullYear()} QUIZPRO OFFICIAL • ALL RIGHTS RESERVED</div>
+        <div class="copyright">© ${new Date().getFullYear()} QUIZPRO WINNER OFFICIAL • ALL RIGHTS RESERVED</div>
     </div>`;
     document.body.appendChild(footer); // append to BODY, not .main
 }
@@ -110,7 +110,7 @@ function renderAppNav() {
     const nav = document.createElement('nav');
     nav.className = 'navbar glass-card';
     nav.innerHTML = `
-        <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro</a>
+        <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro Winner</a>
         <div class="nav-links">
             ${user ? `<span style="color:var(--muted); font-size:.88rem; font-weight: 500;">${user.name || ''}</span>
             <a href="/dashboard.html" class="${path.includes('dashboard') ? 'active' : ''}" style="${path.includes('dashboard') ? 'color: var(--blue);' : ''}">Dashboard</a>

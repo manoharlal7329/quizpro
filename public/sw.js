@@ -1,10 +1,10 @@
-const CACHE_NAME = 'quizpro-winner-v1.1';
+const CACHE_NAME = 'quizpro-winner-v1.2';
 const ASSETS = [
     '/',
     '/index.html',
     '/dashboard.html',
-    '/css/style.css',
-    '/js/common.js',
+    '/css/style.css?v=1.2',
+    '/js/common.js?v=1.2',
     '/manifest.json'
 ];
 
@@ -27,7 +27,25 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+    const url = new URL(e.request.url);
+
+    // Network-First strategy for HTML and Root requests
+    if (e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/') {
+        e.respondWith(
+            fetch(e.request)
+                .then((res) => {
+                    const resClone = res.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+                    return res;
+                })
+                .catch(() => caches.match(e.request))
+        );
+        return;
+    }
+
+    // Cache-First strategy for other static assets
     e.respondWith(
         caches.match(e.request).then((res) => res || fetch(e.request))
     );
 });
+
