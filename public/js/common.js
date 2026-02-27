@@ -157,15 +157,9 @@ class InteractionEngine {
         this.bgAssets = [];
         this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         this.isMuted = localStorage.getItem('quiz_muted') === 'true';
-
-        // Motion State
-        this.mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2, targetX: window.innerWidth / 2, targetY: window.innerHeight / 2 };
-        this.orientation = { gamma: 0, beta: 0, targetGamma: 0, targetBeta: 0 };
-
         this.applyDynamicTheme();
         this.init();
         this.updateAudioUI();
-        this.startRenderLoop();
     }
 
     applyDynamicTheme() {
@@ -202,52 +196,20 @@ class InteractionEngine {
         document.addEventListener('touchstart', unlock);
 
         document.addEventListener('mousemove', (e) => {
-            this.mouse.targetX = e.clientX;
-            this.mouse.targetY = e.clientY;
-
             if (!this.isMobile) {
+                this.updateSpatial(e.clientX, e.clientY);
                 // Update CSS variables for reflection logic
                 document.documentElement.style.setProperty('--mouse-x', `${(e.clientX / window.innerWidth) * 100}%`);
                 document.documentElement.style.setProperty('--mouse-y', `${(e.clientY / window.innerHeight) * 100}%`);
             }
+            this.updateTilt(e.clientX, e.clientY);
         });
 
         if (this.isMobile && window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientation', (e) => {
-                this.orientation.targetGamma = e.gamma || 0; // -90 to 90
-                this.orientation.targetBeta = e.beta || 0;   // -180 to 180
+                this.updateSpatial(e.gamma * 10, e.beta * 10); // Simulated
             });
         }
-    }
-
-    startRenderLoop() {
-        const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
-
-        const render = () => {
-            // Smooth mouse
-            this.mouse.x = lerp(this.mouse.x, this.mouse.targetX, 0.1);
-            this.mouse.y = lerp(this.mouse.y, this.mouse.targetY, 0.1);
-
-            // Smooth orientation
-            this.orientation.gamma = lerp(this.orientation.gamma, this.orientation.targetGamma, 0.1);
-            this.orientation.beta = lerp(this.orientation.beta, this.orientation.targetBeta, 0.1);
-
-            // Determine active coordinates
-            let activeX = this.mouse.x;
-            let activeY = this.mouse.y;
-
-            if (this.isMobile) {
-                // Map orientation to screen-like coords for 3D system
-                activeX = (window.innerWidth / 2) + (this.orientation.gamma * 10);
-                activeY = (window.innerHeight / 2) + (this.orientation.beta * 10);
-            }
-
-            this.updateSpatial(activeX, activeY);
-            this.updateTilt(activeX, activeY);
-
-            requestAnimationFrame(render);
-        };
-        render();
     }
 
     initAudio() {
@@ -306,7 +268,8 @@ class InteractionEngine {
             this.bgAssets.push({
                 el: img,
                 type: assets[i % assets.length].includes('gem') ? 'gem' : 'coin',
-                factor: 0.02 + Math.random() * 0.05
+                factor: 0.02 + Math.random() * 0.05,
+                x: 0, y: 0
             });
             img.addEventListener('mouseenter', () => {
                 if (img.src.includes('gem')) this.soundCrystal();
@@ -332,9 +295,6 @@ class InteractionEngine {
 
         document.querySelectorAll('[data-tilt]').forEach(el => {
             const rect = el.getBoundingClientRect();
-            // Check visibility
-            if (rect.top > window.innerHeight || rect.bottom < 0) return;
-
             const x = mx - (rect.left + rect.width / 2);
             const y = my - (rect.top + rect.height / 2);
             const rX = -(y / rect.height) * val;
@@ -359,28 +319,12 @@ class InteractionEngine {
                     this.hookButtons();
                     // Auto-tilt for new cards
                     document.querySelectorAll('.glass-card').forEach(c => {
-                        if (c.parentElement && c.parentElement.id === 'sessionsGrid') c.setAttribute('data-tilt', '');
+                        if (c.parentElement.id === 'sessionsGrid') c.setAttribute('data-tilt', '');
                     });
                 }
             });
         });
         observer.observe(document.body, { childList: true, subtree: true });
-    }
-
-    updateAudioUI() {
-        const btn = document.getElementById('audioToggle');
-        if (!btn) return;
-        btn.querySelector('.a-icon').textContent = this.isMuted ? '🔈' : '🔊';
-        btn.style.borderColor = this.isMuted ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)';
-    }
-
-    toggleAudio() {
-        this.isMuted = !this.isMuted;
-        localStorage.setItem('quiz_muted', this.isMuted);
-        this.updateAudioUI();
-        if (!this.isMuted) {
-            this.playTone(440, 'sine', 0.05, 0.05); // Unmute confirmation beep
-        }
     }
 }
 
@@ -397,4 +341,3 @@ window.addEventListener('DOMContentLoaded', () => {
         if (val && !val.includes('?v=')) el.setAttribute(attr, val + '?v=1.3');
     });
 });
-```
