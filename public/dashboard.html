@@ -171,6 +171,42 @@
 </head>
 
 <body>
+    <!-- 3D SPLASH INTRO -->
+    <div id="splash"
+        style="position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s ease;">
+        <div style="text-align: center;">
+            <div id="splashName"
+                style="font-size: 3rem; font-weight: 900; background: linear-gradient(135deg, var(--blue), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; perspective: 1000px; transform-style: preserve-3d; animation: splash3D 2s forwards ease-out;">
+                USER</div>
+            <div style="color: var(--muted); font-size: 1.1rem; letter-spacing: 4px; margin-top: 10px; opacity: 0;">
+                QUIZPRO WINNER</div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes splash3D {
+            0% {
+                transform: translateZ(-200px) rotateX(90deg);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translateZ(50px) rotateX(-10deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateZ(0) rotateX(0);
+                opacity: 1;
+            }
+        }
+
+        .balance-hidden {
+            filter: blur(8px);
+            cursor: pointer;
+        }
+    </style>
+
     <!-- NAVBAR -->
     <nav class="navbar glass-card">
         <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro Winner</a>
@@ -190,7 +226,8 @@
             <span>Home</span>
             <div class="icon-dot"></div>
         </a>
-        <a href="/wallet.html" class="nav-item">
+        <!-- WALLET NAV MODIFIED TO TOGGLE -->
+        <a href="javascript:void(0)" onclick="toggleWallet()" class="nav-item">
             <i style="font-style: normal; font-size: 1.6rem;">💳</i>
             <span>Wallet</span>
             <div class="icon-dot"></div>
@@ -210,6 +247,15 @@
 
     <div class="main">
         <div class="container" style="padding-top:40px;">
+
+            <!-- PRO TIP BANNER -->
+            <div class="glass-card"
+                style="padding: 14px 24px; border-radius: 16px; margin-bottom: 24px; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--blue); display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.2rem;">💡</span>
+                <span style="font-size: .88rem; color: var(--blue); font-weight: 600;">PRO TIP: Get study material 30
+                    mins before Live Quiz.</span>
+            </div>
+
             <div class="page-hero">
                 <h1 class="text-gradient">Premium Dashboard</h1>
                 <p>Welcome to the VIP arena. Play, Win, and Repeat.</p>
@@ -217,15 +263,20 @@
 
             <!-- BENTO HEADER GRID -->
             <div class="grid-2" style="margin-bottom: 32px; gap: 24px;">
-                <!-- VIP WALLET CARD -->
-                <a href="/wallet.html" class="vip-wallet" style="text-decoration:none;">
+                <!-- VIP WALLET CARD (Private by default) -->
+                <div class="vip-wallet" onclick="toggleWallet()"
+                    style="cursor: pointer; position: relative; overflow: hidden;">
                     <div style="display:flex; justify-content:space-between; align-items:start;">
                         <div>
                             <div
                                 style="font-size: .8rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px;">
                                 Total Balance</div>
-                            <div class="wamt real" id="realAmt" style="color: #fff; font-size: 2.4rem; margin: 4px 0;">
-                                ₹—</div>
+                            <div class="wamt real balance-hidden" id="realAmt"
+                                style="color: #fff; font-size: 2.4rem; margin: 4px 0; transition: filter 0.3s ease;">
+                                ₹0</div>
+                            <div id="tapToShow"
+                                style="font-size: .7rem; color: var(--blue); font-weight: 700; margin-top: 4px;">🎯
+                                CLICK TO REVEAL</div>
                         </div>
                         <div style="font-size: 2rem;">👑</div>
                     </div>
@@ -234,7 +285,8 @@
                         <span style="font-size: .7rem; color: rgba(255,255,255,0.3); font-family: monospace;">****
                             2026</span>
                     </div>
-                </a>
+                </div>
+
 
                 <!-- QUICK ACTIONS CARD -->
                 <div class="glass-card"
@@ -297,7 +349,33 @@
         requireLogin();
         let allSessions = [];
         const user = getUser();
-        if (user) document.getElementById('userGreet').textContent = `👤 ${user.email}`;
+        if (user) {
+            document.getElementById('userGreet').textContent = `👤 ${user.email}`;
+            document.getElementById('splashName').textContent = user.name || user.email.split('@')[0].toUpperCase();
+        }
+
+        // Hide splash after 2.5s
+        setTimeout(() => {
+            const sp = document.getElementById('splash');
+            if (sp) {
+                sp.style.opacity = '0';
+                setTimeout(() => sp.remove(), 800);
+            }
+        }, 2200);
+
+        function toggleWallet() {
+            const amt = document.getElementById('realAmt');
+            const tap = document.getElementById('tapToShow');
+            if (amt.classList.contains('balance-hidden')) {
+                amt.classList.remove('balance-hidden');
+                tap.textContent = '🔒 CLICK TO HIDE';
+                tap.style.color = 'var(--muted)';
+            } else {
+                amt.classList.add('balance-hidden');
+                tap.textContent = '🎯 CLICK TO REVEAL';
+                tap.style.color = 'var(--blue)';
+            }
+        }
 
         // Load wallet
         async function loadWallet() {
