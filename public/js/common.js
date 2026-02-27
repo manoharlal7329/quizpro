@@ -101,3 +101,54 @@ function renderFooter() {
     </div>`;
     document.body.appendChild(footer); // append to BODY, not .main
 }
+// ─── GLOBAL NAVIGATION (Luxury) ───────────────────────────────
+function renderAppNav() {
+    const user = getUser();
+    const path = window.location.pathname;
+
+    // Navbar
+    const nav = document.createElement('nav');
+    nav.className = 'navbar glass-card';
+    nav.innerHTML = `
+        <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro</a>
+        <div class="nav-links">
+            ${user ? `<span style="color:var(--muted); font-size:.88rem; font-weight: 500;">${user.name || ''}</span>
+            <a href="/dashboard.html" class="${path.includes('dashboard') ? 'active' : ''}" style="${path.includes('dashboard') ? 'color: var(--blue);' : ''}">Dashboard</a>
+            <button class="btn btn-outline" style="padding:6px 16px; font-size:.85rem; border-radius: 12px;" onclick="logout()">Logout</button>` :
+            `<a href="/login.html" class="btn btn-primary" style="padding:8px 20px; border-radius:12px;">Login</a>`}
+        </div>`;
+
+    // Bottom Nav (Mobile Only)
+    const bNav = document.createElement('div');
+    bNav.className = 'bottom-nav';
+    bNav.innerHTML = `
+        <a href="/dashboard.html" class="nav-item ${path.includes('dashboard') ? 'active' : ''}">
+            <i style="font-style: normal; font-size: 1.6rem;">🏠</i>
+            <span>Home</span>
+            <div class="icon-dot"></div>
+        </a>
+        <a href="/wallet.html" class="nav-item ${path.includes('wallet') ? 'active' : ''}">
+            <i style="font-style: normal; font-size: 1.6rem;">💳</i>
+            <span>Wallet</span>
+            <div class="icon-dot"></div>
+        </a>
+        <a href="/leaderboard.html" class="nav-item ${path.includes('leaderboard') ? 'active' : ''}">
+            <i style="font-style: normal; font-size: 1.6rem;">🏆</i>
+            <span>Ranks</span>
+            <div class="icon-dot"></div>
+        </a>
+        <button onclick="logout()" class="nav-item" style="background:none; border:none; padding:0; font-family:inherit;">
+            <i style="font-style: normal; font-size: 1.6rem;">🚪</i>
+            <span>Logout</span>
+            <div class="icon-dot"></div>
+        </button>`;
+
+    // Prepend to body so it stays at the top/bottom
+    if (!document.querySelector('.navbar')) document.body.prepend(nav);
+    if (!document.querySelector('.bottom-nav')) document.body.appendChild(bNav);
+}
+
+// Auto-render if not admin page
+if (!window.location.pathname.includes('admin')) {
+    window.addEventListener('DOMContentLoaded', renderAppNav);
+}

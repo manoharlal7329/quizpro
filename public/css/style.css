@@ -10,20 +10,26 @@
 }
 
 :root {
-  --blue: #0ea5e9;
+  --blue: #3b82f6;
   --indigo: #6366f1;
   --violet: #8b5cf6;
-  --gold: #f59e0b;
+  --gold: #fbbf24;
+  --gold-glow: rgba(251, 191, 36, 0.4);
   --green: #10b981;
   --red: #ef4444;
-  --dark: #0a0a14;
-  --surface: #12121f;
-  --card: rgba(255, 255, 255, 0.05);
-  --border: rgba(255, 255, 255, 0.1);
-  --text: #e2e8f0;
-  --muted: #64748b;
-  --radius: 16px;
+  --dark: #030712;
+  --surface: #0f172a;
+  /* Glassmorphism Tokens */
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-heavy: rgba(255, 255, 255, 0.05);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
   --font: 'Poppins', sans-serif;
+  --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 html,
@@ -385,15 +391,137 @@ body {
   .grid-3,
   .grid-4 {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .navbar {
     padding: 0 16px;
+    height: 64px;
+  }
+
+  /* Hide Desktop Nav items on Mobile */
+  .nav-links a,
+  .nav-links span {
+    display: none;
   }
 
   .container {
     padding: 0 16px;
   }
+
+  .main {
+    padding-bottom: 90px;
+    /* Space for bottom nav */
+  }
+}
+
+/* ── LUXURY UTILITIES ───────────────────────────────────────── */
+.glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-premium);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fff 30%, var(--muted) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── BOTTOM NAVIGATION (APP STYLE) ─────────────────────────── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(25px);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  padding: 0 10px;
+}
+
+@media(min-width: 769px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.nav-item.active {
+  color: var(--blue);
+}
+
+.nav-item i {
+  font-size: 1.4rem;
+}
+
+.nav-item .icon-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s;
+}
+
+.nav-item.active .icon-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── LUXURY WALLET CARD (BENTO) ─────────────────────────────── */
+.vip-wallet {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s;
+}
+
+.vip-wallet::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.vip-wallet:hover {
+  transform: translateY(-5px) scale(1.02);
 }
 
 /* ── LOADING SPINNER ────────────────────────────────────────── */
