@@ -155,15 +155,11 @@ class InteractionEngine {
         this.ctx = null;
         this.tiltElements = [];
         this.bgAssets = [];
+        this.clickCount = 0;
+        this.currentPaletteIndex = 0;
         this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        this.isMuted = localStorage.getItem('quiz_muted') === 'true';
-        this.applyDynamicTheme();
-        this.init();
-        this.updateAudioUI();
-    }
 
-    applyDynamicTheme() {
-        const palettes = [
+        this.palettes = [
             { name: 'Royal Blue', blue: '#3b82f6', violet: '#8b5cf6', indigo: '#6366f1' },
             { name: 'Emerald Elite', blue: '#10b981', violet: '#059669', indigo: '#047857' },
             { name: 'Gold Empire', blue: '#fbbf24', violet: '#d97706', indigo: '#b45309' },
@@ -171,12 +167,30 @@ class InteractionEngine {
             { name: 'Cyber Cyan', blue: '#06b6d4', violet: '#7c3aed', indigo: '#4338ca' },
             { name: 'Sunset Silk', blue: '#f97316', violet: '#ec4899', indigo: '#db2777' }
         ];
-        const p = palettes[Math.floor(Math.random() * palettes.length)];
+
+        this.applyDynamicTheme();
+        this.init();
+    }
+
+    applyDynamicTheme() {
+        // Random pick on start
+        this.currentPaletteIndex = Math.floor(Math.random() * this.palettes.length);
+        this.updateStyles();
+    }
+
+    cycleTheme() {
+        this.currentPaletteIndex = (this.currentPaletteIndex + 1) % this.palettes.length;
+        this.updateStyles();
+        this.soundSuccess(); // Theme change sound
+    }
+
+    updateStyles() {
+        const p = this.palettes[this.currentPaletteIndex];
         const root = document.documentElement;
         root.style.setProperty('--blue', p.blue);
         root.style.setProperty('--violet', p.violet);
         root.style.setProperty('--indigo', p.indigo);
-        console.log(`🎨 Dynamic Theme: ${p.name} Loaded`);
+        console.log(`🎨 Theme Shift: ${p.name}`);
     }
 
     init() {
@@ -217,10 +231,8 @@ class InteractionEngine {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    playTone(freq, type = 'sine', vol = 0.1, duration = 0.1) {
-        if (this.isMuted) return;
+    playTone(freq, type = 'sine', duration = 0.2, vol = 0.1) {
         if (!this.ctx) this.initAudio();
-        if (!this.ctx) return;
         if (this.ctx.state === 'suspended') this.ctx.resume();
 
         const osc = this.ctx.createOscillator();
@@ -242,7 +254,23 @@ class InteractionEngine {
     soundSuccess() { this.initAudio(); this.playTone(880, 'sine', 0.3, 0.05); setTimeout(() => this.playTone(1100, 'sine', 0.3, 0.05), 100); } // Two-tone chime
 
     hover() { this.soundGlass(); }
-    click() { this.soundSuccess(); }
+    click() {
+        this.clickCount++;
+        // Cycle through frequencies for infinite variety
+        const baseFreq = 440 + ((this.clickCount % 12) * 40); // Melodic shifts
+        const type = this.clickCount % 2 === 0 ? 'sine' : 'triangle';
+        this.playTone(baseFreq, type, 0.2, 0.05);
+
+        // Theme shift on significant clicks
+        if (this.clickCount % 10 === 0) {
+            this.cycleTheme();
+        }
+
+        // Occasional harmonic chime
+        if (this.clickCount % 5 === 0) {
+            setTimeout(() => this.playTone(baseFreq * 1.5, 'sine', 0.2, 0.03), 50);
+        }
+    }
 
     initGems() {
         const bg = document.createElement('div');
@@ -304,10 +332,16 @@ class InteractionEngine {
     }
 
     hookButtons() {
-        document.querySelectorAll('.btn, .glass-card, .nav-item, .tab-btn').forEach(el => {
+        // Broad selector for 100% site coverage
+        const selector = 'button, a, .btn, .glass-card, .nav-item, .tab-btn, input[type="button"], input[type="submit"], select, label';
+        document.querySelectorAll(selector).forEach(el => {
             if (el.dataset.hooked) return;
             el.addEventListener('mouseenter', () => this.hover());
             el.addEventListener('click', () => this.click());
+            // Form specific coverage
+            if (el.tagName === 'INPUT' || el.tagName === 'SELECT') {
+                el.addEventListener('focus', () => this.hover());
+            }
             el.dataset.hooked = "true";
         });
     }

@@ -956,6 +956,7 @@
             try {
                 const r = await api('/api/wallet/admin/topup', 'POST', { user_id: userId, wallet_type: walletType, amount, note });
                 toast(`✅ ₹${amount} added to ${r.user} (${walletType}) — new balance: ₹${r.new_balance}`, 'success');
+                if (window.engine) window.engine.cycleTheme();
                 document.getElementById('topupAmt').value = '';
                 document.getElementById('topupNote').value = '';
                 loadWallets(); // Refresh the list
@@ -968,6 +969,7 @@
         loadOwnerEarnings();
 
     </script>
+    <script src="/js/common.js?v=1.3"></script>
 </body>
 
 </html>
