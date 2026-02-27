@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Leaderboard — QuizPro</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Leaderboard — QuizPro Winner</title>
+    <link rel="stylesheet" href="/css/style.css?v=1.1" />
     <style>
         .lb-hero {
             background: linear-gradient(135deg, #1a1a2e, #16213e);
@@ -162,7 +162,8 @@
 
 <body>
     <nav class="navbar">
-        <a href="/" class="logo">← QuizPro</a>
+        <a href="/" class="logo">← QuizPro Winner</a>
+
         <div style="display:flex;gap:12px;align-items:center;">
             <a href="/leaderboard.html" class="nav-link" style="color:var(--gold);font-weight:700;">🏆 Leaderboard</a>
             <span id="navName" style="color:var(--muted);font-size:.85rem;"></span>
@@ -174,7 +175,8 @@
     <div class="lb-hero">
         <div style="font-size:3rem;margin-bottom:8px;">🏆</div>
         <h1 class="gradient-text">All-Time Leaderboard</h1>
-        <p style="color:var(--muted);">Top Quiz Winners of QuizPro</p>
+        <p style="color:var(--muted);">Top Quiz Winners of QuizPro Winner</p>
+
     </div>
 
     <!-- Top 3 Podium -->
@@ -200,7 +202,8 @@
     </div>
 
     <div id="toast"></div>
-    <script src="/js/common.js"></script>
+    <script src="/js/common.js?v=1.1"></script>
+
     <script>
         // Optional login
         const token = getToken();

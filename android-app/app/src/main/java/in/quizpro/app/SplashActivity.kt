@@ -1,4 +1,5 @@
-package in.quizpro.app
+package in.quizprowinner.app
+
 
 import android.content.Intent
 import android.os.Bundle

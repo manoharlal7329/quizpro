@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard — QuizPro</title>
+    <title>Dashboard — QuizPro Winner</title>
     <link rel="manifest" href="/manifest.json" />
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/style.css?v=1.1" />
+
     <style>
         .tab-bar {
             display: flex;
@@ -172,7 +173,8 @@
 <body>
     <!-- NAVBAR -->
     <nav class="navbar glass-card">
-        <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro</a>
+        <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro Winner</a>
+
         <div class="nav-links">
             <span id="userGreet" style="color:var(--muted); font-size:.88rem; font-weight: 500;"></span>
             <a href="/dashboard.html" class="active" style="color: var(--blue);">Dashboard</a>
@@ -289,7 +291,8 @@
     </div>
 
     <div id="toast"></div>
-    <script src="/js/common.js"></script>
+    <script src="/js/common.js?v=1.1"></script>
+
     <script>
         requireLogin();
         let allSessions = [];

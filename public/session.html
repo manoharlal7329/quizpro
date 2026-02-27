@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Session Detail — QuizPro</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <title>Session Detail — QuizPro Winner</title>
+    <link rel="stylesheet" href="/css/style.css?v=1.1" />
+
     <style>
         .q-card {
             background: var(--card);
@@ -154,7 +155,8 @@
 <body>
     <!-- NAVBAR -->
     <nav class="navbar">
-        <a href="/dashboard.html" class="logo">← QuizPro</a>
+        <a href="/dashboard.html" class="logo">← QuizPro Winner</a>
+
         <div class="nav-links">
             <button class="btn btn-outline" style="padding:6px 16px;font-size:.85rem;"
                 onclick="logout()">Logout</button>
@@ -224,7 +226,8 @@
 
 
         <div id="toast"></div>
-        <script src="/js/common.js"></script>
+        <script src="/js/common.js?v=1.1"></script>
+
         <script>
             requireLogin();
             const params = new URLSearchParams(location.search);
@@ -265,7 +268,8 @@
                 const prizePool = Math.floor(s.entry_fee * s.seat_limit * 0.75);
                 const platformCut = Math.floor(s.entry_fee * s.seat_limit * 0.25);
 
-                document.title = s.title + ' — QuizPro';
+                document.title = s.title + ' — QuizPro Winner';
+
 
                 // Header
                 document.getElementById('sessionHeader').innerHTML = `
@@ -484,8 +488,9 @@
                         key: order.key,
                         amount: order.amount,
                         currency: 'INR',
-                        name: 'QuizPro',
+                        name: 'QuizPro Winner',
                         description: `Session Entry Fee`,
+
                         order_id: order.order_id,
                         prefill: { contact: user.email || '' },
                         theme: { color: '#f59e0b' },
@@ -514,8 +519,9 @@
                 } catch (e) {
                     toast('❌ Error: ' + e.message, 'error');
                     // Fallback to UPI deeplink
-                    const upiUrl = `upi://pay?pa=${encodeURIComponent('manoharlala02911-2@okaxis')}&pn=QuizPro&am=${sessionData.entry_fee}&cu=INR&tn=QuizPro`;
+                    const upiUrl = `upi://pay?pa=${encodeURIComponent('manoharlala02911-2@okaxis')}&pn=QuizPro%20Winner&am=${sessionData.entry_fee}&cu=INR&tn=QuizPro%20Winner`;
                     window.location.href = upiUrl;
+
                 }
             }
 

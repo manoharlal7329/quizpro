@@ -1,6 +1,6 @@
 {
-    "name": "QuizPro — Skill Quiz Platform",
-    "short_name": "QuizPro",
+    "name": "QuizPro Winner — Skill Quiz Platform",
+    "short_name": "QuizPro Winner",
     "description": "Win real money playing skill-based quizzes",
     "start_url": "/dashboard.html",
     "display": "standalone",

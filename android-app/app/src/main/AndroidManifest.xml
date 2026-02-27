@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="in.quizpro.app">
+    package="in.quizprowinner.app">
+
 
     <!-- ── PERMISSIONS ──────────────────────────────────────────────────── -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -14,7 +15,8 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
-        android:theme="@style/Theme.QuizPro"
+        android:theme="@style/Theme.QuizProWinner"
+
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
@@ -22,7 +24,8 @@
         <activity
             android:name=".SplashActivity"
             android:exported="true"
-            android:theme="@style/Theme.QuizPro.Splash"
+            android:theme="@style/Theme.QuizProWinner.Splash"
+
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

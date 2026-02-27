@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Results — QuizPro</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <title>Results — QuizPro Winner</title>
+    <link rel="stylesheet" href="/css/style.css?v=1.1" />
+
     <style>
         .podium {
             display: flex;
@@ -113,7 +114,8 @@
 
 <body>
     <nav class="navbar">
-        <a href="/dashboard.html" class="logo">⚡ QuizPro</a>
+        <a href="/dashboard.html" class="logo">⚡ QuizPro Winner</a>
+
         <div class="nav-links">
             <a href="/dashboard.html" class="btn btn-outline" style="padding:8px 18px; font-size:.85rem;">←
                 Dashboard</a>
@@ -196,7 +198,8 @@
     </div>
 
     <div id="toast"></div>
-    <script src="/js/common.js"></script>
+    <script src="/js/common.js?v=1.1"></script>
+
     <script>
         requireLogin();
         const params = new URLSearchParams(location.search);
@@ -265,7 +268,8 @@
 
         function render(data) {
             const { session, prizes, results, questions } = data;
-            document.title = session.title + ' Results — QuizPro';
+            document.title = session.title + ' Results — QuizPro Winner';
+
             document.getElementById('resultSub').textContent = session.title;
 
             const myResult = results.find(r => user && r.user_id == user.id);

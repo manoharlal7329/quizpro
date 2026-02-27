@@ -65,13 +65,14 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     let rzpPkg = '✅ Installed';
     try { require.resolve('razorpay'); } catch (e) { rzpPkg = '❌ Missing (npm install razorpay)'; }
 
-    console.log(`\n🚀 QuizPro LIVE!`);
+    console.log(`\n🚀 QuizPro Winner LIVE!`);
     console.log(`🖥️  Local:   http://localhost:${PORT}`);
     console.log(`📱  Network: http://${localIP}:${PORT}  ← Phone ke liye`);
     console.log(`👤  Admin:   http://localhost:${PORT}/admin.html`);
     console.log(`🔒  Legal:   /privacy | /terms | /refund | /contact`);
     console.log(`💳  Gateway:  ${process.env.PAYMENT_GATEWAY || 'RAZORPAY'} | Razorpay: ${rzpStatus} | Pkg: ${rzpPkg}`);
     console.log(`📲  OTP: ${process.env.OTP_PROVIDER || 'console'} | Demo: ${process.env.DEMO_OTP_MODE === 'true' ? 'ON (1234)' : 'OFF'}\n`);
+
 });
 
 server.on('error', (e) => {

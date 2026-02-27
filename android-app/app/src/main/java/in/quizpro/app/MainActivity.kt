@@ -1,4 +1,5 @@
-package in.quizpro.app
+package in.quizprowinner.app
+
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -60,7 +61,8 @@ class MainActivity : AppCompatActivity() {
         settings.cacheMode = WebSettings.LOAD_DEFAULT
 
         // ── User Agent: Identify as Android app ───────────────────────────────
-        settings.userAgentString = settings.userAgentString + " QuizProApp/1.0"
+        settings.userAgentString = settings.userAgentString + " QuizProWinnerApp/1.0"
+
 
         // ── WebViewClient: Handle navigation ─────────────────────────────────
         webView.webViewClient = object : WebViewClient() {
@@ -121,9 +123,10 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onConsoleMessage(message: ConsoleMessage): Boolean {
-                android.util.Log.d("QuizPro", "${message.message()} -- From line ${message.lineNumber()}")
+                android.util.Log.d("QuizPro Winner", "${message.message()} -- From line ${message.lineNumber()}")
                 return true
             }
+
         }
 
         // Enable mixed content (needed for some payment flows)
