@@ -5,8 +5,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard — QuizPro Winner</title>
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="stylesheet" href="/css/style.css?v=1.1" />
+    <link rel="manifest" href="/manifest.json?v=1.3" />
+    <link href="https://fonts.cdnfonts.com/css/monster-clubhouse" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=1.3" />
 
     <style>
         .tab-bar {
@@ -171,15 +172,16 @@
 </head>
 
 <body>
-    <!-- 3D SPLASH INTRO -->
-    <div id="splash"
+    <!-- 3D SPLASH INTRO (Luxury Nebula) -->
+    <div id="splash" class="nebula-bg"
         style="position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s ease;">
         <div style="text-align: center;">
-            <div id="splashName"
-                style="font-size: 3rem; font-weight: 900; background: linear-gradient(135deg, var(--blue), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; perspective: 1000px; transform-style: preserve-3d; animation: splash3D 2s forwards ease-out;">
+            <div id="splashName" class="font-monster text-gold-luxury luxury-glow"
+                style="font-size: 4rem; font-weight: 900; perspective: 1000px; transform-style: preserve-3d; animation: splash3D 2.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                 USER</div>
-            <div style="color: var(--muted); font-size: 1.1rem; letter-spacing: 4px; margin-top: 10px; opacity: 0;">
-                QUIZPRO WINNER</div>
+            <div
+                style="color: var(--gold); font-size: 0.9rem; font-weight: 800; letter-spacing: 6px; margin-top: 15px; opacity: 0.8; text-transform: uppercase;">
+                ✨ LUXURY ARENA ✨</div>
         </div>
     </div>
 
@@ -208,12 +210,25 @@
     </style>
 
     <!-- NAVBAR -->
-    <nav class="navbar glass-card">
+    <nav class="navbar deep-glass">
         <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro Winner</a>
 
         <div class="nav-links">
+            <!-- QUICK WALLET CHIP -->
+            <a href="/wallet.html" id="quickWallet" class="glass-card"
+                style="padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; text-decoration: none; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05);">
+                <span style="font-size: 1rem;">💰</span>
+                <span id="navBal" style="font-size: .9rem; font-weight: 800; color: var(--green);">₹0</span>
+            </a>
+            <!-- AUDIO TOGGLE CHIP -->
+            <div id="audioToggle" class="glass-card" onclick="engine.toggleAudio()"
+                style="padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; cursor: pointer; border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05);">
+                <span class="a-icon" style="font-size: 1rem;">🔊</span>
+            </div>
             <span id="userGreet" style="color:var(--muted); font-size:.88rem; font-weight: 500;"></span>
             <a href="/dashboard.html" class="active" style="color: var(--blue);">Dashboard</a>
+            <a href="/wallet.html"
+                style="color: var(--muted); text-decoration: none; font-size: .88rem; font-weight: 500;">Wallet</a>
             <button class="btn btn-outline" style="padding:6px 16px; font-size:.85rem; border-radius: 12px;"
                 onclick="logout()">Logout</button>
         </div>
@@ -226,8 +241,8 @@
             <span>Home</span>
             <div class="icon-dot"></div>
         </a>
-        <!-- WALLET NAV MODIFIED TO TOGGLE -->
-        <a href="javascript:void(0)" onclick="toggleWallet()" class="nav-item">
+        <!-- WALLET NAV DIRECT LINK -->
+        <a href="/wallet.html" class="nav-item">
             <i style="font-style: normal; font-size: 1.6rem;">💳</i>
             <span>Wallet</span>
             <div class="icon-dot"></div>
@@ -249,53 +264,69 @@
         <div class="container" style="padding-top:40px;">
 
             <!-- PRO TIP BANNER -->
-            <div class="glass-card"
-                style="padding: 14px 24px; border-radius: 16px; margin-bottom: 24px; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--blue); display: flex; align-items: center; gap: 12px;">
+            <div class="glass-card card-reveal stagger-1"
+                style="padding: 14px 24px; border-radius: 16px; margin-bottom: 24px; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--blue); display: flex; align-items: center; gap: 12px;"
+                data-tilt>
                 <span style="font-size: 1.2rem;">💡</span>
                 <span style="font-size: .88rem; color: var(--blue); font-weight: 600;">PRO TIP: Get study material 30
                     mins before Live Quiz.</span>
             </div>
 
-            <div class="page-hero">
-                <h1 class="text-gradient">Premium Dashboard</h1>
-                <p>Welcome to the VIP arena. Play, Win, and Repeat.</p>
+            <div class="page-hero card-reveal stagger-2">
+                <h1 class="text-gold-luxury text-3d-float font-monster" style="font-size: 3.5rem;">Elite Dashboard</h1>
+                <p style="letter-spacing: 1px; color: var(--gold); font-weight: 600;">Welcome to the VIP arena. Play,
+                    Win, and Repeat.</p>
             </div>
 
             <!-- BENTO HEADER GRID -->
-            <div class="grid-2" style="margin-bottom: 32px; gap: 24px;">
-                <!-- VIP WALLET CARD (Private by default) -->
-                <div class="vip-wallet" onclick="toggleWallet()"
-                    style="cursor: pointer; position: relative; overflow: hidden;">
-                    <div style="display:flex; justify-content:space-between; align-items:start;">
+            <div class="grid-2 card-reveal stagger-3" style="margin-bottom: 32px; gap: 24px;">
+                <!-- PERFORMANCE MASTERY CARD -->
+                <div class="glass-card deep-glass"
+                    style="border-radius: var(--radius-md); padding: 28px; border-left: 5px solid var(--violet); position: relative; overflow: hidden; background: linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(15, 23, 42, 0.4));"
+                    data-tilt>
+                    <div
+                        style="font-size: .7rem; color: var(--violet); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">
+                        Global Performance</div>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div
+                            style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--violet), var(--indigo)); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);">
+                            💎</div>
                         <div>
-                            <div
-                                style="font-size: .8rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px;">
-                                Total Balance</div>
-                            <div class="wamt real balance-hidden" id="realAmt"
-                                style="color: #fff; font-size: 2.4rem; margin: 4px 0; transition: filter 0.3s ease;">
-                                ₹0</div>
-                            <div id="tapToShow"
-                                style="font-size: .7rem; color: var(--blue); font-weight: 700; margin-top: 4px;">🎯
-                                CLICK TO REVEAL</div>
+                            <div style="font-size: 1.8rem; font-weight: 900; color: #fff;">Legend Rank</div>
+                            <div style="font-size: .82rem; color: var(--muted); margin-top: 4px;">Top 2% Globally •
+                                Elite Status</div>
                         </div>
-                        <div style="font-size: 2rem;">👑</div>
                     </div>
-                    <div style="margin-top:auto; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size: .75rem; color: var(--blue); font-weight: 600;">ACTIVE VIP STATUS</span>
-                        <span style="font-size: .7rem; color: rgba(255,255,255,0.3); font-family: monospace;">****
-                            2026</span>
+
+                    <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div
+                            style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 14px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: .65rem; color: var(--muted); margin-bottom: 4px;">WIN STREAK</div>
+                            <div style="font-size: 1.1rem; font-weight: 900; color: var(--gold);">🔥 12 DAYS</div>
+                        </div>
+                        <div
+                            style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 14px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size: .65rem; color: var(--muted); margin-bottom: 4px;">ACCURACY</div>
+                            <div style="font-size: 1.1rem; font-weight: 900; color: var(--green);">94.8%</div>
+                        </div>
                     </div>
                 </div>
 
 
                 <!-- QUICK ACTIONS CARD -->
-                <div class="glass-card"
-                    style="border-radius: var(--radius-md); padding: 24px; display: flex; flex-direction: column; gap: 12px; justify-content: center;">
-                    <button class="btn btn-primary btn-full" style="border-radius: 14px; padding: 16px;"
+                <div class="glass-card deep-glass"
+                    style="border-radius: var(--radius-md); padding: 28px; display: flex; flex-direction: column; gap: 12px; justify-content: center; background: linear-gradient(145deg, rgba(59, 130, 246, 0.05), rgba(15, 23, 42, 0.4));"
+                    data-tilt>
+                    <div
+                        style="font-size: .7rem; color: var(--blue); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">
+                        Quick Operations</div>
+                    <button class="btn btn-primary btn-full"
+                        style="border-radius: 16px; padding: 16px; font-weight: 800; font-size: 1rem; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.25);"
                         onclick="window.location='/wallet.html'">
                         ⚡ Add Instant Funds
                     </button>
-                    <button class="btn btn-outline btn-full" style="border-radius: 14px; padding: 16px;"
+                    <button class="btn btn-outline btn-full"
+                        style="border-radius: 16px; padding: 16px; font-size: .9rem; border-color: rgba(255,255,255,0.1);"
                         onclick="window.location='/leaderboard.html'">
                         🏆 View Global Rankings
                     </button>
@@ -303,8 +334,9 @@
             </div>
 
             <!-- REFERRAL BOX (Luxury Style) -->
-            <div class="glass-card"
-                style="border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; border-left: 4px solid var(--gold);">
+            <div class="glass-card card-reveal stagger-4 deep-glass"
+                style="border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; border-left: 4px solid var(--gold);"
+                data-tilt>
                 <div>
                     <div
                         style="font-size: .7rem; color: var(--gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 4px;">
@@ -323,11 +355,12 @@
             </div>
 
             <!-- TAB NAVIGATION -->
-            <div class="tab-bar" style="margin-bottom: 32px;">
-                <button class="tab-btn active" data-cat="all" onclick="filterSessions('all', this)">All Games</button>
-                <button class="tab-btn" data-cat="1" onclick="filterSessions('1', this)">🟢 Rookie</button>
-                <button class="tab-btn" data-cat="2" onclick="filterSessions('2', this)">🟡 Sharp</button>
-                <button class="tab-btn" data-cat="3" onclick="filterSessions('3', this)">🔴 Legend</button>
+            <div class="tab-bar card-reveal stagger-4" style="margin-bottom: 32px;">
+                <button class="tab-btn active" data-cat="all" onclick="filterSessions('all', this)" data-tilt>All
+                    Games</button>
+                <button class="tab-btn" data-cat="1" onclick="filterSessions('1', this)" data-tilt>🟢 Rookie</button>
+                <button class="tab-btn" data-cat="2" onclick="filterSessions('2', this)" data-tilt>🟡 Sharp</button>
+                <button class="tab-btn" data-cat="3" onclick="filterSessions('3', this)" data-tilt>🔴 Legend</button>
             </div>
 
             <div id="sessionsGrid" class="grid-3" style="align-items:start; gap: 24px;"></div>
@@ -381,7 +414,7 @@
         async function loadWallet() {
             try {
                 const w = await api('/api/wallet/me');
-                document.getElementById('realAmt').textContent = '₹' + (w.real || 0);
+                if (document.getElementById('navBal')) document.getElementById('navBal').textContent = '₹' + (w.real || 0);
             } catch (e) { }
         }
 
@@ -487,7 +520,7 @@
                     if (diff > 0) timeInfo = `<div class="time-badge" style="border-radius:10px; background:rgba(251,191,36,0.1); border-color:var(--gold-glow)">⏰ ${formatCountdown(diff)}</div>`;
                 }
                 return `
-        <div class="glass-card session-card" style="border-radius: 24px; padding: 24px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;" onclick="window.location='/session.html?id=${s.id}'" onmouseover="this.style.transform='translateY(-8px) scale(1.02)'" onmouseout="this.style.transform='translateY(0) scale(1)'">
+        <div class="glass-card session-card" style="border-radius: 24px; padding: 24px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;" onclick="window.location='/session.html?id=${s.id}'" onmouseover="this.style.transform='translateY(-8px) scale(1.02)'" onmouseout="this.style.transform='translateY(0) scale(1)'" data-tilt>
           <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom: 16px;">
             <span class="badge ${st.cls}" style="border-radius: 8px; padding: 6px 12px; font-size: 0.7rem;">${st.label}</span>
             <div style="font-size: 1.2rem;">💎</div>
@@ -495,12 +528,30 @@
           <div class="s-title" style="font-size: 1.2rem; margin-bottom: 4px; color: #fff;">${s.title}</div>
           <div class="s-meta" style="font-size: .8rem; margin-bottom: 12px; opacity: 0.6;">${s.category_name} • ${s.seat_limit} Arena</div>
           
-          <div style="background: rgba(0,0,0,0.2); border-radius: 16px; padding: 16px; margin: 16px 0;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="fee" style="color:var(--gold); font-size: 1.8rem; margin:0;">₹${s.entry_fee}</div>
+          <div style="background: rgba(0,0,0,0.2); border-radius: 20px; padding: 20px; margin: 16px 0; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                <div class="fee" style="color:var(--gold); font-size: 1.8rem; margin:0; filter: drop-shadow(0 0 10px rgba(251,191,36,0.3))">₹${s.entry_fee}</div>
                 <div style="text-align:right;">
-                    <div style="font-size: .7rem; color: var(--green); font-weight: 600;">PRIZE POOL</div>
-                    <div style="font-size: 1rem; color: #fff; font-weight: 800;">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75).toLocaleString()}</div>
+                    <div style="font-size: .7rem; color: var(--green); font-weight: 700; letter-spacing: 1px;">TOTAL PRIZE</div>
+                    <div style="font-size: 1.2rem; color: #fff; font-weight: 900;">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75).toLocaleString()}</div>
+                </div>
+            </div>
+            
+            <!-- RANK BREAKDOWN -->
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                <div style="text-align:center;">
+                    <div style="font-size: .65rem; color: var(--gold); font-weight: 800; margin-bottom: 4px;">🥇 1ST</div>
+                    <div style="font-size: 1rem; color: #fff; font-weight: 900;">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75 * 0.5).toLocaleString()}</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size: .65rem; color: #e2e8f0; font-weight: 800; margin-bottom: 4px;">🥈 2ND</div>
+                    <div style="font-size: 1rem; color: #fff; font-weight: 900;">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75 * 0.3).toLocaleString()}</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="text-align:center;">
+                        <div style="font-size: .65rem; color: #f59e0b; font-weight: 800; margin-bottom: 4px;">🥉 3RD</div>
+                        <div style="font-size: 1rem; color: #fff; font-weight: 900;">₹${Math.floor(s.entry_fee * s.seat_limit * 0.75 * 0.2).toLocaleString()}</div>
+                    </div>
                 </div>
             </div>
           </div>

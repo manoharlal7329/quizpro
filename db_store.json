@@ -106,7 +106,16 @@
     }
   ],
   "quiz_attempts": [],
-  "payments": [],
+  "payments": [
+    {
+      "id": 1772232097856,
+      "user_id": 1,
+      "session_id": "1772135312539",
+      "order_id": "order_SLL39k2jKwzUly",
+      "amount": 50,
+      "status": "pending"
+    }
+  ],
   "wallets": [
     {
       "user_id": 1,

@@ -1,5 +1,5 @@
 /* ── GLOBAL CSS — Quiz Platform ──────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;700&display=swap');
 
 *,
 *::before,
@@ -19,18 +19,29 @@
   --red: #ef4444;
   --dark: #030712;
   --surface: #0f172a;
-  /* Glassmorphism Tokens */
-  --glass: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.07);
-  --glass-heavy: rgba(255, 255, 255, 0.05);
+  /* Glassmorphism 2.0 Tokens */
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-heavy: rgba(255, 255, 255, 0.08);
   --text: #f8fafc;
   --muted: #94a3b8;
-  --radius-sm: 12px;
-  --radius-md: 20px;
-  --radius-lg: 28px;
-  --font: 'Poppins', sans-serif;
-  --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.5);
+  --radius-sm: 14px;
+  --radius-md: 24px;
+  --radius-lg: 32px;
+  --font: 'Outfit', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --perspective: 1500px;
+  --tilt-amount: 15deg;
 }
+
+@media (min-width: 1024px) {
+  :root {
+    --perspective: 2500px;
+    --tilt-amount: 20deg;
+  }
+}
+
 
 html,
 body {
@@ -38,6 +49,89 @@ body {
   font-family: var(--font);
   background: var(--dark);
   color: var(--text);
+  perspective: 1500px;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── SPATIAL BACKGROUND ────────────────────────────────────── */
+.spatial-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.floating-asset {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@keyframes float-spatial {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+
+  50% {
+    transform: translateY(-30px) rotate(10deg);
+  }
+
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+}
+
+.deep-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.7),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  transform-style: preserve-3d;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-premium);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.2s;
+  transform-style: preserve-3d;
+}
+
+.glass-card::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: rotate(25deg);
+  transition: transform 0.5s;
+  pointer-events: none;
+}
+
+.glass-card:hover::after {
+  transform: rotate(25deg) translate(10%, 10%);
+}
+
+.deep-glass::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  z-index: -1;
+  opacity: 0.1;
+  border-radius: inherit;
+  filter: blur(20px);
 }
 
 /* ── SCROLLBAR ──────────────────────────────────────────────── */
@@ -78,6 +172,55 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ── MASTER 3D ANIMATIONS ──────────────────────────────────── */
+.text-3d-float {
+  display: inline-block;
+  animation: float3DText 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes float3DText {
+
+  0%,
+  100% {
+    transform: translateZ(30px) translateY(0) rotateX(0);
+  }
+
+  50% {
+    transform: translateZ(60px) translateY(-10px) rotateX(10deg);
+  }
+}
+
+.card-reveal {
+  opacity: 0;
+  transform: translateY(40px) translateZ(-100px) rotateX(-20deg);
+  animation: cardRevealAnim 1s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+@keyframes cardRevealAnim {
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0) rotateX(0);
+  }
+}
+
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+
+.stagger-4 {
+  animation-delay: 0.4s;
 }
 
 .navbar .nav-links {
@@ -182,6 +325,12 @@ body {
   opacity: .5;
   cursor: not-allowed;
   transform: none !important;
+}
+
+/* 3D Wrapper */
+.three-d-scene {
+  perspective: var(--perspective);
+  transform-style: preserve-3d;
 }
 
 /* ── CARD ───────────────────────────────────────────────────── */
@@ -422,6 +571,103 @@ body {
   -webkit-backdrop-filter: blur(25px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-premium);
+  transform-style: preserve-3d;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.3s ease;
+}
+
+[data-tilt] {
+  will-change: transform;
+  transform: translateZ(20px);
+}
+
+/* ── DESKTOP PRECISION 3D ───────────────────────────────────── */
+@media (min-width: 1024px) {
+  .glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.8),
+      inset 0 0 20px rgba(59, 130, 246, 0.1);
+  }
+
+  .glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.06), transparent 40%);
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .glass-card:hover::before {
+    opacity: 1;
+  }
+}
+
+/* ── MOBILE MASTER 3D (Pocket 3D) ───────────────────────────── */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.2rem !important;
+  }
+
+  .spatial-bg .floating-asset {
+    opacity: 0.15 !important;
+    /* Subtle for mobile battery/clutter */
+  }
+
+  /* ── LUXURY TYPOGRAPHY & ANIMATIONS ───────────────────────── */
+  @import url('https://fonts.cdnfonts.com/css/monster-clubhouse');
+
+  .font-monster {
+    font-family: 'Monster Clubhouse', sans-serif !important;
+    letter-spacing: 2px;
+  }
+
+  .text-gold-luxury {
+    background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fcf6ba, #aa771c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: goldShimmer 4s linear infinite;
+  }
+
+  @keyframes goldShimmer {
+    to {
+      background-position: 200% center;
+    }
+  }
+
+  .luxury-glow {
+    filter: drop-shadow(0 0 15px rgba(191, 149, 63, 0.4));
+  }
+
+  .nebula-bg {
+    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15), transparent 70%),
+      radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1), transparent 50%);
+    animation: nebulaMove 10s ease-infinite alternate;
+  }
+
+  @keyframes nebulaMove {
+    from {
+      transform: scale(1) translate(0, 0);
+    }
+
+    to {
+      transform: scale(1.1) translate(2%, -2%);
+    }
+  }
+
+  .bottom-nav {
+    background: rgba(10, 10, 25, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .card-reveal {
+    animation-duration: 0.6s !important;
+    /* Faster for mobile feel */
+  }
 }
 
 .text-gradient {

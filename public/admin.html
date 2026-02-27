@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Panel — QuizPro Winner</title>
-    <link rel="stylesheet" href="/css/style.css?v=1.1" />
+    <link rel="stylesheet" href="/css/style.css?v=1.3" />
 
     <style>
         .sidebar-nav {
@@ -118,7 +118,7 @@
 </head>
 
 <body>
-    <nav class="navbar">
+    <nav class="navbar deep-glass">
         <span class="logo">⚡ QuizPro Winner Admin <span
                 style="font-size:.7rem; color:var(--gold); border:1px solid var(--gold); padding:2px 4px; border-radius:4px; margin-left:6px;">FULL
                 POWER</span></span>
@@ -134,15 +134,15 @@
         <div class="container">
             <div class="admin-layout">
                 <!-- Sidebar -->
-                <div class="sidebar-nav">
-                    <a href="#" class="active" onclick="showPanel('dashboard',this)">📊 Dashboard</a>
-                    <a href="#" onclick="showPanel('sessions',this)">🗂️ Sessions</a>
-                    <a href="#" onclick="showPanel('create',this)">➕ Create Session</a>
-                    <a href="#" onclick="showPanel('categories',this)">📁 Categories</a>
-                    <a href="#" onclick="showPanel('questions',this)">📝 Add Questions</a>
-                    <a href="#" onclick="showPanel('users',this)">👤 Users</a>
-                    <a href="#" onclick="showPanel('wallets',this)">💰 Wallets</a>
-                    <a href="#" onclick="showPanel('rewards',this)">🎁 Rewards</a>
+                <div class="sidebar-nav glass-card" style="padding: 14px;">
+                    <a href="#" class="active" onclick="showPanel('dashboard',this)" data-tilt>📊 Dashboard</a>
+                    <a href="#" onclick="showPanel('sessions',this)" data-tilt>🗂️ Sessions</a>
+                    <a href="#" onclick="showPanel('create',this)" data-tilt>➕ Create Session</a>
+                    <a href="#" onclick="showPanel('categories',this)" data-tilt>📁 Categories</a>
+                    <a href="#" onclick="showPanel('questions',this)" data-tilt>📝 Add Questions</a>
+                    <a href="#" onclick="showPanel('users',this)" data-tilt>👤 Users</a>
+                    <a href="#" onclick="showPanel('wallets',this)" data-tilt>💰 Wallets</a>
+                    <a href="#" onclick="showPanel('rewards',this)" data-tilt>🎁 Rewards</a>
                 </div>
 
                 <!-- Content -->
@@ -151,18 +151,19 @@
                     <!-- Dashboard -->
                     <div class="panel active" id="panel-dashboard">
                         <div class="page-hero" style="padding-top:0;">
-                            <h1>📊 Dashboard</h1>
+                            <h1 class="text-3d-float">📊 Dashboard</h1>
                         </div>
                         <div class="stat-bar" id="statsBar">
                             <div class="spinner"></div>
                         </div>
                         <h3 style="margin-bottom:14px;">Recent Sessions</h3>
-                        <div id="recentSessions"></div>
+                        <div id="recentSessions" class="glass-card" style="padding: 14px;"></div>
                         <!-- OWNER EARNINGS TRACKER -->
                         <div style="margin-top:28px;">
                             <h3 style="margin-bottom:14px;">💰 Owner Earnings (25% Platform Cut)</h3>
-                            <div id="ownerEarnings"
-                                style="background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.25); border-radius:14px; padding:20px;">
+                            <div id="ownerEarnings" class="glass-card deep-glass card-reveal"
+                                style="background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.25); border-radius:14px; padding:20px;"
+                                data-tilt>
                                 <div class="spinner"></div>
                             </div>
                         </div>
@@ -171,17 +172,17 @@
                     <!-- Sessions List -->
                     <div class="panel" id="panel-sessions">
                         <div class="page-hero" style="padding-top:0;">
-                            <h1>🗂️ All Sessions</h1>
+                            <h1 class="text-3d-float">🗂️ All Sessions</h1>
                         </div>
-                        <div id="sessionsList"></div>
+                        <div id="sessionsList" class="glass-card" style="padding: 14px;"></div>
                     </div>
 
                     <!-- Create Session -->
                     <div class="panel" id="panel-create">
                         <div class="page-hero" style="padding-top:0;">
-                            <h1>➕ Create Session</h1>
+                            <h1 class="text-3d-float">➕ Create Session</h1>
                         </div>
-                        <div class="card" style="max-width:520px;">
+                        <div class="glass-card deep-glass card-reveal" style="max-width:520px;" data-tilt>
                             <div id="createAlert"></div>
                             <div class="form-group">
                                 <label>Session Title</label>
@@ -323,9 +324,9 @@
                     <!-- Users -->
                     <div class="panel" id="panel-users">
                         <div class="page-hero" style="padding-top:0;">
-                            <h1>👤 Users Management</h1>
+                            <h1 class="text-3d-float">👤 Users Management</h1>
                         </div>
-                        <div id="usersList"></div>
+                        <div id="usersList" class="glass-card" style="padding: 14px;"></div>
                     </div>
 
                     <!-- Categories -->
@@ -425,7 +426,7 @@
                                 oninput="filterWallets()"
                                 style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);width:220px;" />
                         </div>
-                        <div id="walletsTable">
+                        <div id="walletsTable" class="glass-card" style="padding: 14px;">
                             <div class="spinner"></div>
                         </div>
                     </div>
