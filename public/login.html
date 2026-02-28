@@ -250,6 +250,20 @@
             const user = getUser();
             window.location.href = (user && user.is_admin) ? '/admin.html' : '/dashboard.html';
         }
+
+        // 🔗 Referral Auto-Fill Logic
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ref = urlParams.get('ref');
+            if (ref) {
+                const refInput = document.getElementById('regRefCode');
+                if (refInput) {
+                    refInput.value = ref;
+                    switchTab('register'); // Auto-switch to register tab
+                    toast('🎁 Referral code applied!', 'success');
+                }
+            }
+        };
     </script>
 
     <!-- 🔐 Trust & Policy Notice (Google Security Fix) -->

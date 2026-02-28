@@ -245,9 +245,27 @@ router.post('/admin/credit-prize', authMiddleware, (req, res) => {
     if (!Array.isArray(prizes)) return res.status(400).json({ error: 'prizes array required' });
 
     prizes.forEach(p => {
-        const wallet = getWallet(p.user_id);
-        wallet.win_bal += p.amount; // Prizes go to winning balance
-        addTxn(p.user_id, 'real', 'credit', p.amount, `🏆 Prize #${p.rank} — ${p.session_title}`);
+        const winnerWallet = getWallet(p.user_id);
+        const winnerUser = (data.users || []).find(u => String(u.id) === String(p.user_id));
+
+        let finalPrize = p.amount;
+        let referralComm = 0;
+
+        // Check for referral (referred_by stores the referral_code of the referrer)
+        if (winnerUser && winnerUser.referred_by) {
+            const referrer = (data.users || []).find(u => u.referral_code === winnerUser.referred_by);
+            if (referrer && String(referrer.id) !== String(p.user_id)) {
+                referralComm = Math.floor(p.amount * 0.05);
+                finalPrize = p.amount - referralComm;
+
+                const referrerWallet = getWallet(referrer.id);
+                referrerWallet.win_bal += referralComm;
+                addTxn(referrer.id, 'real', 'credit', referralComm, `📩 Referral Win Comm: ${winnerUser.username} — ${p.session_title}`);
+            }
+        }
+
+        winnerWallet.win_bal += finalPrize;
+        addTxn(p.user_id, 'real', 'credit', finalPrize, `🏆 Prize #${p.rank} — ${p.session_title}${referralComm > 0 ? ' (Net after 5% Ref)' : ''}`);
     });
 
     save();
