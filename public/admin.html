@@ -727,7 +727,7 @@
                                 <th>User ID</th>
                                 <th>Full Name / Username</th>
                                 <th>Contact Details</th>
-                                <th>Age / Status</th>
+                                <th>Joined / Referral</th>
                                 <th>Quizzes</th>
                                 <th>Wallets</th>
                                 <th>Action</th>
@@ -740,16 +740,20 @@
                                 <tr>
                                     <td>#${u.id}</td>
                                     <td>
-                                        <div style="font-weight:700; color:var(--text);">${u.full_name}</div>
-                                        <div style="font-size:.7rem; color:var(--muted);">@${u.username}</div>
+                                        <div style="font-weight:700; color:var(--text);">${u.full_name || u.name || 'User'}</div>
+                                        <div style="font-size:.7rem; color:var(--muted);">@${u.username || u.name || 'unknown'}</div>
                                     </td>
                                     <td>
-                                        <div style="font-size:.8rem;">📞 ${u.phone}</div>
+                                        <div style="font-size:.8rem; font-weight:600; color:var(--text);">📞 ${u.phone || 'N/A'}</div>
                                         <div style="font-size:.7rem; color:var(--muted);">📧 ${u.email}</div>
                                     </td>
                                     <td>
-                                        <div style="font-size:.8rem; font-weight:600; color:var(--blue);">${days} Days Old</div>
-                                        ${u.is_admin ? '<span class="badge badge-gold" style="font-size:.65rem; padding:2px 6px;">Admin</span>' : ''}
+                                        <div style="font-size:.75rem; color:var(--blue); font-weight:700;">📅 ${new Date(u.created_at * 1000).toLocaleDateString()}</div>
+                                        <div style="font-size:.65rem; color:var(--muted); margin-top:2px;">
+                                            🎟️ Code: <span style="color:var(--gold); font-weight:700;">${u.referral_code}</span><br>
+                                            🔗 By: <span style="color:var(--violet);">${u.referred_by}</span>
+                                        </div>
+                                        ${u.is_admin ? '<span class="badge badge-gold" style="font-size:.6rem; padding:1px 4px; display:inline-block; margin-top:4px;">Admin</span>' : ''}
                                     </td>
                                     <td>
                                         <div style="font-size:1.1rem; font-weight:900; color:var(--gold);">${u.quizzes_solved}</div>

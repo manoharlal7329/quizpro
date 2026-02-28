@@ -97,6 +97,40 @@
             animation-delay: 2s;
         }
 
+        @media (max-width: 480px) {
+            .hero {
+                min-height: 80vh;
+                text-align: center;
+                padding-top: 40px;
+            }
+
+            .hero-content {
+                margin: 0 auto;
+            }
+
+            .hero-title {
+                font-size: 3.5rem !important;
+                line-height: 1.0;
+                letter-spacing: -2px;
+            }
+
+            .hero-btns {
+                flex-direction: column;
+                width: 100%;
+                gap: 12px;
+            }
+
+            .hero-btns .btn {
+                width: 100%;
+                padding: 20px !important;
+                border-radius: 14px !important;
+            }
+
+            .hero-badges {
+                justify-content: center;
+            }
+        }
+
         @keyframes float {
 
             0%,

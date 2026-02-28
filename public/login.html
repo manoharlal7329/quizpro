@@ -10,9 +10,12 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            padding: 20px 0;
+            overflow-x: hidden;
         }
 
         .login-wrap {
@@ -105,6 +108,10 @@
                 <input type="password" id="loginPassword" placeholder="Enter your password" required />
             </div>
             <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Login 🚀</button>
+            <div style="text-align: center; margin-top: 14px;">
+                <a href="#" onclick="forgotPass()"
+                    style="color: var(--muted); font-size: .85rem; text-decoration: none;">Forgot Password?</a>
+            </div>
         </div>
 
         <!-- REGISTER PANEL -->
@@ -227,12 +234,38 @@
             }
         }
 
+        async function forgotPass() {
+            const email = prompt("Please enter your registered email address:");
+            if (!email) return;
+            try {
+                const res = await api('/api/auth/forgot-password', 'POST', { email });
+                toast(res.message, 'success');
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+        }
+
         // Redirect if already logged in
         if (localStorage.getItem('token')) {
             const user = getUser();
             window.location.href = (user && user.is_admin) ? '/admin.html' : '/dashboard.html';
         }
     </script>
+
+    <!-- 🔐 Trust & Policy Notice (Google Security Fix) -->
+    <div
+        style="margin-top:24px; text-align:center; font-size:12px; color:rgba(255,255,255,0.4); max-width: 420px; padding: 0 20px;">
+        <p>
+            This is the official login page of <strong>QuizPro Winner</strong>.
+            We do not ask for passwords, OTPs, or PINs outside this website.
+        </p>
+        <p style="margin-top: 8px;">
+            <a href="/privacy" style="color:var(--blue)">Privacy Policy</a> |
+            <a href="/terms" style="color:var(--blue)">Terms & Conditions</a> |
+            <a href="/refund" style="color:var(--blue)">Refund Policy</a> |
+            <a href="/contact" style="color:var(--blue)">Contact Us</a>
+        </p>
+    </div>
 </body>
 
 </html>

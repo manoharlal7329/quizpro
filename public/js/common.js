@@ -206,13 +206,60 @@ class InteractionEngine {
         document.addEventListener('mousedown', unlock);
         document.addEventListener('touchstart', unlock);
 
-        document.addEventListener('mousemove', (e) => {
-            if (!this.isMobile) {
-                // Update CSS variables for reflection logic (subtle glow)
-                document.documentElement.style.setProperty('--mouse-x', `${(e.clientX / window.innerWidth) * 100}%`);
-                document.documentElement.style.setProperty('--mouse-y', `${(e.clientY / window.innerHeight) * 100}%`);
+        document.addEventListener('mousemove', (e) => this.handleGlobalParallax(e));
+        if (window.DeviceOrientationEvent && !this.isMobile) {
+            // Some mobile browsers require permission for orientation
+            // We use scroll-linked parallax as a robust mobile fallback
+        }
+        window.addEventListener('scroll', () => this.handleScrollParallax());
+        this.initObserver();
+    }
+
+    handleScrollParallax() {
+        if (!this.isMobile) return;
+        const scrolled = window.scrollY;
+        document.querySelectorAll('.glass-card').forEach((card, i) => {
+            const rect = card.getBoundingClientRect();
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                const shift = (rect.top - window.innerHeight / 2) * 0.05;
+                card.style.transform = `perspective(1000px) rotateX(${shift}deg) translateZ(5px)`;
             }
         });
+    }
+
+    handleGlobalParallax(e) {
+        if (this.isMobile) return;
+        const x = (e.clientX / window.innerWidth) * 100;
+        const y = (e.clientY / window.innerHeight) * 100;
+        document.documentElement.style.setProperty('--mouse-x', `${x}%`);
+        document.documentElement.style.setProperty('--mouse-y', `${y}%`);
+
+        // Precision Tilt for hovered elements
+        const hovered = document.elementFromPoint(e.clientX, e.clientY);
+        const card = hovered?.closest('.glass-card');
+        if (card) this.applyTilt(e, card);
+    }
+
+    handleGyro(e) {
+        if (!this.isMobile || !e.beta) return;
+        // Map beta/gamma to small rotation values
+        const rx = (e.beta - 45) * 0.2; // subtle pitch
+        const ry = e.gamma * 0.2;      // subtle roll
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+    }
+
+    applyTilt(e, el) {
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rx = ((y - centerY) / centerY) * -10; // max 10deg
+        const ry = ((x - centerX) / centerX) * 10;  // max 10deg
+        el.style.setProperty('--rx', `${rx}deg`);
+        el.style.setProperty('--ry', `${ry}deg`);
     }
 
     initAudio() {

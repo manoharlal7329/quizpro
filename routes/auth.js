@@ -179,4 +179,48 @@ router.get('/badges', authMiddleware, (req, res) => {
     res.json(badges);
 });
 
+// ─── FORGOT PASSWORD ──────────────────────────────────────────────────
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = data.users.find(u => u.email === email.toLowerCase().trim());
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Generate token valid for 1 hour
+    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    user.reset_token = token;
+    user.reset_expires = Date.now() + 3600000;
+    save();
+
+    // In a real app, send email. For now, log it.
+    console.log(`[AUTH] Password reset requested for ${email}. Token: ${token}`);
+
+    // Optional: Send real email if SMTP is configured
+    try {
+        const { sendMail } = require('../utils/mailer');
+        await sendMail(email, 'Password Reset Request', `Click the link below to reset your password and secure your account: ${process.env.BASE_URL || 'http://localhost:9988'}/reset_password.html?token=${token}`);
+    } catch (e) {
+        console.error('Email send failed:', e.message);
+    }
+
+    res.json({ message: 'Reset link sent to your email.' });
+});
+
+// ─── RESET PASSWORD ────────────────────────────────────────────────────
+router.post('/reset-password', async (req, res) => {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) return res.status(400).json({ error: 'Token and new password required' });
+
+    const user = data.users.find(u => u.reset_token === token && u.reset_expires > Date.now());
+    if (!user) return res.status(400).json({ error: 'Invalid or expired token' });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.reset_token = undefined;
+    user.reset_expires = undefined;
+    save();
+
+    res.json({ message: 'Password updated successfully. You can now login.' });
+});
+
 module.exports = router;

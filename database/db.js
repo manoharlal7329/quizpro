@@ -57,6 +57,9 @@ if (!data.users.find(u => u.is_admin === 1)) {
   data.users.push({
     id: 1,
     email: 'manoharlala02911@gmail.com',
+    full_name: 'Manohar Lal Prajapati',
+    username: 'admin',
+    phone: '0000000000',
     name: 'Manohar Lal Prajapati',
     is_admin: 1
   });
