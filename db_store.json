@@ -36,6 +36,20 @@
       "referred_by": null,
       "quizzes_solved": 0,
       "created_at": 1772215764
+    },
+    {
+      "id": 1772265242568,
+      "email": "verify@example.com",
+      "password": "$2b$10$pAOyoVc38mVhu9ho00iiEOuxrcFUjpwYpympWDxNtIuLkWbMG7x7i",
+      "full_name": "Verify User",
+      "username": "verifyuser1",
+      "phone": "9876543210",
+      "name": "verifyuser1",
+      "is_admin": 0,
+      "referral_code": "VER8XM9",
+      "referred_by": null,
+      "quizzes_solved": 0,
+      "created_at": 1772265242
     }
   ],
   "settings": {
@@ -140,6 +154,13 @@
     },
     {
       "user_id": 1772215764023,
+      "demo": 0,
+      "dep_bal": 0,
+      "win_bal": 0,
+      "pin": null
+    },
+    {
+      "user_id": 1772265242568,
       "demo": 0,
       "dep_bal": 0,
       "win_bal": 0,

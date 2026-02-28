@@ -172,37 +172,7 @@
 </head>
 
 <body>
-    <!-- 3D SPLASH INTRO (Luxury Nebula) -->
-    <div id="splash" class="nebula-bg"
-        style="position: fixed; inset: 0; z-index: 9999; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s ease;">
-        <div style="text-align: center;">
-            <div id="splashName" class="font-monster text-gold-luxury luxury-glow"
-                style="font-size: 4rem; font-weight: 900; perspective: 1000px; transform-style: preserve-3d; animation: splash3D 2.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                USER</div>
-            <div
-                style="color: var(--gold); font-size: 0.9rem; font-weight: 800; letter-spacing: 6px; margin-top: 15px; opacity: 0.8; text-transform: uppercase;">
-                ✨ LUXURY ARENA ✨</div>
-        </div>
-    </div>
-
     <style>
-        @keyframes splash3D {
-            0% {
-                transform: translateZ(-200px) rotateX(90deg);
-                opacity: 0;
-            }
-
-            50% {
-                transform: translateZ(50px) rotateX(-10deg);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateZ(0) rotateX(0);
-                opacity: 1;
-            }
-        }
-
         .balance-hidden {
             filter: blur(8px);
             cursor: pointer;
@@ -259,26 +229,24 @@
         <div class="container" style="padding-top:40px;">
 
             <!-- PRO TIP BANNER -->
-            <div class="glass-card card-reveal stagger-1"
-                style="padding: 14px 24px; border-radius: 16px; margin-bottom: 24px; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--blue); display: flex; align-items: center; gap: 12px;"
-                data-tilt>
+            <div class="glass-card"
+                style="padding: 14px 24px; border-radius: 16px; margin-bottom: 24px; background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--blue); display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 1.2rem;">💡</span>
                 <span style="font-size: .88rem; color: var(--blue); font-weight: 600;">PRO TIP: Get study material 30
                     mins before Live Quiz.</span>
             </div>
 
-            <div class="page-hero card-reveal stagger-2">
-                <h1 class="text-gold-luxury text-3d-float font-monster" style="font-size: 3.5rem;">Elite Dashboard</h1>
+            <div class="page-hero">
+                <h1 class="text-gold-luxury font-monster" style="font-size: 3.5rem;">Elite Dashboard</h1>
                 <p style="letter-spacing: 1px; color: var(--gold); font-weight: 600;">Welcome to the VIP arena. Play,
                     Win, and Repeat.</p>
             </div>
 
             <!-- BENTO HEADER GRID -->
-            <div class="grid-2 card-reveal stagger-3" style="margin-bottom: 32px; gap: 24px;">
+            <div class="grid-2" style="margin-bottom: 32px; gap: 24px;">
                 <!-- PERFORMANCE MASTERY CARD -->
                 <div class="glass-card deep-glass"
-                    style="border-radius: var(--radius-md); padding: 28px; border-left: 5px solid var(--violet); position: relative; overflow: hidden; background: linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(15, 23, 42, 0.4));"
-                    data-tilt>
+                    style="border-radius: var(--radius-md); padding: 28px; border-left: 5px solid var(--violet); position: relative; overflow: hidden; background: linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(15, 23, 42, 0.4));">
                     <div
                         style="font-size: .7rem; color: var(--violet); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">
                         Global Performance</div>
@@ -310,8 +278,7 @@
 
                 <!-- QUICK ACTIONS CARD -->
                 <div class="glass-card deep-glass"
-                    style="border-radius: var(--radius-md); padding: 28px; display: flex; flex-direction: column; gap: 12px; justify-content: center; background: linear-gradient(145deg, rgba(59, 130, 246, 0.05), rgba(15, 23, 42, 0.4));"
-                    data-tilt>
+                    style="border-radius: var(--radius-md); padding: 28px; display: flex; flex-direction: column; gap: 12px; justify-content: center; background: linear-gradient(145deg, rgba(59, 130, 246, 0.05), rgba(15, 23, 42, 0.4));">
                     <div
                         style="font-size: .7rem; color: var(--blue); font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">
                         Quick Operations</div>
@@ -329,9 +296,8 @@
             </div>
 
             <!-- REFERRAL BOX (Luxury Style) -->
-            <div class="glass-card card-reveal stagger-4 deep-glass"
-                style="border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; border-left: 4px solid var(--gold);"
-                data-tilt>
+            <div class="glass-card deep-glass"
+                style="border-radius: var(--radius-md); padding: 24px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; border-left: 4px solid var(--gold);">
                 <div>
                     <div
                         style="font-size: .7rem; color: var(--gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 4px;">
@@ -350,12 +316,12 @@
             </div>
 
             <!-- TAB NAVIGATION -->
-            <div class="tab-bar card-reveal stagger-4" style="margin-bottom: 32px;">
-                <button class="tab-btn active" data-cat="all" onclick="filterSessions('all', this)" data-tilt>All
-                    Games</button>
-                <button class="tab-btn" data-cat="1" onclick="filterSessions('1', this)" data-tilt>🟢 Rookie</button>
-                <button class="tab-btn" data-cat="2" onclick="filterSessions('2', this)" data-tilt>🟡 Sharp</button>
-                <button class="tab-btn" data-cat="3" onclick="filterSessions('3', this)" data-tilt>🔴 Legend</button>
+            <div class="tab-bar" style="margin-bottom: 32px;">
+                <button class="tab-btn active" data-cat="all" onclick="filterSessions('all', this)">All
+                    Arenas</button>
+                <button class="tab-btn" data-cat="1" onclick="filterSessions('1', this)">🟢 Rookie</button>
+                <button class="tab-btn" data-cat="2" onclick="filterSessions('2', this)">🟡 Sharp</button>
+                <button class="tab-btn" data-cat="3" onclick="filterSessions('3', this)">🔴 Legend</button>
             </div>
 
             <div id="sessionsGrid" class="grid-3" style="align-items:start; gap: 24px;"></div>
@@ -379,17 +345,8 @@
         const user = getUser();
         if (user) {
             document.getElementById('userGreet').textContent = `👤 ${user.email}`;
-            document.getElementById('splashName').textContent = user.name || user.email.split('@')[0].toUpperCase();
         }
 
-        // Hide splash after 2.5s
-        setTimeout(() => {
-            const sp = document.getElementById('splash');
-            if (sp) {
-                sp.style.opacity = '0';
-                setTimeout(() => sp.remove(), 800);
-            }
-        }, 2200);
 
         function toggleWallet() {
             const amt = document.getElementById('realAmt');
@@ -515,7 +472,7 @@
                     if (diff > 0) timeInfo = `<div class="time-badge" style="border-radius:10px; background:rgba(251,191,36,0.1); border-color:var(--gold-glow)">⏰ ${formatCountdown(diff)}</div>`;
                 }
                 return `
-        <div class="glass-card session-card" style="border-radius: 24px; padding: 24px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;" onclick="window.location='/session.html?id=${s.id}'" onmouseover="this.style.transform='translateY(-8px) scale(1.02)'" onmouseout="this.style.transform='translateY(0) scale(1)'" data-tilt>
+        <div class="glass-card session-card" style="border-radius: 24px; padding: 24px; cursor: pointer;" onclick="window.location='/session.html?id=${s.id}'">
           <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom: 16px;">
             <span class="badge ${st.cls}" style="border-radius: 8px; padding: 6px 12px; font-size: 0.7rem;">${st.label}</span>
             <div style="font-size: 1.2rem;">💎</div>

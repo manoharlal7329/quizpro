@@ -154,7 +154,6 @@ class InteractionEngine {
     constructor() {
         this.ctx = null;
         this.tiltElements = [];
-        this.bgAssets = [];
         this.clickCount = 0;
         this.currentPaletteIndex = 0;
         this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -195,9 +194,7 @@ class InteractionEngine {
 
     init() {
         window.addEventListener('scroll', () => renderFooter());
-        this.initGems();
         this.hookButtons();
-        this.initObserver();
 
         // Unlock audio on first interaction
         const unlock = () => {
@@ -211,19 +208,11 @@ class InteractionEngine {
 
         document.addEventListener('mousemove', (e) => {
             if (!this.isMobile) {
-                this.updateSpatial(e.clientX, e.clientY);
-                // Update CSS variables for reflection logic
+                // Update CSS variables for reflection logic (subtle glow)
                 document.documentElement.style.setProperty('--mouse-x', `${(e.clientX / window.innerWidth) * 100}%`);
                 document.documentElement.style.setProperty('--mouse-y', `${(e.clientY / window.innerHeight) * 100}%`);
             }
-            this.updateTilt(e.clientX, e.clientY);
         });
-
-        if (this.isMobile && window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', (e) => {
-                this.updateSpatial(e.gamma * 10, e.beta * 10); // Simulated
-            });
-        }
     }
 
     initAudio() {
@@ -272,65 +261,6 @@ class InteractionEngine {
         }
     }
 
-    initGems() {
-        const bg = document.createElement('div');
-        bg.className = 'spatial-bg';
-
-        const assets = [
-            '/assets/3d/gem.png',
-            '/assets/3d/coin.png'
-        ];
-
-        for (let i = 0; i < 8; i++) {
-            const img = document.createElement('img');
-            img.className = 'floating-asset';
-            img.src = `${assets[i % assets.length]}`;
-
-            const size = 60 + Math.random() * 120;
-            img.style.width = size + 'px';
-            img.style.left = Math.random() * 100 + '%';
-            img.style.top = Math.random() * 100 + '%';
-            img.style.opacity = 0.1 + Math.random() * 0.3;
-            img.style.animation = `float-spatial ${10 + Math.random() * 20}s infinite ease-in-out`;
-
-            this.bgAssets.push({
-                el: img,
-                type: assets[i % assets.length].includes('gem') ? 'gem' : 'coin',
-                factor: 0.02 + Math.random() * 0.05,
-                x: 0, y: 0
-            });
-            img.addEventListener('mouseenter', () => {
-                if (img.src.includes('gem')) this.soundCrystal();
-                else this.soundGold();
-                img.style.transform += ' scale(1.2) translateZ(50px)';
-            });
-            bg.appendChild(img);
-        }
-        document.body.appendChild(bg);
-    }
-
-    updateSpatial(mx, my) {
-        this.bgAssets.forEach(asset => {
-            const dx = (mx - window.innerWidth / 2) * asset.factor;
-            const dy = (my - window.innerHeight / 2) * asset.factor;
-            asset.el.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 10}deg)`;
-        });
-    }
-
-    updateTilt(mx, my) {
-        const tiltAmount = getComputedStyle(document.documentElement).getPropertyValue('--tilt-amount').trim() || '15deg';
-        const val = parseFloat(tiltAmount);
-
-        document.querySelectorAll('[data-tilt]').forEach(el => {
-            const rect = el.getBoundingClientRect();
-            const x = mx - (rect.left + rect.width / 2);
-            const y = my - (rect.top + rect.height / 2);
-            const rX = -(y / rect.height) * val;
-            const rY = (x / rect.width) * val;
-            el.style.transform = `perspective(var(--perspective)) rotateX(${rX}deg) rotateY(${rY}deg) translateZ(30px)`;
-        });
-    }
-
     hookButtons() {
         // Broad selector for 100% site coverage
         const selector = 'button, a, .btn, .glass-card, .nav-item, .tab-btn, input[type="button"], input[type="submit"], select, label';
@@ -351,10 +281,6 @@ class InteractionEngine {
             mutations.forEach(m => {
                 if (m.addedNodes.length) {
                     this.hookButtons();
-                    // Auto-tilt for new cards
-                    document.querySelectorAll('.glass-card').forEach(c => {
-                        if (c.parentElement.id === 'sessionsGrid') c.setAttribute('data-tilt', '');
-                    });
                 }
             });
         });
