@@ -79,27 +79,33 @@ function hideLoading(id = 'loadingState') {
     if (el) el.style.display = 'none';
 }
 
-// ─── GLOBAL FOOTER ────────────────────────────────────────────
-// Appended to body — NOT inside .main (was causing layout conflicts)
+// ─── GLOBAL FOOTER (Liquid Glass Luxury) ──────────────────────
 function renderFooter() {
     const existing = document.querySelector('footer.footer');
-    if (existing) return; // don't add twice
+    if (existing) return;
 
     const footer = document.createElement('footer');
-    footer.className = 'footer';
+    footer.className = 'footer luxury-reveal';
     footer.innerHTML = `
-    <div class="container footer-wrap">
-        <div class="footer-social">
-            <a href="https://www.instagram.com/quiz_pro_24?igsh=MXd4cmY0bzh6NjBvcA==" target="_blank" class="btn btn-insta">📸 Follow on Instagram</a>
-            <a href="https://youtube.com/@therealjourney-t4j?si=76G9-CnV98EwG6e5" target="_blank" class="btn btn-youtube">▶️ Watch on YouTube</a>
+    <div class="container footer-wrap" style="text-align:center; padding-bottom: 40px;">
+        <div style="display:flex; gap:20px; justify-content:center; margin-bottom:32px; flex-wrap:wrap;">
+            <a href="https://instagram.com/quizprowinner" target="_blank" class="social-pill insta-glow">
+                <span>📸</span> INSTAGRAM
+            </a>
+            <a href="https://youtube.com/@quizprowinner" target="_blank" class="social-pill yt-glow">
+                <span>▶️</span> YOUTUBE
+            </a>
         </div>
-        <p class="trust-line">
-            Follow us on Instagram &amp; YouTube for updates, learning tips, and announcements.
-            <br><strong>⚡ QuizPro Winner</strong> is a 100% Skill-Based platform. Not gambling.
+        <p class="trust-line" style="font-size: 0.82rem; color: rgba(255,255,255,0.4); max-width: 600px; margin: 0 auto 16px;">
+            This is the official platform of <strong>QuizPro Winner</strong>. 
+            Follow us for updates, learning tips, and announcements.
+            <br>⚡ 100% Skill-Based platform. Not gambling.
         </p>
-        <div class="copyright">© ${new Date().getFullYear()} QUIZPRO WINNER OFFICIAL • ALL RIGHTS RESERVED</div>
+        <div class="copyright" style="font-size: 0.75rem; color: rgba(255,255,255,0.25); letter-spacing: 1px;">
+            © ${new Date().getFullYear()} QUIZPRO WINNER OFFICIAL • ALL RIGHTS RESERVED
+        </div>
     </div>`;
-    document.body.appendChild(footer); // append to BODY, not .main
+    document.body.appendChild(footer);
 }
 // ─── GLOBAL NAVIGATION (Luxury) ───────────────────────────────
 function renderAppNav() {

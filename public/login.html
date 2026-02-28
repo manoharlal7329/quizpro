@@ -38,28 +38,34 @@
 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 5px;
-            border-radius: 12px;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .tab-btn {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: none;
             background: transparent;
             color: var(--muted);
-            font-weight: 600;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
             cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.2s;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .tab-btn.active {
-            background: var(--blue);
+            background: linear-gradient(135deg, var(--blue), var(--violet));
             color: #fff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transform: scale(1.02);
         }
 
         .auth-panel {
@@ -132,6 +138,52 @@
 
         .auth-panel.glass-card {
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 40px !important;
+            padding: 32px 28px !important;
+            /* Ultra Rounded for Liquid Feel */
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 🌊 LIQUID WATER FILL EFFECT */
+        .auth-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                    rgba(59, 130, 246, 0.15) 0%,
+                    rgba(139, 92, 246, 0.05) 50%,
+                    rgba(3, 7, 18, 0.8) 100%);
+            animation: liquidMove 10s infinite alternate-reverse ease-in-out;
+            z-index: -1;
+        }
+
+        @keyframes liquidMove {
+            0% {
+                transform: scale(1) translate(0, 0) rotate(0);
+            }
+
+            50% {
+                transform: scale(1.1) translate(5%, 2%) rotate(2deg);
+            }
+
+            100% {
+                transform: scale(1.05) translate(-2%, 5%) rotate(-1deg);
+            }
+        }
+
+        /* Fluid Rounding for all children */
+        .auth-panel input,
+        .btn-gold-luxury {
+            border-radius: 24px !important;
+        }
+
+        .tabs {
+            border-radius: 20px !important;
+        }
+
+        .tab-btn {
+            border-radius: 16px !important;
         }
 
         @keyframes goldShimmer {
@@ -165,7 +217,7 @@
 
     <div class="login-wrap card-reveal">
         <div class="login-logo text-3d-float font-monster text-gold-luxury"
-            style="font-size: 2.8rem; margin-bottom: 32px;">QuizPro Winner</div>
+            style="font-size: clamp(2rem, 8vw, 2.8rem); margin-bottom: 36px;">QuizPro Winner</div>
 
 
         <div class="tabs">
@@ -175,8 +227,10 @@
 
         <!-- LOGIN PANEL -->
         <div id="login-panel" class="auth-panel glass-card deep-glass active" data-tilt>
-            <h2 class="font-monster text-gold-luxury" style="font-size:1.8rem; margin-bottom:6px;">Welcome Back 👋</h2>
-            <p style="color:var(--gold); font-size:.9rem; margin-bottom:24px; font-weight:600; letter-spacing:1px;">
+            <h2 class="font-monster text-gold-luxury"
+                style="font-size: clamp(1.4rem, 5vw, 1.8rem); margin-bottom:10px;">Welcome Back 👋</h2>
+            <p
+                style="color:var(--gold); font-size: 0.75rem; margin-bottom:32px; font-weight:700; letter-spacing:2px; opacity:0.7;">
                 ELITE ACCESS GRANTED</p>
             <div id="loginAlert"></div>
             <div class="form-group">
@@ -196,8 +250,11 @@
 
         <!-- REGISTER PANEL -->
         <div id="register-panel" class="auth-panel glass-card deep-glass">
-            <h2 class="font-monster text-gold-luxury" style="font-size:1.8rem; margin-bottom:6px;">Create Account ✨</h2>
-            <p style="color:var(--gold); font-size:.9rem; margin-bottom:24px; font-weight:600; letter-spacing:1px;">JOIN
+            <h2 class="font-monster text-gold-luxury"
+                style="font-size: clamp(1.4rem, 5vw, 1.8rem); margin-bottom:10px;">Create Account ✨</h2>
+            <p
+                style="color:var(--gold); font-size: 0.75rem; margin-bottom:32px; font-weight:700; letter-spacing:2px; opacity:0.7;">
+                JOIN
                 THE VIP ARENA</p>
             <div id="registerAlert"></div>
 
@@ -348,20 +405,6 @@
         };
     </script>
 
-    <!-- 🔐 Trust & Policy Notice (Google Security Fix) -->
-    <div
-        style="margin-top:24px; text-align:center; font-size:12px; color:rgba(255,255,255,0.4); max-width: 420px; padding: 0 20px;">
-        <p>
-            This is the official login page of <strong>QuizPro Winner</strong>.
-            We do not ask for passwords, OTPs, or PINs outside this website.
-        </p>
-        <p style="margin-top: 8px;">
-            <a href="/privacy" style="color:var(--blue)">Privacy Policy</a> |
-            <a href="/terms" style="color:var(--blue)">Terms & Conditions</a> |
-            <a href="/refund" style="color:var(--blue)">Refund Policy</a> |
-            <a href="/contact" style="color:var(--blue)">Contact Us</a>
-        </p>
-    </div>
 </body>
 
 </html>
