@@ -97,10 +97,17 @@ function renderFooter() {
             </a>
         </div>
         <p class="trust-line" style="font-size: 0.82rem; color: rgba(255,255,255,0.4); max-width: 600px; margin: 0 auto 16px;">
-            This is the official platform of <strong>QuizPro Winner</strong>. 
             Follow us for updates, learning tips, and announcements.
             <br>⚡ 100% Skill-Based platform. Not gambling.
+            <br/><span style="color:var(--gold); font-weight:700;">✅ Full Security Guarantee — All Transactions Protected</span>
         </p>
+        <div style="margin-bottom: 24px; font-size: 0.75rem;">
+            <a href="/privacy.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Privacy Policy</a> |
+            <a href="/terms.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Terms & Conditions</a> |
+            <a href="/shipping.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Shipping Policy</a> |
+            <a href="/refund.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Cancellation & Refunds</a> |
+            <a href="/contact.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Contact Us</a>
+        </div>
         <div class="copyright" style="font-size: 0.75rem; color: rgba(255,255,255,0.25); letter-spacing: 1px;">
             © ${new Date().getFullYear()} QUIZPRO WINNER OFFICIAL • ALL RIGHTS RESERVED
         </div>
