@@ -279,7 +279,7 @@ router.post('/withdraw', authMiddleware, (req, res) => {
     const { amount, upi_id, pin } = req.body;
     const userId = req.user.id;
 
-    if (!amount || amount < 100) return res.status(400).json({ error: 'MIN_WITHDRAW', message: 'Minimum withdrawal is ₹100' });
+    if (!amount || amount < 1) return res.status(400).json({ error: 'MIN_WITHDRAW', message: 'Minimum withdrawal is ₹1' });
     if (!upi_id || !upi_id.includes('@')) return res.status(400).json({ error: 'INVALID_UPI', message: 'Valid UPI ID required.' });
 
     const wallet = getWallet(userId);

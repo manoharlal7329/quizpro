@@ -237,7 +237,7 @@
 
                     <div class="amt-input-wrap">
                         <span>₹</span>
-                        <input type="number" id="withdrawAmt" placeholder="Points (Min 100)" min="100" value="100"
+                        <input type="number" id="withdrawAmt" placeholder="Enter Amount" min="1" value="100"
                             oninput="updateWithdrawPreview()">
                     </div>
 
@@ -263,7 +263,7 @@
                     <button class="btn btn-outline" id="withdrawBtn"
                         style="width: 100%; margin-top: 20px; border-color: var(--gold); color: var(--gold);"
                         onclick="requestWithdrawal()">
-                        Request Bank Transfer
+                        Request Withdrawal
                     </button>
                 </div>
 
@@ -381,7 +381,7 @@
             const upi = document.getElementById('withdrawUpi').value.trim();
             const pin = document.getElementById('withdrawPin').value;
 
-            if (!amt || amt < 100) return toast('Min redemption is 100 points', 'error');
+            if (!amt || amt < 1) return toast('Min redemption is ₹1', 'error');
             if (amt > window.withdrawableAmt) return toast(`Insufficient redeemable points. (Max ${window.withdrawableAmt})`, 'error');
             if (!upi) return toast('Please enter UPI ID', 'error');
             if (!pin || pin.length !== 4) return toast('Please enter a 4-digit Wallet PIN', 'error');
