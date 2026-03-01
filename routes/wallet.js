@@ -225,8 +225,8 @@ router.get('/admin/list', authMiddleware, (req, res) => {
         const w = getWallet(u.id);
         return {
             id: u.id,
-            mobile: u.mobile,
-            name: u.name,
+            mobile: u.phone || u.mobile || 'N/A',
+            name: u.full_name || u.name,
             real: w.dep_bal + w.win_bal,
             dep_bal: w.dep_bal,
             win_bal: w.win_bal
