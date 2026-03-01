@@ -763,9 +763,10 @@
                                         <div style="color:var(--green); font-weight:700;">₹${u.wallet_real} <span style="font-size:.7rem; color:var(--muted);">Real</span></div>
                                     </td>
                                     <td>
-                                        ${u.id == 1 ? '-' : `
-                                            <button class="btn btn-danger" style="padding:4px 8px; font-size:.7rem;" onclick="deleteUser(${u.id})">Delete</button>
-                                        `}
+                                        <div style="display:flex; gap:6px;">
+                                            <button class="btn btn-gold" style="padding:4px 10px; font-size:.7rem;" onclick="showPanel('wallets'); quickTopup('${u.id}', '${u.phone || u.email}')">💰 Topup</button>
+                                            ${u.id == 1 ? '' : `<button class="btn btn-danger" style="padding:4px 8px; font-size:.75rem;" onclick="deleteUser(${u.id})">Delete</button>`}
+                                        </div>
                                     </td>
                                 </tr>`;
                 }).join('')}
