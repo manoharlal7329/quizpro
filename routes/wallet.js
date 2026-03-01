@@ -182,15 +182,14 @@ router.post('/confirm-deposit', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Signature verification required or simulation missing' });
     }
 
+    // Use creditWallet helper for consistent fee cut and logging
+    const success = creditWallet(req.user.id, amount, payment_id, "razorpay_sync");
+
+    if (!success) {
+        return res.status(409).json({ error: 'Duplicate or invalid payment' });
+    }
+
     const wallet = getWallet(req.user.id);
-    const depositAmount = Number(amount);
-
-    // 🏷️ 100% Credit to dep_bal (Unrotated)
-    wallet.dep_bal += depositAmount;
-
-    addTxn(req.user.id, 'real', 'credit', depositAmount, `💰 Wallet Deposit (ID: ${payment_id})`);
-
-    save();
     res.json({ success: true, new_balance: wallet.dep_bal + wallet.win_bal });
 });
 
