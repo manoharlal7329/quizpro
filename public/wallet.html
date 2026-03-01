@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Wallet — QuizPro Winner</title>
+    <title>My Account — QuizPro Arena</title>
     <link rel="stylesheet" href="/css/style.css?v=1.1" />
     <style>
         .wallet-card {
@@ -172,7 +172,7 @@
 
 <body>
     <nav class="navbar">
-        <a href="/" class="logo">⚡ QuizPro Winner</a>
+        <a href="/" class="logo">⚡ QuizPro Arena</a>
 
         <div class="nav-links">
             <a href="/dashboard.html" class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;">Dashboard</a>
@@ -184,13 +184,13 @@
     <div class="main">
         <div class="container" style="padding-top:40px; max-width: 800px;">
             <div class="page-hero">
-                <h1>💰 My Wallet</h1>
-                <p>Add money to join quizzes and track your winnings.</p>
+                <h1>👤 My Account & Rewards</h1>
+                <p>Add points to join quizzes and track your achievements.</p>
             </div>
 
             <div class="wallet-card">
                 <div class="balance-item">
-                    <div class="label">💵 Real Balance</div>
+                    <div class="label">⭐ Account Balance</div>
                     <div class="value real-val" id="realBal">₹0</div>
                 </div>
             </div>
@@ -199,8 +199,8 @@
                 style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
                 <!-- DEPOSIT BOX -->
                 <div class="deposit-section">
-                    <h3 style="margin-bottom: 8px;">💳 Add Money</h3>
-                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Instant deposit using
+                    <h3 style="margin-bottom: 8px;">💳 Add Points</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Instant settlement using
                         UPI/Razorpay</p>
 
                     <div class="amt-input-wrap">
@@ -226,22 +226,22 @@
 
                 <!-- WITHDRAW BOX -->
                 <div class="deposit-section" style="border-color: var(--gold);">
-                    <h3 style="margin-bottom: 8px;">🏦 Withdraw Funds</h3>
-                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Transfer winnings to your
-                        Bank/UPI</p>
+                    <h3 style="margin-bottom: 8px;">🏦 Redeem Rewards</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Transfer rewards to your
+                        Settlement Account</p>
 
                     <div
                         style="font-size: 0.85rem; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; margin-bottom: 15px; color: var(--gold); text-align: center;">
-                        Withdrawable: <strong id="withdrawableDisplay" style="font-size: 1.1rem;">₹0</strong>
+                        Redeemable: <strong id="withdrawableDisplay" style="font-size: 1.1rem;">₹0</strong>
                     </div>
 
                     <div class="amt-input-wrap">
                         <span>₹</span>
-                        <input type="number" id="withdrawAmt" placeholder="Amount (Min 100)" min="100" value="100"
+                        <input type="number" id="withdrawAmt" placeholder="Points (Min 100)" min="100" value="100"
                             oninput="updateWithdrawPreview()">
                     </div>
 
-                    <input type="text" id="withdrawUpi" placeholder="Enter UPI ID (e.g. name@upi)"
+                    <input type="text" id="withdrawUpi" placeholder="Enter Settlement UPI (e.g. name@upi)"
                         style="width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; color: var(--text); margin-bottom: 12px;">
 
                     <input type="password" id="withdrawPin" placeholder="Enter 4-Digit Wallet PIN" maxlength="4"
@@ -271,7 +271,7 @@
                 <div class="deposit-section" style="border-color: var(--blue);">
                     <h3 style="margin-bottom: 8px;">🔐 Wallet Security</h3>
                     <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Set or update your 4-digit
-                        PIN for payments & withdrawals.</p>
+                        PIN for payments & redemptions.</p>
 
                     <div style="margin: 20px 0;">
                         <label style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">New
@@ -293,17 +293,17 @@
             <!-- TAX EDUCATION CARDS -->
             <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="card" style="border-left: 4px solid var(--green);">
-                    <h4 style="color: var(--green); margin-bottom: 10px;">🛡️ No GST for Users</h4>
+                    <h4 style="color: var(--green); margin-bottom: 10px;">🛡️ Purely Skill Based</h4>
                     <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.6;">
-                        Aapke deposit par **0% Tax** lagega. Poora ka poora paisa aapke wallet mein aayega. GST ki
-                        zimmedari platform owner ki hogi.
+                        This platform is designed for learning and skill improvement. All participation is voluntary and
+                        based purely on user expertise.
                     </p>
                 </div>
                 <div class="card" style="border-left: 4px solid var(--orange);">
-                    <h4 style="color: var(--gold); margin-bottom: 10px;">🏆 TDS (30%) on Withdrawal</h4>
+                    <h4 style="color: var(--gold); margin-bottom: 10px;">🏆 Performance Settlement</h4>
                     <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.6;">
-                        Income Tax rules ke mutabik, jab aap winnings bank mein mangte hain, toh **30% TDS** kat-ta hai.
-                        Ye aapke PAN card par Govt. ko credit kiya jata hai aur IT file karte waqt wapas mil sakta hai.
+                        As per standard guidelines, a processing fee and applicable TDS (30%) is adjusted for high-value
+                        rewards. This is credited to Government norms.
                     </p>
                 </div>
             </div>
@@ -381,8 +381,8 @@
             const upi = document.getElementById('withdrawUpi').value.trim();
             const pin = document.getElementById('withdrawPin').value;
 
-            if (!amt || amt < 100) return toast('Min withdrawal is ₹100', 'error');
-            if (amt > window.withdrawableAmt) return toast(`Insufficient withdrawable balance. (Max ₹${window.withdrawableAmt})`, 'error');
+            if (!amt || amt < 100) return toast('Min redemption is 100 points', 'error');
+            if (amt > window.withdrawableAmt) return toast(`Insufficient redeemable points. (Max ${window.withdrawableAmt})`, 'error');
             if (!upi) return toast('Please enter UPI ID', 'error');
             if (!pin || pin.length !== 4) return toast('Please enter a 4-digit Wallet PIN', 'error');
 
@@ -443,8 +443,8 @@
                     key: order.key,
                     amount: order.amount,
                     currency: order.currency,
-                    name: 'QuizPro Winner Wallet',
-                    description: 'Adding funds to wallet',
+                    name: 'QuizPro Arena Account',
+                    description: 'Adding points to account',
 
                     order_id: order.order_id,
                     handler: async function (res) {

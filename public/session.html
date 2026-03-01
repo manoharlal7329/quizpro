@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Session Detail — QuizPro Winner</title>
+    <title>Session Detail — QuizPro Arena</title>
     <link rel="stylesheet" href="/css/style.css?v=1.1" />
 
     <style>
@@ -155,7 +155,7 @@
 <body>
     <!-- NAVBAR -->
     <nav class="navbar">
-        <a href="/dashboard.html" class="logo">← QuizPro Winner</a>
+        <a href="/dashboard.html" class="logo">← QuizPro Arena</a>
 
         <div class="nav-links">
             <button class="btn btn-outline" style="padding:6px 16px;font-size:.85rem;"
@@ -268,7 +268,7 @@
                 const prizePool = Math.floor(s.entry_fee * s.seat_limit * 0.75);
                 const platformCut = Math.floor(s.entry_fee * s.seat_limit * 0.25);
 
-                document.title = s.title + ' — QuizPro Winner';
+                document.title = s.title + ' — QuizPro Arena';
 
 
                 // Header
@@ -306,7 +306,7 @@
                 document.getElementById('bookingCard').innerHTML = `
         <div style="text-align:center; margin-bottom:20px;">
           <div style="font-size:2.2rem; font-weight:900; color:var(--gold);">₹${s.entry_fee}</div>
-          <div style="font-size:.82rem; color:var(--muted);">Entry Fee</div>
+          <div style="font-size:.82rem; color:var(--muted);">Participation Fee</div>
           <span class="badge badge-${statusColor}" style="margin-top:8px;">${s.status === 'live' ? '⚡ QUIZ STARTED' : s.status.toUpperCase()}</span>
         </div>
 
@@ -323,12 +323,12 @@
         <!-- Top 10 Prize Table -->
         <div style="margin:16px 0; border:1px solid rgba(245,158,11,.25); border-radius:12px; overflow:hidden;">
           <div style="background:rgba(245,158,11,.1); padding:10px 14px; font-weight:700; color:var(--gold); font-size:.88rem;">
-            🏆 TOTAL PRIZE: ₹${prizePool.toLocaleString()}
+            🏆 TOTAL REWARDS: ${prizePool.toLocaleString()} Points
           </div>
           <table style="width:100%; border-collapse:collapse; font-size:.78rem;">
             <thead><tr style="color:var(--muted); border-bottom:1px solid var(--border); font-size:.72rem;">
               <th style="padding:5px 10px; text-align:left;">Rank</th>
-              <th style="padding:5px 10px; text-align:right;">Prize</th>
+              <th style="padding:5px 10px; text-align:right;">Rewards</th>
             </tr></thead>
             <tbody>
               ${(() => {
@@ -343,13 +343,13 @@
                         arr[0].a += rem; // add to 1st rank so order stays strictly decreasing
                         return arr.map(p => `<tr style="border-bottom:1px solid var(--border);">
                     <td style="padding:5px 10px;">${p.r}</td>
-                    <td style="padding:5px 10px; text-align:right; color:var(--gold); font-weight:700;">₹${p.a.toLocaleString()}</td>
+                    <td style="padding:5px 10px; text-align:right; color:var(--gold); font-weight:700;">${p.a.toLocaleString()}</td>
                   </tr>`).join('');
                     })()}
             </tbody>
           </table>
           <div style="padding:8px 12px; font-size:.7rem; color:var(--muted); border-top:1px solid var(--border);">
-            💸 Top 15 winners paid directly to UPI/Bank • Skill-based ranking
+            💸 Users pay a participation fee to access quizzes and competitions. Skill-based ranking.
           </div>
         </div>
 
@@ -390,7 +390,7 @@
                         })()}
         ` : s.status === 'open' ? `
           <button class="btn btn-primary btn-full" id="bookBtn" onclick="openPayChoice()" style="margin-top:4px; font-size:1rem; padding:14px;">
-            🔐 Join Quiz from Wallet — ₹${s.entry_fee}
+            🔐 Join Quiz Arena — ₹${s.entry_fee}
           </button>
           <p style="font-size:.75rem; color:var(--muted); text-align:center; margin-top:10px;">🔒 Secured by 4-Digit Wallet PIN</p>
         ` : `<div class="alert alert-info">This session is ${s.status}. No seats available.</div>`}`;
@@ -488,7 +488,7 @@
                         key: order.key,
                         amount: order.amount,
                         currency: 'INR',
-                        name: 'QuizPro Winner',
+                        name: 'QuizPro Arena',
                         description: `Session Entry Fee`,
 
                         order_id: order.order_id,
@@ -519,7 +519,7 @@
                 } catch (e) {
                     toast('❌ Error: ' + e.message, 'error');
                     // Fallback to UPI deeplink
-                    const upiUrl = `upi://pay?pa=${encodeURIComponent('manoharlala02911-2@okaxis')}&pn=QuizPro%20Winner&am=${sessionData.entry_fee}&cu=INR&tn=QuizPro%20Winner`;
+                    const upiUrl = `upi://pay?pa=${encodeURIComponent('manoharlala02911-2@okaxis')}&pn=QuizPro%20Arena&am=${sessionData.entry_fee}&cu=INR&tn=QuizPro%20Arena`;
                     window.location.href = upiUrl;
 
                 }

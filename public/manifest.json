@@ -1,7 +1,7 @@
 {
-    "name": "QuizPro Winner — Skill Quiz Platform",
-    "short_name": "QuizPro Winner",
-    "description": "Win real money playing skill-based quizzes",
+    "name": "QuizPro Arena — Skill Quiz Platform",
+    "short_name": "QuizPro Arena",
+    "description": "Skill-based educational quiz competition",
     "start_url": "/dashboard.html",
     "display": "standalone",
     "background_color": "#0a0a14",
@@ -24,7 +24,7 @@
     ],
     "categories": [
         "education",
-        "entertainment"
+        "quiz"
     ],
     "shortcuts": [
         {
@@ -35,7 +35,7 @@
         {
             "name": "Leaderboard",
             "url": "/leaderboard.html",
-            "description": "View Top Winners"
+            "description": "View Top Achievers"
         }
     ]
 }

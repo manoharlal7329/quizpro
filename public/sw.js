@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quizpro-winner-v1.2';
+const CACHE_NAME = 'quizpro-arena-v1.2';
 const ASSETS = [
     '/',
     '/index.html',

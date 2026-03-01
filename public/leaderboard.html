@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Leaderboard — QuizPro Winner</title>
+    <title>Leaderboard — QuizPro Arena</title>
     <link rel="stylesheet" href="/css/style.css?v=1.1" />
     <style>
         .lb-hero {
@@ -162,7 +162,7 @@
 
 <body>
     <nav class="navbar">
-        <a href="/" class="logo">← QuizPro Winner</a>
+        <a href="/" class="logo">← QuizPro Arena</a>
 
         <div style="display:flex;gap:12px;align-items:center;">
             <a href="/leaderboard.html" class="nav-link" style="color:var(--gold);font-weight:700;">🏆 Leaderboard</a>
@@ -175,7 +175,7 @@
     <div class="lb-hero">
         <div style="font-size:3rem;margin-bottom:8px;">🏆</div>
         <h1 class="gradient-text">All-Time Leaderboard</h1>
-        <p style="color:var(--muted);">Top Quiz Winners of QuizPro Winner</p>
+        <p style="color:var(--muted);">Top Quiz Achievers of QuizPro Arena</p>
 
     </div>
 
@@ -237,14 +237,14 @@
                     return `<div class="top3-box ${MEDAL_CLASS[i]}">
                         <div class="top3-medal">${MEDALS[i]}</div>
                         <div class="top3-name">${p.name}</div>
-                        <div class="top3-prize">₹${p.total_prize}</div>
+                        <div class="top3-prize">${p.total_prize} Points</div>
                         <div class="lb-stat">${p.sessions_played} sessions</div>
                     </div>`;
                 }).join('');
             }
 
             if (list.length === 0) {
-                document.getElementById('lbList').innerHTML = '<div class="empty-state">🎯 No winners yet. Be the first!</div>';
+                document.getElementById('lbList').innerHTML = '<div class="empty-state">🎯 No achievers yet. Be the first!</div>';
                 return;
             }
 
@@ -255,7 +255,7 @@
                         <div class="lb-name">${p.name}</div>
                         <div class="lb-stat">${p.sessions_played} sessions • Best rank: ${p.best_rank || '—'}</div>
                     </div>
-                    <div class="lb-prize">₹${p.total_prize}</div>
+                    <div class="lb-prize">${p.total_prize}</div>
                 </div>`).join('') || '<div class="empty-state" style="padding:20px;">More players coming soon!</div>';
         }
 
@@ -267,7 +267,7 @@
                     <div>
                         <div style="font-weight:700;">${s.title}</div>
                         <div class="lb-stat">${s.seats_booked}/${s.seat_limit} seats • ₹${s.entry_fee} entry</div>
-                        ${s.prize_pool ? `<div style="color:var(--gold);font-size:.8rem;font-weight:700;">Prize Pool: ₹${s.prize_pool}</div>` : ''}
+                        ${s.prize_pool ? `<div style="color:var(--gold);font-size:.8rem;font-weight:700;">Reward Pool: ${s.prize_pool} Points</div>` : ''}
                     </div>
                     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
                         <span class="sess-status ${s.status}">${s.status === 'open' ? '🟢 OPEN' : '⚡ CONFIRMED'}</span>

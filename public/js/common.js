@@ -89,19 +89,20 @@ function renderFooter() {
     footer.innerHTML = `
     <div class="container footer-wrap" style="text-align:center; padding-bottom: 40px;">
         <div style="display:flex; gap:20px; justify-content:center; margin-bottom:32px; flex-wrap:wrap;">
-            <a href="https://instagram.com/quizprowinner" target="_blank" class="social-pill insta-glow">
+            <a href="https://instagram.com/quiz_pro_24" target="_blank" class="social-pill insta-glow">
                 <span>📸</span> INSTAGRAM
             </a>
-            <a href="https://youtube.com/@quizprowinner" target="_blank" class="social-pill yt-glow">
+            <a href="https://youtube.com/@therealjourney-t4j" target="_blank" class="social-pill yt-glow">
                 <span>▶️</span> YOUTUBE
             </a>
         </div>
         <p class="trust-line" style="font-size: 0.82rem; color: rgba(255,255,255,0.4); max-width: 600px; margin: 0 auto 16px;">
             Follow us for updates, learning tips, and announcements.
-            <br>⚡ 100% Skill-Based platform. Not gambling.
-            <br/><span style="color:var(--gold); font-weight:700;">✅ Full Security Guarantee — All Transactions Protected</span>
+            <br>⚡ This is a skill-based educational quiz platform. No gambling or real-money winnings involved.
+            <br/><span style="color:var(--gold); font-weight:700;">✅ Purely Knowledge and Skill Based</span>
         </p>
         <div style="margin-bottom: 24px; font-size: 0.75rem;">
+            <a href="/about.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">About Us</a> |
             <a href="/privacy.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Privacy Policy</a> |
             <a href="/terms.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Terms & Conditions</a> |
             <a href="/shipping.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Shipping Policy</a> |
@@ -109,7 +110,7 @@ function renderFooter() {
             <a href="/contact.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Contact Us</a>
         </div>
         <div class="copyright" style="font-size: 0.75rem; color: rgba(255,255,255,0.25); letter-spacing: 1px;">
-            © ${new Date().getFullYear()} QUIZPRO WINNER OFFICIAL • ALL RIGHTS RESERVED
+            © ${new Date().getFullYear()} QUIZPRO ARENA OFFICIAL • ALL RIGHTS RESERVED
         </div>
     </div>`;
     document.body.appendChild(footer);
@@ -123,11 +124,11 @@ function renderAppNav() {
     const nav = document.createElement('nav');
     nav.className = 'navbar glass-card';
     nav.innerHTML = `
-        <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro Winner</a>
+        <a href="/" class="logo" style="font-size: 1.3rem;">💎 QuizPro Arena</a>
         <div class="nav-links">
             ${user ? `<span style="color:var(--muted); font-size:.88rem; font-weight: 500;">${user.name || ''}</span>
             <a href="/dashboard.html" class="${path.includes('dashboard') ? 'active' : ''}" style="${path.includes('dashboard') ? 'color: var(--blue);' : ''}">Dashboard</a>
-            <a href="/wallet.html" class="${path.includes('wallet') ? 'active' : ''}" style="${path.includes('wallet') ? 'color: var(--blue);' : ''}">Wallet</a>
+            <a href="/wallet.html" class="${path.includes('wallet') ? 'active' : ''}" style="${path.includes('wallet') ? 'color: var(--blue);' : ''}">Account</a>
             <button class="btn btn-outline" style="padding:6px 16px; font-size:.85rem; border-radius: 12px;" onclick="logout()">Logout</button>` :
             `<a href="/login.html" class="btn btn-primary" style="padding:8px 20px; border-radius:12px;">Login</a>`}
         </div>`;
@@ -142,8 +143,8 @@ function renderAppNav() {
             <div class="icon-dot"></div>
         </a>
         <a href="/wallet.html" class="nav-item ${path.includes('wallet') ? 'active' : ''}">
-            <i style="font-style: normal; font-size: 1.6rem;">💳</i>
-            <span>Wallet</span>
+            <i style="font-style: normal; font-size: 1.6rem;">👤</i>
+            <span>Account</span>
             <div class="icon-dot"></div>
         </a>
         <a href="/leaderboard.html" class="nav-item ${path.includes('leaderboard') ? 'active' : ''}">
