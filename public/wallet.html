@@ -200,7 +200,7 @@
                 <!-- DEPOSIT BOX -->
                 <div class="deposit-section">
                     <h3 style="margin-bottom: 8px;">💳 Add Points</h3>
-                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Instant settlement using
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Safe payment via
                         UPI/Razorpay</p>
 
                     <div class="amt-input-wrap">
@@ -228,7 +228,7 @@
                 <div class="deposit-section" style="border-color: var(--gold);">
                     <h3 style="margin-bottom: 8px;">🏦 Redeem Rewards</h3>
                     <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Transfer rewards to your
-                        Settlement Account</p>
+                        Reward Account</p>
 
                     <div
                         style="font-size: 0.85rem; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; margin-bottom: 15px; color: var(--gold); text-align: center;">
@@ -241,7 +241,7 @@
                             oninput="updateWithdrawPreview()">
                     </div>
 
-                    <input type="text" id="withdrawUpi" placeholder="Enter Settlement UPI (e.g. name@upi)"
+                    <input type="text" id="withdrawUpi" placeholder="Enter Reward UPI (e.g. name@upi)"
                         style="width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; color: var(--text); margin-bottom: 12px;">
 
                     <input type="password" id="withdrawPin" placeholder="Enter 4-Digit Wallet PIN" maxlength="4"
@@ -300,10 +300,10 @@
                     </p>
                 </div>
                 <div class="card" style="border-left: 4px solid var(--orange);">
-                    <h4 style="color: var(--gold); margin-bottom: 10px;">🏆 Performance Settlement</h4>
+                    <h4 style="color: var(--gold); margin-bottom: 10px;">🏆 Performance Rewards</h4>
                     <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.6;">
-                        As per standard guidelines, a processing fee and applicable TDS (30%) is adjusted for high-value
-                        rewards. This is credited to Government norms.
+                        As per standard guidelines, fixed platform management fees are adjusted for high-value
+                        rewards. No real-money prizes are offered directly through the platform.
                     </p>
                 </div>
             </div>
@@ -404,7 +404,7 @@
                 toast(e.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Claim Reward Settlement';
+                btn.textContent = 'Redeem Skill Points & Badges';
             }
         }
 

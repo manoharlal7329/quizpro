@@ -97,8 +97,9 @@ function renderFooter() {
             </a>
         </div>
         <p class="trust-line" style="font-size: 0.82rem; color: rgba(255,255,255,0.4); max-width: 600px; margin: 0 auto 16px;">
-            Follow us for updates, learning tips, and announcements.
-            <br>⚡ This is a skill-based educational quiz platform. No gambling or real-money winnings involved.
+            QuizPro is a skill-based educational quiz platform.
+            <br>Participation fees are charged only for access.
+            <br>No gambling, betting, or real-money cash rewards are offered.
             <br/><span style="color:var(--gold); font-weight:700;">✅ Purely Knowledge and Skill Based</span>
         </p>
         <div style="margin-bottom: 24px; font-size: 0.75rem;">
@@ -149,7 +150,7 @@ function renderAppNav() {
         </a>
         <a href="/leaderboard.html" class="nav-item ${path.includes('leaderboard') ? 'active' : ''}">
             <i style="font-style: normal; font-size: 1.6rem;">🏆</i>
-            <span>Ranks</span>
+            <span>Rewards</span>
             <div class="icon-dot"></div>
         </a>
         <button onclick="logout()" class="nav-item" style="background:none; border:none; padding:0; font-family:inherit;">
