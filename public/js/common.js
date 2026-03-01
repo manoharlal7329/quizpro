@@ -363,3 +363,15 @@ window.addEventListener('DOMContentLoaded', () => {
         if (val && !val.includes('?v=')) el.setAttribute(attr, val + '?v=1.3');
     });
 });
+// ─── PASSWORD TOGGLE HELPER ──────────────────────────────────
+function togglePassword(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) icon.textContent = '👁️‍🗨️'; // Open eye
+    } else {
+        input.type = 'password';
+        if (icon) icon.textContent = '👁️'; // Closed eye
+    }
+}

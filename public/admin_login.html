@@ -67,7 +67,11 @@
             </div>
             <div class="form-group">
                 <label>🔒 Password</label>
-                <input type="password" id="password" placeholder="••••••••" required />
+                <div class="form-group-password">
+                    <input type="password" id="password" placeholder="••••••••" required />
+                    <span class="password-toggle" id="toggleAdminPass"
+                        onclick="togglePassword('password', 'toggleAdminPass')">👁️</span>
+                </div>
             </div>
             <button class="btn btn-violet btn-full" id="loginBtn" onclick="doAdminLogin()"
                 style="background:var(--violet)">Enter Full Power Mode ⚡</button>

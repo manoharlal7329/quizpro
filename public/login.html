@@ -239,7 +239,11 @@
             </div>
             <div class="form-group">
                 <label>🔒 Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter your password" required />
+                <div class="form-group-password">
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required />
+                    <span class="password-toggle" id="toggleLoginPass"
+                        onclick="togglePassword('loginPassword', 'toggleLoginPass')">👁️</span>
+                </div>
             </div>
             <button class="btn btn-gold-luxury btn-full" id="loginBtn" onclick="doLogin()">Elite Login 🚀</button>
             <div style="text-align: center; margin-top: 14px;">
@@ -281,7 +285,11 @@
 
             <div class="form-group">
                 <label>🔒 Password</label>
-                <input type="password" id="regPassword" placeholder="Min 6 characters" required />
+                <div class="form-group-password">
+                    <input type="password" id="regPassword" placeholder="Min 6 characters" required />
+                    <span class="password-toggle" id="toggleRegPass"
+                        onclick="togglePassword('regPassword', 'toggleRegPass')">👁️</span>
+                </div>
             </div>
 
             <div class="form-group">
