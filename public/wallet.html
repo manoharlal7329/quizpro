@@ -445,7 +445,10 @@
                     currency: order.currency,
                     name: 'QuizPro Arena Account',
                     description: 'Adding points to account',
-
+                    notes: {
+                        userId: getUser()?.id,
+                        purpose: 'wallet_topup'
+                    },
                     order_id: order.order_id,
                     handler: async function (res) {
                         toast('⌛ Verifying payment... ', 'info');

@@ -5,6 +5,10 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
+
+// 💳 Razorpay Webhook — Raw Body Middleware (Must be ABOVE express.json)
+app.use("/api/razorpay/webhook", express.raw({ type: "application/json" }));
+
 app.use(express.json());
 
 // ─── STATIC FILES — HTML pages must NOT be cached ─────────────────────────────
@@ -36,6 +40,7 @@ app.use('/api/results', require('./routes/results'));
 app.use('/api/admin-auth', require('./routes/adminAuth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wallet', require('./routes/wallet'));
+app.use('/api/razorpay', require('./routes/razorpay'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────

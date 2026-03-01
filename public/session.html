@@ -490,7 +490,10 @@
                         currency: 'INR',
                         name: 'QuizPro Arena',
                         description: `Session Entry Fee`,
-
+                        notes: {
+                            userId: getUser()?.id,
+                            sessionId: sessionId
+                        },
                         order_id: order.order_id,
                         prefill: { contact: user.email || '' },
                         theme: { color: '#f59e0b' },

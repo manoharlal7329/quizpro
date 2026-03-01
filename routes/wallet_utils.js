@@ -38,4 +38,47 @@ function addTxn(userId, wallet, type, amount, note) {
     });
 }
 
-module.exports = { getWallet, addTxn };
+function isDuplicatePayment(paymentId) {
+    if (!paymentId) return false;
+    const txns = data.wallet_txns || [];
+    const seats = data.seats || [];
+    const isTxnDup = txns.some(t => t.payment_id === paymentId);
+    const isSeatDup = seats.some(s => s.payment_id === paymentId);
+    return isTxnDup || isSeatDup;
+}
+
+function creditWallet(userId, amount, paymentId, source = "razorpay") {
+    // 🛡️ ANTI-FRAUD DUPLICATE CHECK
+    if (isDuplicatePayment(paymentId)) {
+        if (!data.fraud_logs) data.fraud_logs = [];
+        data.fraud_logs.push({
+            type: "DUPLICATE_PAYMENT",
+            payment_id: paymentId,
+            user_id: userId,
+            amount: amount,
+            at: Math.floor(Date.now() / 1000)
+        });
+        save();
+        console.error(`🚨 [FRAUD] Duplicate payment blocked: ${paymentId} for User ${userId}`);
+        return false;
+    }
+
+    const wallet = getWallet(userId);
+    const totalAmount = Number(amount);
+
+    // 🏗️ PLATFORM EARNING AUTO-CUT (Default 25%)
+    const platformFeePercent = Number(process.env.PLATFORM_FEE_PERCENT || 25);
+    const fee = Math.floor((totalAmount * platformFeePercent) / 100);
+    const creditAmount = totalAmount - fee;
+
+    wallet.dep_bal += creditAmount;
+
+    // 📝 FULL AUDIT TRAIL
+    addTxn(userId, 'real', 'credit', creditAmount, `💰 Deposit (ID: ${paymentId}) | Fee Cut: ₹${fee}`);
+
+    // Track platform earning separately if needed, but for now txn is enough
+    save();
+    return true;
+}
+
+module.exports = { getWallet, addTxn, creditWallet, isDuplicatePayment };

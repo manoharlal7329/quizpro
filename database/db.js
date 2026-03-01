@@ -40,7 +40,7 @@ load();
 const defaults = {
   users: [], categories: [], sessions: [], seats: [], questions: [],
   quiz_attempts: [], payments: [],
-  wallets: [], wallet_txns: [], referrals: []
+  wallets: [], wallet_txns: [], referrals: [], fraud_logs: [], withdraw_requests: []
 };
 Object.keys(defaults).forEach(k => { if (!data[k]) data[k] = defaults[k]; });
 

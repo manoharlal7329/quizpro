@@ -15,6 +15,8 @@ if (RZP_REAL) {
 }
 
 const { getWallet, addTxn } = require('./wallet_utils');
+const { requestWithdrawal, logFraud } = require('./withdraw_utils');
+const { processPayout } = require('../utils/razorpayPayout');
 
 
 // ── GET /api/wallet/me ────────────────────────────────────────────────────────
@@ -272,58 +274,63 @@ router.post('/admin/credit-prize', authMiddleware, (req, res) => {
     res.json({ success: true, credited: prizes.length });
 });
 
-// ── POST /api/wallet/withdraw ────────────────────────────────────────────────
-// Request a withdrawal (Apply 30% TDS here)
+// ─── POST /api/wallet/withdraw (Anti-Fraud & Fund Lock) ─────────────────────
 router.post('/withdraw', authMiddleware, (req, res) => {
     const { amount, upi_id, pin } = req.body;
-    if (!amount || amount < 100) return res.status(400).json({ error: 'Minimum withdrawal is ₹100' });
-    if (!upi_id) return res.status(400).json({ error: 'UPI ID is required' });
+    const userId = req.user.id;
 
-    const wallet = getWallet(req.user.id);
-    if (!wallet.pin) return res.status(400).json({ error: 'Please set your Wallet PIN first.' });
-    if (String(wallet.pin) !== String(pin)) return res.status(403).json({ error: 'Incorrect Wallet PIN' });
+    if (!amount || amount < 100) return res.status(400).json({ error: 'MIN_WITHDRAW', message: 'Minimum withdrawal is ₹100' });
+    if (!upi_id || !upi_id.includes('@')) return res.status(400).json({ error: 'INVALID_UPI', message: 'Valid UPI ID required.' });
 
-    const withdrawalAmt = Number(amount);
-
-    if (wallet.win_bal < withdrawalAmt) {
-        return res.status(400).json({ error: 'Insufficient withdrawable balance. You must play quizzes to convert deposits into winnings.' });
+    const wallet = getWallet(userId);
+    if (!wallet.pin) return res.status(400).json({ error: 'PIN_NOT_SET', message: 'Please set your Wallet PIN first.' });
+    if (String(wallet.pin) !== String(pin)) {
+        logFraud(userId, "INVALID_PIN_WITHDRAW", { amount, upi_id });
+        return res.status(403).json({ error: 'INVALID_PIN', message: 'Incorrect Wallet PIN' });
     }
 
-    // 🏷️ APPLY 30% TDS (Tax Deducted at Source on withdrawal)
-    const tdsAmount = Math.floor(withdrawalAmt * 0.30);
-    const netPayout = withdrawalAmt - tdsAmount;
+    const { requestWithdrawal } = require('./withdraw_utils');
+    const result = requestWithdrawal({ userId, amount: Number(amount), upi: upi_id });
 
-    // Deduct from win_bal
-    wallet.win_bal -= withdrawalAmt;
+    if (result.error) {
+        return res.status(403).json(result);
+    }
 
-    // Record transactions
-    addTxn(req.user.id, 'real', 'debit', withdrawalAmt, `📤 Withdrawal Request (${upi_id})`);
-    addTxn(req.user.id, 'real', 'credit', tdsAmount, `🏛️ TDS Adjustment (Will be paid to Govt)`); // This is slightly confusing, let's just record the net.
-    // Actually, it's better to record: 
-    // Debit withdrawal (full)
-    // Note says (Includes 30% TDS: Rs X. Final Net Payout: Rs Y)
+    res.json({ success: true, message: 'Withdraw request submitted. Admin will process it shortly.' });
+});
 
-    // Store request for admin to process
-    if (!data.withdrawals) data.withdrawals = [];
-    const request = {
-        id: Date.now(),
-        user_id: req.user.id,
-        amount: withdrawalAmt,
-        tds: tdsAmount,
-        net: netPayout,
-        upi_id,
-        status: 'pending',
-        at: Math.floor(Date.now() / 1000)
-    };
-    data.withdrawals.push(request);
+// ─── POST /api/wallet/admin/approve-withdraw ──────────────────────────────────
+router.post('/admin/approve-withdraw', authMiddleware, (req, res) => {
+    const liveUser = (data.users || []).find(u => u.id == req.user.id);
+    if (!liveUser || !liveUser.is_admin) return res.status(403).json({ error: 'Admin only' });
+
+    const { withdraw_id } = req.body;
+    const wd = (data.withdraw_requests || []).find(w => w.id === withdraw_id);
+    if (!wd || wd.status !== 'PENDING') return res.status(400).json({ error: 'Invalid or already processed' });
+
+    wd.status = 'PAID';
+    wd.paid_at = Math.floor(Date.now() / 1000);
 
     save();
-    res.json({
-        success: true,
-        net_amount: netPayout,
-        tds_amount: tdsAmount,
-        message: `Withdrawal request for ₹${netPayout} (after ₹${tdsAmount} TDS) placed successfully.`
-    });
+    res.json({ success: true, message: 'Withdrawal marked as PAID.' });
+});
+
+// ─── POST /api/wallet/withdraw/auto (Auto-Payout via Razorpay X) ─────────────
+router.post('/withdraw/auto', authMiddleware, async (req, res) => {
+    // Only admins or if globally enabled
+    if (process.env.AUTO_PAYOUT_ENABLED !== "true") {
+        return res.status(403).json({ error: "AUTO_PAYOUT_DISABLED" });
+    }
+
+    const { withdrawId } = req.body;
+    if (!withdrawId) return res.status(400).json({ error: 'Missing withdrawId' });
+
+    try {
+        const payout = await processPayout(withdrawId);
+        res.json({ success: true, payout });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 
