@@ -249,14 +249,10 @@
 
                     <div id="withdrawBreakdown"
                         style="font-size: 0.75rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Govt. TDS (30%):</span>
-                            <span id="wtTds" style="color: var(--red);">-₹30</span>
-                        </div>
                         <div
-                            style="display: flex; justify-content: space-between; font-weight: 700; margin-top: 4px; color: var(--green);">
+                            style="display: flex; justify-content: space-between; font-weight: 700; color: var(--green);">
                             <span>Net Payout:</span>
-                            <span id="wtNet">₹70</span>
+                            <span id="wtNet">₹0</span>
                         </div>
                     </div>
 
@@ -366,10 +362,9 @@
 
         function updateWithdrawPreview() {
             const amt = parseInt(document.getElementById('withdrawAmt').value) || 0;
-            const tds = Math.floor(amt * 0.30);
-            const net = amt - tds;
+            // Removed 30% TDS for students
+            const net = amt;
 
-            document.getElementById('wtTds').textContent = '-₹' + tds;
             document.getElementById('wtNet').textContent = '₹' + net;
         }
 

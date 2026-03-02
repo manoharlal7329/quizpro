@@ -1,84 +1,32 @@
-const fs = require('fs');
-const path = require('path');
+/**
+ * ⚠️ LEGACY DB SHIM 
+ * All data has been migrated to MongoDB Atlas.
+ * This file is kept only for backward compatibility during the bridge phase.
+ */
 
-const dbFile = path.join(__dirname, '..', 'db_store.json');
-
-// Initialize data structure
-let data = {
+const data = {
   users: [],
   categories: [],
   sessions: [],
   seats: [],
   questions: [],
   quiz_attempts: [],
-  payments: []
+  payments: [],
+  wallets: [],
+  wallet_txns: [],
+  fraud_logs: [],
+  withdraw_requests: []
 };
 
-// Load existing data
-const load = () => {
-  if (fs.existsSync(dbFile)) {
-    try {
-      data = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
-    } catch (e) {
-      console.error('Error loading DB file:', e.message);
-    }
-  }
-};
-
-// Save data
 const save = () => {
-  try {
-    fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
-  } catch (e) {
-    console.error('Error saving DB file:', e.message);
-  }
+  // No-op: Local JSON sync is disabled in favor of MongoDB
+  // console.warn('⚠️ Legacy save() called - No action taken (MongoDB is active)');
 };
 
-load();
-
-// ── Ensure all required keys exist (null-safety after load) ──
-const defaults = {
-  users: [], categories: [], sessions: [], seats: [], questions: [],
-  quiz_attempts: [], payments: [],
-  wallets: [], wallet_txns: [], referrals: [], fraud_logs: [], withdraw_requests: []
-};
-Object.keys(defaults).forEach(k => { if (!data[k]) data[k] = defaults[k]; });
-
-// Seed data if empty
-if (data.categories.length === 0) {
-  data.categories = [
-    { id: 1, name: 'Beginner', level: 'beginner', color: '#10b981' },
-    { id: 2, name: 'Skill Builder', level: 'intermediate', color: '#f59e0b' },
-    { id: 3, name: 'Pro Speed', level: 'advanced', color: '#ef4444' }
-  ];
-  save();
-}
-if (!data.users.find(u => u.is_admin === 1)) {
-  data.users.push({
-    id: 1,
-    email: 'manoharlala02911@gmail.com',
-    full_name: 'Manohar Lal Prajapati',
-    username: 'admin',
-    phone: '0000000000',
-    name: 'Manohar Lal Prajapati',
-    is_admin: 1
-  });
-  save();
-}
-
-// ─── PURE JS DB INTERFACE ───────────────────────────────────────────────────
-// This mimics the SQLite interface used in routes but works on the JSON object
 const db = {
-  // Helper to save after mutation
   commit: () => save(),
-
-  // Table accessors
-  getCollection: (name) => data[name],
-
-  // Generic Mock for Transaction (simulated)
-  transaction: async (callback) => {
-    return await callback();
-  }
+  getCollection: (name) => data[name] || [],
+  transaction: async (callback) => await callback()
 };
 
 module.exports = { db, data, save };

@@ -2,6 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const connectDB = require('./mongodb');
+
+// 🔌 Connect DataBase
+connectDB();
 
 const app = express();
 app.use(cors());
@@ -45,6 +49,8 @@ app.use('/api/leaderboard', require('./routes/leaderboard'));
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+
+// ─── LEGAL PAGES (Play Store required URLs) ──────────────────────────────────
 
 // ─── LEGAL PAGES (Play Store required URLs) ──────────────────────────────────
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));

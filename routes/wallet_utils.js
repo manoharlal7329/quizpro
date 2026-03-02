@@ -1,84 +1,95 @@
-const { data, save } = require('../database/db');
+const User = require('../database/models/User');
+const WalletModel = require('../database/models/Wallet');
+const WalletTxnModel = require('../database/models/WalletTxn');
+const SeatModel = require('../database/models/Seat');
+const FraudLogModel = require('../database/models/FraudLog');
+const antiFraud = require('../utils/antiFraud');
 
-function getWallet(userId) {
-    if (!data.wallets) data.wallets = [];
-    let w = data.wallets.find(w => String(w.user_id) === String(userId));
+async function getWallet(userId) {
+    let w = await WalletModel.findOne({ user_id: Number(userId) });
     if (!w) {
-        w = {
-            user_id: userId,
+        w = new WalletModel({
+            user_id: Number(userId),
             demo: 1000,
-            dep_bal: 0, // 💸 Deposited (Locked for withdrawal)
-            win_bal: 0,  // 🏆 Winnings (Withdrawable)
-            pin: null   // 🔐 4-Digit Security PIN
-        };
-        data.wallets.push(w);
+            dep_bal: 0,
+            win_bal: 0,
+            pin: null
+        });
+        await w.save();
     }
-    // Backward compatibility / Migration
-    if (w.real !== undefined) {
-        w.win_bal = (w.win_bal || 0) + w.real;
-        delete w.real;
-    }
-    if (w.dep_bal === undefined) w.dep_bal = 0;
-    if (w.win_bal === undefined) w.win_bal = 0;
-    if (w.pin === undefined) w.pin = null;
-
     return w;
 }
 
-function addTxn(userId, wallet, type, amount, note) {
-    if (!data.wallet_txns) data.wallet_txns = [];
-    data.wallet_txns.push({
+async function addTxn(userId, wallet, type, amount, note, paymentId = null) {
+    const txn = new WalletTxnModel({
         id: Date.now() + Math.floor(Math.random() * 999),
-        user_id: userId,
+        user_id: Number(userId),
         wallet,       // 'demo' or 'real'
         type,         // 'credit' or 'debit'
         amount,
         note,
+        payment_id: paymentId,
         at: Math.floor(Date.now() / 1000)
     });
+    await txn.save();
+    return txn;
 }
 
-function isDuplicatePayment(paymentId) {
+async function isDuplicatePayment(paymentId) {
     if (!paymentId) return false;
-    const txns = data.wallet_txns || [];
-    const seats = data.seats || [];
-    const isTxnDup = txns.some(t => t.payment_id === paymentId);
-    const isSeatDup = seats.some(s => s.payment_id === paymentId);
-    return isTxnDup || isSeatDup;
+    const txnDup = await WalletTxnModel.findOne({ payment_id: paymentId });
+    const seatDup = await SeatModel.findOne({ payment_id: paymentId });
+    return !!(txnDup || seatDup);
 }
 
-function creditWallet(userId, amount, paymentId, source = "razorpay") {
+async function creditWallet(userId, amount, paymentId, source = "razorpay") {
     // 🛡️ ANTI-FRAUD DUPLICATE CHECK
-    if (isDuplicatePayment(paymentId)) {
-        if (!data.fraud_logs) data.fraud_logs = [];
-        data.fraud_logs.push({
+    const isDup = await isDuplicatePayment(paymentId);
+    if (isDup) {
+        const log = new FraudLogModel({
             type: "DUPLICATE_PAYMENT",
             payment_id: paymentId,
-            user_id: userId,
+            user_id: Number(userId),
             amount: amount,
             at: Math.floor(Date.now() / 1000)
         });
-        save();
+        await log.save();
         console.error(`🚨 [FRAUD] Duplicate payment blocked: ${paymentId} for User ${userId}`);
         return false;
     }
 
-    const wallet = getWallet(userId);
+    const wallet = await getWallet(userId);
+
+    // 🛡️ ANTI-FRAUD RATE LIMIT (Pro Level)
+    if (!antiFraud.canDeposit(wallet)) {
+        console.warn(`🚨 [FRAUD] Rapid deposit blocked for User ${userId}`);
+        const log = new FraudLogModel({
+            type: "RAPID_DEPOSIT",
+            payment_id: paymentId,
+            user_id: Number(userId),
+            amount: amount,
+            at: Math.floor(Date.now() / 1000)
+        });
+        await log.save();
+        return false;
+    }
+
     const totalAmount = Number(amount);
 
-    // 🏗️ PLATFORM EARNING AUTO-CUT (Default 25%)
-    const platformFeePercent = Number(process.env.PLATFORM_FEE_PERCENT || 25);
+    // 🏗️ PLATFORM EARNING AUTO-CUT (Set to 0% for students - fees taken at session level)
+    const platformFeePercent = Number(process.env.PLATFORM_FEE_PERCENT || 0);
     const fee = Math.floor((totalAmount * platformFeePercent) / 100);
     const creditAmount = totalAmount - fee;
 
     wallet.dep_bal += creditAmount;
+    wallet.last_deposit_at = new Date();
+    await wallet.save();
 
     // 📝 FULL AUDIT TRAIL
-    addTxn(userId, 'real', 'credit', creditAmount, `💰 Deposit (ID: ${paymentId}) | Fee Cut: ₹${fee}`);
+    await addTxn(userId, 'real', 'credit', creditAmount, `💰 Deposit (ID: ${paymentId}) | Fee Cut: ₹${fee}`, paymentId);
 
-    // Track platform earning separately if needed, but for now txn is enough
-    save();
     return true;
 }
 
 module.exports = { getWallet, addTxn, creditWallet, isDuplicatePayment };
+

@@ -1,226 +1,262 @@
 const express = require('express');
 const router = express.Router();
-const { data, save } = require('../database/db');
 const authMiddleware = require('../middleware/auth');
 const multer = require('multer');
 const XLSX = require('xlsx');
+const User = require('../database/models/User');
+const Session = require('../database/models/Session');
+const Category = require('../database/models/Category');
+const Question = require('../database/models/Question');
+const Seat = require('../database/models/Seat');
+const Reward = require('../database/models/Reward');
+const FraudLog = require('../database/models/FraudLog');
+const { getWallet, addTxn } = require('./wallet_utils');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ── Admin guard middleware ────────────────────────────────────────────────────
-function adminOnly(req, res, next) {
-  // Check if token has explicit admin role (from adminAuth.js)
-  if (req.user && req.user.role === 'admin') return next();
-
-  // Check if user ID in database has is_admin flag (old auth)
-  const user = (data.users || []).find(u => u.id == req.user.id);
-  if (!user || !user.is_admin) return res.status(403).json({ error: 'Admin only' });
-  next();
+async function adminOnly(req, res, next) {
+  try {
+    if (req.user && req.user.role === 'admin') return next();
+    const user = await User.findOne({ id: Number(req.user.id) });
+    if (!user || !user.is_admin) return res.status(403).json({ error: 'Admin only' });
+    next();
+  } catch (e) {
+    res.status(500).json({ error: 'Admin check failed' });
+  }
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
-router.get('/dashboard', authMiddleware, adminOnly, (req, res) => {
-  const sessions = data.sessions || [];
-  const users = data.users || [];
-  const seats = data.seats || [];
-  const wallets = data.wallets || [];
+router.get('/dashboard', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments({ is_admin: { $ne: true } });
+    const totalSessionsCount = await Session.countDocuments({});
 
-  const totalUsers = users.filter(u => !u.is_admin).length;
-  const totalSessions = sessions.length;
-  const totalRevenue = sessions.filter(s => s.status === 'completed').reduce((sum, s) => sum + (s.platform_cut || 0), 0);
-  const totalPrize = sessions.filter(s => s.status === 'completed').reduce((sum, s) => sum + (s.prize_pool || 0), 0);
+    const completedSessions = await Session.find({ status: 'completed' }).lean();
+    const totalRevenue = completedSessions.reduce((sum, s) => sum + (s.platform_cut || 0), 0);
+    const totalPrize = completedSessions.reduce((sum, s) => sum + (s.prize_pool || 0), 0);
 
-  const stats = {
-    total_users: totalUsers,
-    total_sessions: totalSessions,
-    total_revenue: totalRevenue,
-    total_prize: totalPrize
-  };
+    const stats = {
+      total_users: totalUsers,
+      total_sessions: totalSessionsCount,
+      total_revenue: totalRevenue,
+      total_prize: totalPrize
+    };
 
-  // Recent sessions (last 5)
-  const recentSessions = sessions
-    .sort((a, b) => b.created_at - a.created_at)
-    .slice(0, 5)
-    .map(s => {
-      const cat = (data.categories || []).find(c => c.id == s.category_id);
-      return { ...s, category_name: cat?.name || 'Category' };
-    });
+    const recentSessionsRaw = await Session.find({})
+      .sort({ created_at: -1 })
+      .limit(5)
+      .lean();
 
-  res.json({ stats, recentSessions });
+    const recentSessions = [];
+    for (const s of recentSessionsRaw) {
+      const cat = await Category.findOne({ id: Number(s.category_id) }).lean();
+      recentSessions.push({ ...s, category_name: cat?.name || 'Category' });
+    }
+
+    res.json({ stats, recentSessions });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── SESSIONS — LIST ──────────────────────────────────────────────────────────
-router.get('/sessions', authMiddleware, adminOnly, (req, res) => {
-  const sessions = (data.sessions || [])
-    .sort((a, b) => b.created_at - a.created_at)
-    .map(s => {
-      const cat = (data.categories || []).find(c => c.id == s.category_id);
-      const qCount = (data.questions || []).filter(q => q.session_id == s.id).length;
-      return { ...s, category_name: cat?.name, question_count: qCount };
-    });
-  res.json(sessions);
+router.get('/sessions', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const sessionsRaw = await Session.find({}).sort({ created_at: -1 }).lean();
+    const sessions = [];
+    for (const s of sessionsRaw) {
+      const cat = await Category.findOne({ id: Number(s.category_id) }).lean();
+      const qCount = await Question.countDocuments({ session_id: Number(s.id) });
+      sessions.push({ ...s, category_name: cat?.name, question_count: qCount });
+    }
+    res.json(sessions);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── SESSIONS — CREATE ────────────────────────────────────────────────────────
-router.post('/sessions', authMiddleware, adminOnly, (req, res) => {
-  const { category_id, title, seat_limit, entry_fee, quiz_delay_minutes } = req.body;
-  if (!category_id || !title || !seat_limit || entry_fee === undefined) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+router.post('/sessions', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { category_id, title, seat_limit, entry_fee, quiz_delay_minutes } = req.body;
+    if (!category_id || !title || !seat_limit || entry_fee === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-  // ✅ PLAN RULE: Only 1 active session per category
-  const existing = (data.sessions || []).find(
-    s => s.category_id == category_id && ['open', 'confirmed'].includes(s.status)
-  );
-  if (existing) {
-    return res.status(400).json({
-      error: `Is category mein already ek active session hai: "${existing.title}". Pehle use cancel ya complete karo.`
+    const existing = await Session.findOne({
+      category_id: Number(category_id),
+      status: { $in: ['open', 'confirmed'] }
+    }).lean();
+
+    if (existing) {
+      return res.status(400).json({
+        error: `Is category mein already ek active session hai: "${existing.title}". Pehle use cancel ya complete karo.`
+      });
+    }
+
+    const session = new Session({
+      id: Date.now(),
+      category_id: Number(category_id),
+      title,
+      seat_limit: Number(seat_limit),
+      seats_booked: 0,
+      entry_fee: Number(entry_fee),
+      quiz_delay_minutes: Number(quiz_delay_minutes) || 60,
+      status: 'open',
+      created_at: Math.floor(Date.now() / 1000)
     });
+    await session.save();
+    res.json({ success: true, session });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-
-  if (!data.sessions) data.sessions = [];
-  const session = {
-    id: Date.now(),
-    category_id: Number(category_id),
-    title,
-    seat_limit: Number(seat_limit),
-    seats_booked: 0,
-    entry_fee: Number(entry_fee),
-    quiz_delay_minutes: Number(quiz_delay_minutes) || 60,
-    status: 'open',
-    created_at: Math.floor(Date.now() / 1000)
-  };
-  data.sessions.push(session);
-  save();
-  res.json({ success: true, session });
 });
 
 // ─── SESSIONS — QUESTIONS LIST ────────────────────────────────────────────────
-router.get('/sessions/:id/questions', authMiddleware, adminOnly, (req, res) => {
-  const questions = (data.questions || []).filter(q => q.session_id == req.params.id);
-  res.json(questions);
+router.get('/sessions/:id/questions', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const questions = await Question.find({ session_id: Number(req.params.id) }).lean();
+    res.json(questions);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── SESSIONS — FORCE START ───────────────────────────────────────────────────
-router.post('/sessions/:id/start', authMiddleware, adminOnly, (req, res) => {
-  const session = (data.sessions || []).find(s => s.id == req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
-
-  const now = Math.floor(Date.now() / 1000);
-  session.quiz_start_at = now;
-  session.quiz_end_at = now + 1800;
-  session.pdf_at = now;
-  session.status = 'live';
-  session.prize_pool = Math.floor(session.entry_fee * session.seats_booked * 0.75);
-  session.platform_cut = Math.floor(session.entry_fee * session.seats_booked * 0.25);
-  save();
-
-  // SSE broadcast
+router.post('/sessions/:id/start', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const sessionsRouter = require('./sessions');
-    if (sessionsRouter.broadcastSession) {
-      sessionsRouter.broadcastSession(session.id, {
-        status: 'live',
-        quiz_start_at: session.quiz_start_at,
-        pdf_at: session.pdf_at,
-        seats_booked: session.seats_booked
-      });
-    }
-  } catch (e) { }
+    const session = await Session.findOne({ id: Number(req.params.id) });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
 
-  res.json({ success: true, message: 'Quiz is NOW LIVE!', quiz_start_at: session.quiz_start_at });
+    const now = Math.floor(Date.now() / 1000);
+    session.quiz_start_at = now;
+    session.quiz_end_at = now + 1800;
+    session.pdf_at = now;
+    session.status = 'live';
+    session.prize_pool = Math.floor(session.entry_fee * session.seats_booked * 0.75);
+    session.platform_cut = Math.floor(session.entry_fee * session.seats_booked * 0.25);
+    await session.save();
+
+    try {
+      const sessionsRouter = require('./sessions');
+      if (sessionsRouter.broadcastSession) {
+        sessionsRouter.broadcastSession(session.id, {
+          status: 'live',
+          quiz_start_at: session.quiz_start_at,
+          pdf_at: session.pdf_at,
+          seats_booked: session.seats_booked
+        });
+      }
+    } catch (e) { }
+
+    res.json({ success: true, message: 'Quiz is NOW LIVE!', quiz_start_at: session.quiz_start_at });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── SESSIONS — CANCEL (with auto-refund) ────────────────────────────────────
-router.post('/sessions/:id/cancel', authMiddleware, adminOnly, (req, res) => {
-  const session = (data.sessions || []).find(s => s.id == req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
+router.post('/sessions/:id/cancel', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const session = await Session.findOne({ id: Number(req.params.id) });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
 
-  session.status = 'cancelled';
+    session.status = 'cancelled';
+    await session.save();
 
-  // ✅ Auto refund all bookers to real wallet
-  const seats = (data.seats || []).filter(s => s.session_id == session.id);
-  let refundCount = 0;
-  seats.forEach(seat => {
-    const w = (data.wallets || []).find(w => w.user_id == seat.user_id);
-    if (w) {
-      w.real = (w.real || 0) + session.entry_fee;
-      if (!data.transactions) data.transactions = [];
-      if (!data.wallet_txns) data.wallet_txns = [];
-      data.wallet_txns.push({
-        id: Date.now() + Math.random(),
-        user_id: seat.user_id,
-        wallet: 'real',
-        type: 'credit',
-        amount: session.entry_fee,
-        note: `♻️ Refund: Session cancelled — ${session.title}`,
-        at: Math.floor(Date.now() / 1000)
-      });
-      refundCount++;
+    const seats = await Seat.find({ session_id: Number(session.id) }).lean();
+    let refundCount = 0;
+
+    for (const seat of seats) {
+      const wallet = await getWallet(seat.user_id);
+      if (wallet) {
+        wallet.dep_bal = (wallet.dep_bal || 0) + session.entry_fee;
+        await wallet.save();
+        await addTxn(seat.user_id, 'real', 'credit', session.entry_fee, `♻️ Refund: Session cancelled — ${session.title}`);
+        refundCount++;
+      }
     }
-  });
-  save();
-  res.json({ success: true, message: `Session cancelled. ${refundCount} refunds issued.` });
+
+    res.json({ success: true, message: `Session cancelled. ${refundCount} refunds issued.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── SESSIONS — COMPLETE ──────────────────────────────────────────────────────
-router.post('/sessions/:id/complete', authMiddleware, adminOnly, (req, res) => {
-  const session = (data.sessions || []).find(s => s.id == req.params.id);
-  if (!session) return res.status(404).json({ error: 'Session not found' });
-  session.status = 'completed';
-  save();
-  res.json({ success: true });
+router.post('/sessions/:id/complete', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const session = await Session.findOne({ id: Number(req.params.id) });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    session.status = 'completed';
+    await session.save();
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── SESSIONS — RESET SEATS ───────────────────────────────────────────────────
-router.post('/sessions/:id/reset-seats', authMiddleware, adminOnly, (req, res) => {
-  const session = (data.sessions || []).find(s => s.id == req.params.id);
-  if (session) {
-    session.seats_booked = 0;
-    session.status = 'open';
-    data.seats = (data.seats || []).filter(s => s.session_id != req.params.id);
-    save();
+router.post('/sessions/:id/reset-seats', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const session = await Session.findOne({ id: Number(req.params.id) });
+    if (session) {
+      session.seats_booked = 0;
+      session.status = 'open';
+      await session.save();
+      await Seat.deleteMany({ session_id: Number(req.params.id) });
+    }
+    res.json({ success: true, message: 'Seats reset to zero' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-  res.json({ success: true, message: 'Seats reset to zero' });
 });
 
 // ─── SESSIONS — DELETE ────────────────────────────────────────────────────────
-router.delete('/sessions/:id', authMiddleware, adminOnly, (req, res) => {
-  data.sessions = (data.sessions || []).filter(s => s.id != req.params.id);
-  data.questions = (data.questions || []).filter(q => q.session_id != req.params.id);
-  data.seats = (data.seats || []).filter(s => s.session_id != req.params.id);
-  save();
-  res.json({ success: true });
+router.delete('/sessions/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const sid = Number(req.params.id);
+    await Session.deleteOne({ id: sid });
+    await Question.deleteMany({ session_id: sid });
+    await Seat.deleteMany({ session_id: sid });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── SESSIONS — COPY QUESTIONS ────────────────────────────────────────────────
-router.post('/sessions/:id/copy-questions', authMiddleware, adminOnly, (req, res) => {
-  const targetId = Number(req.params.id);
-  const { source_id } = req.body;
+router.post('/sessions/:id/copy-questions', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const targetId = Number(req.params.id);
+    const { source_id } = req.body;
 
-  if (!source_id) return res.status(400).json({ error: 'source_id required' });
+    if (!source_id) return res.status(400).json({ error: 'source_id required' });
 
-  const sourceQuestions = (data.questions || []).filter(q => Number(q.session_id) === Number(source_id));
-  if (!sourceQuestions.length) return res.status(404).json({ error: 'Source session questions not found' });
+    const sourceQuestions = await Question.find({ session_id: Number(source_id) }).lean();
+    if (!sourceQuestions.length) return res.status(404).json({ error: 'Source session questions not found' });
 
-  // Clear existing questions in target session first
-  data.questions = (data.questions || []).filter(q => Number(q.session_id) !== targetId);
+    await Question.deleteMany({ session_id: targetId });
 
-  // Copy questions with new IDs
-  const copied = sourceQuestions.map(q => ({
-    ...q,
-    id: Date.now() + Math.random(),
-    session_id: targetId
-  }));
+    const copied = sourceQuestions.map(q => {
+      const { _id, ...cleanQ } = q;
+      return {
+        ...cleanQ,
+        id: Date.now() + Math.random(),
+        session_id: targetId
+      };
+    });
 
-  data.questions.push(...copied);
-  save();
-
-  res.json({ success: true, count: copied.length });
+    await Question.insertMany(copied);
+    res.json({ success: true, count: copied.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── QUESTIONS — EXCEL UPLOAD ─────────────────────────────────────────────────
-router.post('/questions/upload', authMiddleware, adminOnly, upload.single('file'), (req, res) => {
+router.post('/questions/upload', authMiddleware, adminOnly, upload.single('file'), async (req, res) => {
   try {
     const { session_id } = req.body;
     if (!session_id) return res.status(400).json({ error: 'session_id required' });
@@ -231,10 +267,9 @@ router.post('/questions/upload', authMiddleware, adminOnly, upload.single('file'
 
     if (!rows.length) return res.status(400).json({ error: 'Excel is empty' });
 
-    if (!data.questions) data.questions = [];
     const added = [];
-    rows.forEach(row => {
-      const q = {
+    for (const row of rows) {
+      const q = new Question({
         id: Date.now() + Math.random(),
         session_id: Number(session_id),
         question_text: row['question'] || row['Question'] || row['question_text'] || '',
@@ -244,10 +279,12 @@ router.post('/questions/upload', authMiddleware, adminOnly, upload.single('file'
         option_d: row['option_d'] || row['Option D'] || row['D'] || '',
         correct: (row['correct'] || row['Correct'] || row['answer'] || 'a').toString().toLowerCase().trim(),
         explanation: row['explanation'] || row['Explanation'] || ''
-      };
-      if (q.question_text) { data.questions.push(q); added.push(q); }
-    });
-    save();
+      });
+      if (q.question_text) {
+        await q.save();
+        added.push(q);
+      }
+    }
     res.json({ success: true, added: added.length, questions: added });
   } catch (e) {
     res.status(500).json({ error: 'Upload failed: ' + e.message });
@@ -255,119 +292,174 @@ router.post('/questions/upload', authMiddleware, adminOnly, upload.single('file'
 });
 
 // ─── QUESTIONS — MANUAL ADD ───────────────────────────────────────────────────
-router.post('/questions', authMiddleware, adminOnly, (req, res) => {
-  const { session_id, questions } = req.body;
-  if (!session_id || !Array.isArray(questions)) return res.status(400).json({ error: 'Invalid data' });
+router.post('/questions', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { session_id, questions } = req.body;
+    if (!session_id || !Array.isArray(questions)) return res.status(400).json({ error: 'Invalid data' });
 
-  if (!data.questions) data.questions = [];
-  questions.forEach(q => {
-    data.questions.push({
-      id: Date.now() + Math.random(),
-      session_id: Number(session_id),
-      question_text: q.question_text,
-      option_a: q.option_a, option_b: q.option_b,
-      option_c: q.option_c, option_d: q.option_d,
-      correct: q.correct, explanation: q.explanation || ''
-    });
-  });
-  save();
-  res.json({ success: true });
+    for (const q of questions) {
+      const newQ = new Question({
+        id: Date.now() + Math.random(),
+        session_id: Number(session_id),
+        question_text: q.question_text,
+        option_a: q.option_a, option_b: q.option_b,
+        option_c: q.option_c, option_d: q.option_d,
+        correct: q.correct, explanation: q.explanation || ''
+      });
+      await newQ.save();
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── QUESTIONS — DELETE ───────────────────────────────────────────────────────
-router.delete('/questions/:id', authMiddleware, adminOnly, (req, res) => {
-  data.questions = (data.questions || []).filter(q => q.id != req.params.id);
-  save();
-  res.json({ success: true });
+router.delete('/questions/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await Question.deleteOne({ id: Number(req.params.id) });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── USERS — LIST ─────────────────────────────────────────────────────────────
-router.get('/users', authMiddleware, adminOnly, (req, res) => {
-  const users = (data.users || []).map(u => {
-    const w = (data.wallets || []).find(w => w.user_id == u.id) || { demo: 0, win_bal: 0, dep_bal: 0 };
-    return {
-      id: u.id,
-      email: u.email,
-      full_name: u.full_name || u.name,
-      username: u.username || u.name,
-      phone: u.phone || u.mobile,
-      is_admin: u.is_admin,
-      referral_code: u.referral_code || 'N/A',
-      referred_by: u.referred_by || 'Organic',
-      wallet_demo: w.demo || 0,
-      wallet_real: (w.dep_bal || 0) + (w.win_bal || 0),
-      withdrawable: w.win_bal || 0,
-      quizzes_solved: u.quizzes_solved || 0,
-      created_at: u.created_at || Math.floor(Date.now() / 1000)
-    };
-  });
-  res.json(users);
+router.get('/users', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const users = await User.find({}).lean();
+    const result = [];
+    for (const u of users) {
+      const w = await getWallet(u.id);
+      result.push({
+        id: u.id,
+        email: u.email,
+        full_name: u.full_name || u.name,
+        username: u.username || u.name,
+        phone: u.phone || u.mobile,
+        is_admin: u.is_admin,
+        referral_code: u.referral_code || 'N/A',
+        referred_by: u.referred_by || 'Organic',
+        wallet_demo: w?.demo || 0,
+        wallet_real: (w?.dep_bal || 0) + (w?.win_bal || 0),
+        withdrawable: w?.win_bal || 0,
+        quizzes_solved: u.quizzes_solved || 0,
+        created_at: u.created_at || Math.floor(Date.now() / 1000)
+      });
+    }
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── USERS — DELETE ───────────────────────────────────────────────────────────
-router.delete('/users/:id', authMiddleware, adminOnly, (req, res) => {
-  const user = (data.users || []).find(u => u.id == req.params.id);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  if (user.is_admin) return res.status(403).json({ error: 'Cannot delete admin' });
-  data.users = data.users.filter(u => u.id != req.params.id);
-  save();
-  res.json({ success: true });
+router.delete('/users/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findOne({ id: Number(req.params.id) });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.is_admin) return res.status(403).json({ error: 'Cannot delete admin' });
+    await User.deleteOne({ id: Number(req.params.id) });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── CATEGORIES — LIST ────────────────────────────────────────────────────────
-router.get('/categories', authMiddleware, adminOnly, (req, res) => {
-  res.json(data.categories || []);
+router.get('/categories', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const categories = await Category.find({}).lean();
+    res.json(categories);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── CATEGORIES — CREATE ──────────────────────────────────────────────────────
-router.post('/categories', authMiddleware, adminOnly, (req, res) => {
-  const { name, icon, description } = req.body;
-  if (!name) return res.status(400).json({ error: 'Name required' });
+router.post('/categories', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { name, icon, description } = req.body;
+    if (!name) return res.status(400).json({ error: 'Name required' });
 
-  if (!data.categories) data.categories = [];
-  const cat = {
-    id: Date.now(),
-    name,
-    icon: icon || '📚',
-    description: description || '',
-    level: data.categories.length + 1,
-    color: '#7c3aed'
-  };
-  data.categories.push(cat);
-  save();
-  res.json({ success: true, category: cat });
+    const totalCats = await Category.countDocuments({});
+    const cat = new Category({
+      id: Date.now(),
+      name,
+      icon: icon || '📚',
+      description: description || '',
+      level: totalCats + 1,
+      color: '#7c3aed'
+    });
+    await cat.save();
+    res.json({ success: true, category: cat });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── WALLET TOPUP ─────────────────────────────────────────────────────────────
-router.post('/wallet/topup', authMiddleware, adminOnly, (req, res) => {
-  const { user_id, wallet_type, amount, note } = req.body;
-  if (!user_id || !wallet_type || !amount) return res.status(400).json({ error: 'Missing params' });
+router.post('/wallet/topup', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { user_id, wallet_type, amount, note } = req.body;
+    if (!user_id || !wallet_type || !amount) return res.status(400).json({ error: 'Missing params' });
 
-  const { getWallet, addTxn } = require('./wallet');
-  const w = getWallet(user_id);
-  const type = wallet_type === 'real' ? 'real' : 'demo';
-  w[type] += Number(amount);
-  addTxn(user_id, type, 'credit', Number(amount), note || 'Admin top-up');
-  save();
-  res.json({ success: true, new_balance: w[type] });
+    const w = await getWallet(user_id);
+    const typeKey = wallet_type === 'real' ? 'dep_bal' : 'demo';
+    w[typeKey] = (w[typeKey] || 0) + Number(amount);
+    await w.save();
+
+    await addTxn(user_id, wallet_type === 'real' ? 'real' : 'demo', 'credit', Number(amount), note || 'Admin top-up');
+    res.json({ success: true, new_balance: w[typeKey] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── REWARDS — LOG MANUAL PAYOUT ─────────────────────────────────────────────
-router.post('/rewards', authMiddleware, adminOnly, (req, res) => {
-  const { mobile, type, detail } = req.body;
-  if (!data.rewards) data.rewards = [];
-  data.rewards.push({
-    id: Date.now(),
-    mobile, type, detail,
-    at: Math.floor(Date.now() / 1000)
-  });
-  save();
-  res.json({ success: true });
+router.post('/rewards', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { mobile, type, detail } = req.body;
+    const reward = new Reward({
+      mobile, type, detail,
+      assigned_at: Math.floor(Date.now() / 1000)
+    });
+    await reward.save();
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// ─── REWARDS — LIST ───────────────────────────────────────────────────────────
-router.get('/rewards', authMiddleware, adminOnly, (req, res) => {
-  res.json((data.rewards || []).sort((a, b) => b.at - a.at));
+// ─── FRAUD LOGS — LIST ────────────────────────────────────────────────────────
+router.get('/fraud-logs', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const logs = await FraudLog.find({}).sort({ at: -1 }).lean();
+    res.json(logs);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── USERS — BLOCK / UNBLOCK ──────────────────────────────────────────────────
+router.post('/users/:id/block', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findOneAndUpdate({ id: Number(req.params.id) }, { blocked: true }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ success: true, user });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/users/:id/unblock', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findOneAndUpdate({ id: Number(req.params.id) }, { blocked: false }, { new: true });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ success: true, user });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 module.exports = router;
