@@ -9,7 +9,6 @@ const Category = require('../database/models/Category');
 const Question = require('../database/models/Question');
 const Seat = require('../database/models/Seat');
 const Reward = require('../database/models/Reward');
-const FraudLog = require('../database/models/FraudLog');
 const { getWallet, addTxn } = require('./wallet_utils');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -431,32 +430,11 @@ router.post('/rewards', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// ─── FRAUD LOGS — LIST ────────────────────────────────────────────────────────
-router.get('/fraud-logs', authMiddleware, adminOnly, async (req, res) => {
+// ─── REWARDS — LIST ───────────────────────────────────────────────────────────
+router.get('/rewards', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const logs = await FraudLog.find({}).sort({ at: -1 }).lean();
-    res.json(logs);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ─── USERS — BLOCK / UNBLOCK ──────────────────────────────────────────────────
-router.post('/users/:id/block', authMiddleware, adminOnly, async (req, res) => {
-  try {
-    const user = await User.findOneAndUpdate({ id: Number(req.params.id) }, { blocked: true }, { new: true });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ success: true, user });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-router.post('/users/:id/unblock', authMiddleware, adminOnly, async (req, res) => {
-  try {
-    const user = await User.findOneAndUpdate({ id: Number(req.params.id) }, { blocked: false }, { new: true });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ success: true, user });
+    const rewards = await Reward.find({}).sort({ assigned_at: -1 }).lean();
+    res.json(rewards);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
