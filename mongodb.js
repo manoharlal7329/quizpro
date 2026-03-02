@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-// require('dns').setServers(['8.8.8.8']); // Commented for Render stability
+require('dns').setServers(['8.8.8.8']); // Fixes ECONNREFUSED for MongoDB Atlas
 
 const connectDB = async () => {
     try {
@@ -8,7 +8,7 @@ const connectDB = async () => {
     } catch (error) {
         console.error("❌ MongoDB Connection Failed", error);
         // Don't exit process in development if possible, but user asked for it
-        // process.exit(1); // Disabled for Render stability — check logs if connection fails
+        process.exit(1);
     }
 };
 
