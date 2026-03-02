@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
-mongoose.set('bufferCommands', false); // Fail fast if not connected
+// Re-enabling buffering to allow startup queries (like login) to wait for the first connection
+mongoose.set('bufferCommands', true);
 require('dns').setServers(['8.8.8.8']); // Fixes ECONNREFUSED for MongoDB Atlas
 
 const connectDB = async () => {
