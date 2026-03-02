@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 mongoose.set('bufferCommands', false); // Fail fast if not connected
 require('dns').setServers(['8.8.8.8']); // Fixes ECONNREFUSED for MongoDB Atlas
 
