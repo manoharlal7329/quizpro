@@ -50,6 +50,9 @@ app.use('/api/leaderboard', require('./routes/leaderboard'));
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
+// ─── FAVICON ──────────────────────────────────────────────────────────────────
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'public', 'favicon.png')));
+
 // ─── DIAGNOSTIC — Shows which env vars exist on Render (values hidden) ────────
 app.get('/api/env-check', (req, res) => {
     const keys = ['MONGODB_URI', 'JWT_SECRET', 'RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET',
