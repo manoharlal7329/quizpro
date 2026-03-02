@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/style.css?v=1.3" />
 
     <style>
+        /* ─── SIDEBAR ─────────────────────────────────────────────── */
         .sidebar-nav {
             width: 220px;
             flex-shrink: 0;
@@ -17,7 +18,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 14px;
+            padding: 12px 14px;
             border-radius: 10px;
             color: var(--muted);
             text-decoration: none;
@@ -114,14 +115,209 @@
         table tr:hover {
             background: rgba(255, 255, 255, 0.02);
         }
+
+        /* ─── HAMBURGER BUTTON ────────────────────────────────────── */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            line-height: 1;
+        }
+
+        /* ─── SIDEBAR OVERLAY (Mobile) ───────────────────────────── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 998;
+            backdrop-filter: blur(4px);
+        }
+
+        .sidebar-overlay.open {
+            display: block;
+        }
+
+        /* ─── TABLE RESPONSIVE ────────────────────────────────────── */
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 10px;
+        }
+
+        /* ─── MOBILE STYLES ───────────────────────────────────────── */
+        @media (max-width: 768px) {
+
+            /* Hamburger visible */
+            .hamburger-btn {
+                display: inline-flex;
+                align-items: center;
+            }
+
+            /* Sidebar becomes an overlay panel */
+            .sidebar-nav {
+                position: fixed;
+                top: 0;
+                left: -280px;
+                width: 260px;
+                height: 100vh;
+                z-index: 999;
+                padding: 70px 14px 30px !important;
+                transition: left .3s ease;
+                overflow-y: auto;
+            }
+
+            .sidebar-nav.mob-open {
+                left: 0;
+            }
+
+            /* Layout stacks vertically */
+            .admin-layout {
+                flex-direction: column;
+                padding: 16px 0 80px;
+                gap: 0;
+            }
+
+            /* Stat bar: 2 columns on phone */
+            .stat-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-bottom: 18px;
+            }
+
+            /* Cards full width */
+            .glass-card,
+            .deep-glass {
+                max-width: 100% !important;
+            }
+
+            /* Tables scrollable */
+            table {
+                font-size: .8rem;
+            }
+
+            td,
+            th {
+                white-space: nowrap;
+                padding: 8px 10px !important;
+            }
+
+            /* Form inputs bigger for touch */
+            input,
+            select,
+            textarea {
+                font-size: 16px !important;
+                /* prevents iOS zoom */
+                padding: 12px !important;
+            }
+
+            /* Buttons touch-friendly */
+            .btn {
+                min-height: 44px;
+                font-size: .9rem !important;
+            }
+
+            /* Q-row stacks */
+            .q-row {
+                flex-wrap: wrap;
+            }
+
+            .correct-sel {
+                flex-wrap: wrap;
+            }
+
+            .correct-sel label {
+                min-width: 40%;
+            }
+
+            /* Grid 2 becomes 1 on small phones */
+            .grid-2 {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Add-q-form padding */
+            .add-q-form {
+                padding: 16px;
+            }
+
+            /* Page hero smaller */
+            .page-hero h1 {
+                font-size: 1.5rem !important;
+            }
+        }
+
+        /* ─── BOTTOM NAV (Mobile Quick Nav) ─────────────────────── */
+        .mob-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 20, 0.97);
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            z-index: 900;
+            padding: 6px 0 8px;
+        }
+
+        .mob-bottom-nav-inner {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mob-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 10px;
+            color: var(--muted);
+            font-size: .65rem;
+            font-weight: 500;
+            transition: color .2s;
+            text-decoration: none;
+            background: none;
+            border: none;
+            min-width: 48px;
+        }
+
+        .mob-nav-item .nav-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        .mob-nav-item.active,
+        .mob-nav-item:hover {
+            color: var(--gold);
+        }
+
+        @media (max-width: 768px) {
+            .mob-bottom-nav {
+                display: block;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
     <nav class="navbar deep-glass">
-        <span class="logo">⚡ QuizPro Arena Admin <span
-                style="font-size:.7rem; color:var(--gold); border:1px solid var(--gold); padding:2px 4px; border-radius:4px; margin-left:6px;">FULL
-                POWER</span></span>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+            <span class="logo">⚡ QuizPro Arena Admin <span
+                    style="font-size:.7rem; color:var(--gold); border:1px solid var(--gold); padding:2px 4px; border-radius:4px; margin-left:6px;">FULL
+                    POWER</span></span>
+        </div>
 
         <div class="nav-links">
             <a href="/dashboard.html" style="color:var(--muted); font-size:.88rem; text-decoration:none;">User View</a>
@@ -981,6 +1177,75 @@
 
     </script>
     <script src="/js/common.js?v=1.3"></script>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="mob-bottom-nav" id="mobBottomNav">
+        <div class="mob-bottom-nav-inner">
+            <button class="mob-nav-item active" id="mbn-dashboard"
+                onclick="showPanel('dashboard',null); setMobActive('dashboard')">
+                <span class="nav-icon">📊</span>Dashboard
+            </button>
+            <button class="mob-nav-item" id="mbn-sessions"
+                onclick="showPanel('sessions',null); setMobActive('sessions')">
+                <span class="nav-icon">🗂️</span>Sessions
+            </button>
+            <button class="mob-nav-item" id="mbn-create" onclick="showPanel('create',null); setMobActive('create')">
+                <span class="nav-icon">➕</span>Create
+            </button>
+            <button class="mob-nav-item" id="mbn-users" onclick="showPanel('users',null); setMobActive('users')">
+                <span class="nav-icon">👤</span>Users
+            </button>
+            <button class="mob-nav-item" id="mbn-wallets" onclick="showPanel('wallets',null); setMobActive('wallets')">
+                <span class="nav-icon">💰</span>Wallets
+            </button>
+            <button class="mob-nav-item" onclick="toggleSidebar()">
+                <span class="nav-icon">☰</span>More
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ── MOBILE SIDEBAR CONTROLS ───────────────────────────────────────────
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar-nav');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('mob-open');
+            overlay.classList.toggle('open');
+            document.getElementById('hamburgerBtn').textContent = sidebar.classList.contains('mob-open') ? '✕' : '☰';
+        }
+
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar-nav');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.remove('mob-open');
+            overlay.classList.remove('open');
+            document.getElementById('hamburgerBtn').textContent = '☰';
+        }
+
+        // Close sidebar when a nav item is clicked on mobile
+        document.querySelectorAll('.sidebar-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) closeSidebar();
+            });
+        });
+
+        // ── MOBILE BOTTOM NAV ACTIVE STATE ────────────────────────────────────
+        function setMobActive(panel) {
+            document.querySelectorAll('.mob-nav-item').forEach(el => el.classList.remove('active'));
+            const el = document.getElementById('mbn-' + panel);
+            if (el) el.classList.add('active');
+        }
+
+        // Wrap existing showPanel to also update mobile bottom nav
+        const _origShowPanel = typeof showPanel === 'function' ? showPanel : null;
+        if (_origShowPanel) {
+            showPanel = function (panel, el) {
+                _origShowPanel(panel, el);
+                setMobActive(panel);
+                if (window.innerWidth <= 768) closeSidebar();
+            };
+        }
+    </script>
 </body>
 
 </html>
