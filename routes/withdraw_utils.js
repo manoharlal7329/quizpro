@@ -13,10 +13,11 @@ async function requestWithdrawal({ userId, amount, upi }) {
     try {
         const wallet = await getWallet(userId);
 
-        // 1. Balance Check
-        if (!wallet || (wallet.win_bal || 0) < amount) {
-            await logFraud(userId, "INSUFFICIENT_BALANCE", { requested: amount, balance: wallet.win_bal });
-            return { error: "INSUFFICIENT_BALANCE", message: "Aapke paas paryapt winnings nahi hai." };
+        // 1. Balance Check (total real = dep_bal + win_bal)
+        const totalReal = (wallet.dep_bal || 0) + (wallet.win_bal || 0);
+        if (!wallet || totalReal < amount) {
+            await logFraud(userId, "INSUFFICIENT_BALANCE", { requested: amount, balance: totalReal });
+            return { error: "INSUFFICIENT_BALANCE", message: `Insufficient balance. Available: ₹${totalReal}` };
         }
 
         // 🛡️ ANTI-FRAUD RATE LIMIT (Pro Level)
@@ -43,8 +44,15 @@ async function requestWithdrawal({ userId, amount, upi }) {
             return { error: "DAILY_LIMIT", message: "Aap din mein sirf ek hi withdrawal kar sakte hain." };
         }
 
-        // 4. Deduct and Lock
-        wallet.win_bal -= amount;
+        // 4. Deduct from dep_bal first, then win_bal
+        let remaining = amount;
+        if (wallet.dep_bal >= remaining) {
+            wallet.dep_bal -= remaining;
+        } else {
+            remaining -= wallet.dep_bal;
+            wallet.dep_bal = 0;
+            wallet.win_bal -= remaining;
+        }
         wallet.last_withdraw_at = new Date();
         await wallet.save();
 

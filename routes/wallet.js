@@ -28,10 +28,11 @@ const { processPayout } = require('../utils/razorpayPayout');
 router.get('/me', authMiddleware, async (req, res) => {
     try {
         const w = await getWallet(req.user.id);
+        const totalReal = (w.dep_bal || 0) + (w.win_bal || 0);
         res.json({
             demo: w.demo || 0,
-            real: (w.dep_bal || 0) + (w.win_bal || 0),
-            withdrawable: w.win_bal || 0,
+            real: totalReal,
+            withdrawable: totalReal, // Students can withdraw full real balance (dep + win)
             has_pin: !!w.pin
         });
     } catch (e) {
