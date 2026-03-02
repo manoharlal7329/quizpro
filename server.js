@@ -50,6 +50,17 @@ app.use('/api/leaderboard', require('./routes/leaderboard'));
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
+// ─── DIAGNOSTIC — Shows which env vars exist on Render (values hidden) ────────
+app.get('/api/env-check', (req, res) => {
+    const keys = ['MONGODB_URI', 'JWT_SECRET', 'RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET',
+        'PLATFORM_FEE_PERCENT', 'AUTO_PAYOUT_ENABLED', 'OTP_PROVIDER'];
+    const result = {};
+    keys.forEach(k => { result[k] = process.env[k] ? '✅ SET' : '❌ MISSING'; });
+    const mongoose = require('mongoose');
+    result['DB_STATE'] = ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown';
+    res.json(result);
+});
+
 // ─── LEGAL PAGES (Play Store required URLs) ──────────────────────────────────
 
 // ─── LEGAL PAGES (Play Store required URLs) ──────────────────────────────────
