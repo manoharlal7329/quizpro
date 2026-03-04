@@ -336,6 +336,8 @@
                     <a href="#" onclick="showPanel('create',this)" data-tilt>➕ Create Session</a>
                     <a href="#" onclick="showPanel('categories',this)" data-tilt>📁 Categories</a>
                     <a href="#" onclick="showPanel('questions',this)" data-tilt>📝 Add Questions</a>
+                    <a href="#" onclick="showPanel('books',this)" data-tilt style="color:var(--gold);">📖 Books
+                        Library</a>
                     <a href="#" onclick="showPanel('users',this)" data-tilt>👤 Users</a>
                     <a href="#" onclick="showPanel('wallets',this)" data-tilt>💰 Wallets</a>
                     <a href="#" onclick="showPanel('rewards',this)" data-tilt>🎁 Rewards</a>
@@ -363,6 +365,65 @@
                                 <div class="spinner"></div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Books Library Panel -->
+                    <div class="panel" id="panel-books">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>📖 Books Library</h1>
+                            <p style="font-size:.88rem;color:var(--muted);">Upload question banks, set prices & offers
+                                for users.</p>
+                        </div>
+
+                        <!-- Create Book Form -->
+                        <div class="glass-card deep-glass" style="margin-bottom:28px;padding:24px;">
+                            <h3 style="margin-bottom:18px;color:var(--gold);">➕ Add New Book</h3>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Book Title *</label>
+                                    <input type="text" id="bookTitle" placeholder="e.g. Hindi Grammar Master" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Subject *</label>
+                                    <input type="text" id="bookSubject" placeholder="e.g. Hindi, Math, GK" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" id="bookDesc" placeholder="Short description of this book" />
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Cover Emoji</label>
+                                    <input type="text" id="bookEmoji" placeholder="📚" value="📚" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Cover Color</label>
+                                    <input type="color" id="bookColor" value="#7c3aed" style="height:44px;" />
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Base Price (₹)</label>
+                                    <input type="number" id="bookBasePrice" placeholder="e.g. 499" value="0" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Offer Price (₹) — 0 = no offer</label>
+                                    <input type="number" id="bookOfferPrice" placeholder="e.g. 199" value="0" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Offer Label (shown on badge)</label>
+                                <input type="text" id="bookOfferLabel"
+                                    placeholder="e.g. 60% OFF, Special Deal, Launch Price" />
+                            </div>
+                            <button class="btn btn-primary" style="width:100%;" onclick="createBook()">✦ Create
+                                Book</button>
+                        </div>
+
+                        <!-- Books List -->
+                        <h3 style="margin-bottom:14px;">All Books</h3>
+                        <div id="booksList"></div>
                     </div>
 
                     <!-- Sessions List -->
@@ -1243,9 +1304,112 @@
                 _origShowPanel(panel, el);
                 setMobActive(panel);
                 if (window.innerWidth <= 768) closeSidebar();
+                if (panel === 'books') loadAdminBooks();
             };
         }
+
+        // ── BOOKS LIBRARY ─────────────────────────────────────────────────────
+        async function createBook() {
+            const title = document.getElementById('bookTitle').value.trim();
+            const subject = document.getElementById('bookSubject').value.trim();
+            if (!title || !subject) { alert('Title and Subject are required!'); return; }
+
+            try {
+                const result = await api('/api/books', 'POST', {
+                    title,
+                    subject,
+                    description: document.getElementById('bookDesc').value.trim(),
+                    cover_emoji: document.getElementById('bookEmoji').value.trim() || '📚',
+                    cover_color: document.getElementById('bookColor').value,
+                    base_price: Number(document.getElementById('bookBasePrice').value) || 0,
+                    offer_price: Number(document.getElementById('bookOfferPrice').value) || 0,
+                    offer_label: document.getElementById('bookOfferLabel').value.trim()
+                });
+                toast('✅ Book created: ' + result.book.title, 'success');
+                // Clear form
+                ['bookTitle', 'bookSubject', 'bookDesc', 'bookEmoji', 'bookOfferLabel'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('bookEmoji').value = '📚';
+                document.getElementById('bookBasePrice').value = '0';
+                document.getElementById('bookOfferPrice').value = '0';
+                loadAdminBooks();
+            } catch (e) {
+                toast('❌ ' + e.message, 'error');
+            }
+        }
+
+        async function loadAdminBooks() {
+            const container = document.getElementById('booksList');
+            container.innerHTML = '<div class="spinner"></div>';
+            try {
+                const books = await api('/api/books/admin/all');
+                if (!books.length) {
+                    container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:30px 0;">No books yet. Create one above!</p>';
+                    return;
+                }
+                container.innerHTML = books.map(b => {
+                    const price = b.offer_price > 0 ? b.offer_price : b.base_price;
+                    const isFree = price === 0;
+                    return `
+                    <div class="glass-card deep-glass" style="margin-bottom:14px;padding:18px;border-radius:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                        <div style="width:52px;height:52px;border-radius:14px;background:${b.cover_color || '#7c3aed'}33;border:1px solid ${b.cover_color || '#7c3aed'}44;display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">${b.cover_emoji || '📚'}</div>
+                        <div style="flex:1;min-width:150px;">
+                            <div style="font-weight:800;color:#fff;font-size:.95rem;">${b.title}</div>
+                            <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">${b.subject} · ${b.q_count} Questions · ${b.purchases} Purchases</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                            <span style="font-size:.88rem;font-weight:800;color:var(--gold);">${isFree ? 'FREE' : '₹' + price}</span>
+                            ${b.offer_price > 0 ? `<span style="font-size:.68rem;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.25);padding:2px 8px;border-radius:99px;">${b.offer_label || 'OFFER'}</span>` : ''}
+                        </div>
+                        <div style="display:flex;gap:8px;flex-shrink:0;">
+                            <label style="cursor:pointer;">
+                                <input type="file" accept=".xlsx,.xls" style="display:none;" onchange="uploadBookQuestions(${b.id}, this)">
+                                <span class="btn btn-outline" style="padding:7px 14px;font-size:.75rem;border-radius:10px;cursor:pointer;">📤 Upload Excel</span>
+                            </label>
+                            <button class="btn" style="padding:7px 14px;font-size:.75rem;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;" onclick="deleteBook(${b.id}, '${b.title.replace(/'/g, '\\\'')}')">🗑 Delete</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<p style="color:#ef4444;">${e.message}</p>`;
+            }
+        }
+
+        async function uploadBookQuestions(bookId, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            toast('📤 Uploading questions to book...', 'info');
+            try {
+                const res = await fetch(`/api/books/${bookId}/upload`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + getToken() },
+                    body: formData
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                toast('✅ ' + data.message, 'success');
+                loadAdminBooks();
+            } catch (e) {
+                toast('❌ Upload failed: ' + e.message, 'error');
+            }
+            input.value = '';
+        }
+
+        async function deleteBook(bookId, title) {
+            if (!confirm(`Delete "${title}" and all its questions? This cannot be undone.`)) return;
+            try {
+                await api(`/api/books/${bookId}`, 'DELETE');
+                toast('🗑️ Book deleted', 'success');
+                loadAdminBooks();
+            } catch (e) {
+                toast('❌ ' + e.message, 'error');
+            }
+        }
     </script>
+
 </body>
 
 </html>

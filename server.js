@@ -46,6 +46,8 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/razorpay', require('./routes/razorpay'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
+app.use('/api/books', require('./routes/books'));
+
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
