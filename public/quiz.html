@@ -255,6 +255,9 @@
         requireLogin();
         const params = new URLSearchParams(location.search);
         const sessId = params.get('id');
+        const bookId = params.get('book_id');
+        const quizMode = parseInt(params.get('mode') || '20');
+        let isBookMode = !!bookId;
         let questions = [];
         let answers = {};
         let qTimings = {}; // { qId: ms }
@@ -264,6 +267,42 @@
         let autoLockTimeout;
 
         async function load() {
+            // ── BOOK MODE ──────────────────────────────────────────────────────────
+            if (isBookMode) {
+                try {
+                    let qs = await api(`/api/books/${bookId}/questions`);
+                    // Shuffle
+                    qs = qs.sort(() => Math.random() - 0.5);
+                    // Slice by mode: 0 = all, else limit
+                    if (quizMode > 0) qs = qs.slice(0, quizMode);
+                    questions = qs;
+
+                    if (!questions.length) {
+                        document.getElementById('loadingState').style.display = 'none';
+                        document.getElementById('waitState').style.display = 'block';
+                        document.getElementById('waitTitle').textContent = '📭 No Questions';
+                        document.getElementById('waitMsg').textContent = 'Is book mein abhi questions nahi hain. Admin se upload karwayein.';
+                        return;
+                    }
+
+                    document.getElementById('sessionTitle').textContent = `📖 Book Quiz — ${questions.length} Questions`;
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('quizContent').style.display = 'block';
+                    buildDots();
+                    renderQ(0);
+                    // Timer: 30s per question
+                    const totalSecs = Math.min(questions.length * 30, 3600);
+                    startTimer(totalSecs);
+                } catch (e) {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('waitState').style.display = 'block';
+                    document.getElementById('waitTitle').textContent = '❌ ' + (e.message || 'Error');
+                    document.getElementById('waitMsg').textContent = 'Book questions load nahi hue. Wapas jao aur try karo.';
+                }
+                return;
+            }
+
+            // ── SESSION MODE (original) ────────────────────────────────────────────
             // 10 sec timeout — spinner never hangs forever
             const timeout = setTimeout(() => {
                 document.getElementById('loadingState').style.display = 'none';
@@ -421,6 +460,53 @@
             clearTimeout(autoLockTimeout);
             document.getElementById('submitOverlay').style.display = 'none';
 
+            // ── BOOK MODE: Show inline result ─────────────────────────────────────
+            if (isBookMode) {
+                let correct = 0, wrong = 0, skipped = 0;
+                questions.forEach(q => {
+                    const ans = answers[q.id];
+                    if (!ans || ans === 'none') skipped++;
+                    else if (ans === q.correct) correct++;
+                    else wrong++;
+                });
+                const total = questions.length;
+                const pct = Math.round((correct / total) * 100);
+                const grade = pct >= 80 ? '🏆 Excellent!' : pct >= 60 ? '👍 Good!' : pct >= 40 ? '📚 Practice More' : '💪 Keep Going!';
+
+                // Show overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,8,20,.97);backdrop-filter:blur(10px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+                overlay.innerHTML = `
+                    <div style="background:rgba(14,12,26,.95);border:1px solid rgba(201,168,76,.3);border-radius:24px;padding:36px 28px;max-width:420px;width:100%;text-align:center;">
+                        <div style="font-size:3.5rem;margin-bottom:12px;">${pct >= 80 ? '🏆' : pct >= 60 ? '🎉' : pct >= 40 ? '📖' : '💪'}</div>
+                        <div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:4px;">Quiz Complete!</div>
+                        <div style="font-size:.85rem;color:rgba(255,255,255,.4);margin-bottom:28px;">${grade}</div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
+                            <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:14px;padding:16px;">
+                                <div style="font-size:1.8rem;font-weight:900;color:#34d399;">${correct}</div>
+                                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:1px;">CORRECT</div>
+                            </div>
+                            <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:16px;">
+                                <div style="font-size:1.8rem;font-weight:900;color:#f87171;">${wrong}</div>
+                                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:1px;">WRONG</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;">
+                                <div style="font-size:1.8rem;font-weight:900;color:rgba(255,255,255,.5);">${skipped}</div>
+                                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:1px;">SKIPPED</div>
+                            </div>
+                        </div>
+                        <div style="font-size:3rem;font-weight:900;color:#c9a84c;margin-bottom:6px;">${pct}%</div>
+                        <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-bottom:28px;">${correct} / ${total} correct</div>
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="window.location='/books.html'" style="flex:1;padding:14px;border-radius:14px;border:1px solid rgba(201,168,76,.3);background:rgba(201,168,76,.08);color:#c9a84c;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--font);">📖 Library</button>
+                            <button onclick="window.location.reload()" style="flex:1;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#c9a84c,#e6c05a);color:#000;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 Try Again</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+                return;
+            }
+
+            // ── SESSION MODE: Submit to server ─────────────────────────────────────
             try {
                 const result = await api(`/api/quiz/${sessId}/submit`, 'POST', {
                     answers,
@@ -436,6 +522,7 @@
                 }
             }
         }
+
 
         // Anti-Cheat: Disable Back Button
         (function () {
