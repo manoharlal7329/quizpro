@@ -1361,11 +1361,12 @@
                             ${b.offer_price > 0 ? `<span style="font-size:.68rem;background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.25);padding:2px 8px;border-radius:99px;">${b.offer_label || 'OFFER'}</span>` : ''}
                         </div>
                         <div style="display:flex;gap:8px;flex-shrink:0;">
+                            <button class="btn btn-outline" style="padding:7px 14px;font-size:.75rem;border-radius:10px;color:var(--gold);border-color:rgba(201,168,76,0.3);" onclick="openEditBook('${encodeURIComponent(JSON.stringify({ id: b.id, title: b.title, subject: b.subject, description: b.description, base_price: b.base_price, offer_price: b.offer_price, offer_label: b.offer_label, status: b.status }))}')">✏️ Edit</button>
                             <label style="cursor:pointer;">
                                 <input type="file" accept=".xlsx,.xls" style="display:none;" onchange="uploadBookQuestions(${b.id}, this)">
-                                <span class="btn btn-outline" style="padding:7px 14px;font-size:.75rem;border-radius:10px;cursor:pointer;">📤 Upload Excel</span>
+                                <span class="btn btn-outline" style="padding:7px 14px;font-size:.75rem;border-radius:10px;cursor:pointer;">📤 Upload</span>
                             </label>
-                            <button class="btn" style="padding:7px 14px;font-size:.75rem;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;" onclick="deleteBook(${b.id}, '${b.title.replace(/'/g, '\\\'')}')">🗑 Delete</button>
+                            <button class="btn" style="padding:7px 14px;font-size:.75rem;border-radius:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;" onclick="deleteBook(${b.id}, '${b.title.replace(/'/g, "\\'")}')">🗑</button>
                         </div>
                     </div>`;
                 }).join('');
@@ -1408,7 +1409,71 @@
                 toast('❌ ' + e.message, 'error');
             }
         }
+
+        // ── EDIT BOOK MODAL ────────────────────────────────────────────────────
+        function openEditBook(book) {
+            const b = typeof book === 'string' ? JSON.parse(decodeURIComponent(book)) : book;
+            document.getElementById('editBookId').value = b.id;
+            document.getElementById('editBookTitle').value = b.title;
+            document.getElementById('editBookSubject').value = b.subject;
+            document.getElementById('editBookDesc').value = b.description || '';
+            document.getElementById('editBookBasePrice').value = b.base_price || 0;
+            document.getElementById('editBookOfferPrice').value = b.offer_price || 0;
+            document.getElementById('editBookOfferLabel').value = b.offer_label || '';
+            document.getElementById('editBookStatus').value = b.status || 'active';
+            document.getElementById('editBookModal').style.display = 'flex';
+        }
+        function closeEditBook() { document.getElementById('editBookModal').style.display = 'none'; }
+        async function saveEditBook() {
+            const id = document.getElementById('editBookId').value;
+            const body = {
+                title: document.getElementById('editBookTitle').value.trim(),
+                subject: document.getElementById('editBookSubject').value.trim(),
+                description: document.getElementById('editBookDesc').value.trim(),
+                base_price: Number(document.getElementById('editBookBasePrice').value),
+                offer_price: Number(document.getElementById('editBookOfferPrice').value),
+                offer_label: document.getElementById('editBookOfferLabel').value.trim(),
+                status: document.getElementById('editBookStatus').value
+            };
+            try {
+                await api(`/api/books/${id}`, 'PUT', body);
+                toast('✅ Book updated!', 'success');
+                closeEditBook();
+                loadAdminBooks();
+            } catch (e) { toast('❌ ' + e.message, 'error'); }
+        }
     </script>
+
+    <!-- EDIT BOOK MODAL -->
+    <div id="editBookModal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+        <div
+            style="background:rgba(14,12,26,0.97);border:1px solid rgba(201,168,76,0.3);border-radius:24px;padding:28px;max-width:480px;width:100%;">
+            <h3 style="margin-bottom:20px;color:var(--gold);">✏️ Edit Book</h3>
+            <input type="hidden" id="editBookId" />
+            <div class="form-group"><label>Title</label><input type="text" id="editBookTitle"></div>
+            <div class="form-group"><label>Subject</label><input type="text" id="editBookSubject"></div>
+            <div class="form-group"><label>Description</label><input type="text" id="editBookDesc"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group"><label>Base Price (₹)</label><input type="number" id="editBookBasePrice"
+                        min="0"></div>
+                <div class="form-group"><label>Offer Price (₹) — 0=none</label><input type="number"
+                        id="editBookOfferPrice" min="0"></div>
+            </div>
+            <div class="form-group"><label>Offer Label</label><input type="text" id="editBookOfferLabel"
+                    placeholder="e.g. 50% OFF"></div>
+            <div class="form-group"><label>Status</label>
+                <select id="editBookStatus">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:6px;">
+                <button class="btn btn-primary" style="flex:1;" onclick="saveEditBook()">💾 Save Changes</button>
+                <button class="btn btn-outline" onclick="closeEditBook()">Cancel</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 
