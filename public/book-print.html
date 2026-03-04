@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book PDF — QuizPro Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #c9a84c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0814;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* ── TOP BAR (hidden on print) ─────────────────── */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 8, 20, .96);
+            border-bottom: 1px solid rgba(201, 168, 76, .2);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .top-bar-title {
+            font-size: .92rem;
+            font-weight: 800;
+            color: var(--gold);
+        }
+
+        .top-bar-sub {
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .35);
+            margin-top: 2px;
+        }
+
+        .print-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-print {
+            padding: 10px 22px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #c9a84c, #e6c05a);
+            color: #000;
+            font-size: .85rem;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .btn-back {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(201, 168, 76, .3);
+            background: rgba(201, 168, 76, .07);
+            color: var(--gold);
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ── CONTENT ──────────────────────────────────── */
+        .wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 32px 24px 80px;
+        }
+
+        /* Book Header */
+        .book-header {
+            background: rgba(14, 12, 26, .9);
+            border: 1px solid rgba(201, 168, 76, .2);
+            border-radius: 18px;
+            padding: 28px 24px;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .book-header h1 {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .book-header .subject {
+            font-size: .7rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .book-header .meta {
+            font-size: .78rem;
+            color: rgba(255, 255, 255, .35);
+        }
+
+        /* Answer Key badge (top of page when print) */
+        .section-label {
+            font-size: .65rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .3);
+            font-weight: 800;
+            margin-bottom: 16px;
+            padding: 0 2px;
+        }
+
+        /* Question Card */
+        .q-card {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .07);
+            border-radius: 14px;
+            padding: 20px 20px 16px;
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+        }
+
+        .q-num {
+            font-size: .68rem;
+            color: rgba(255, 255, 255, .3);
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .q-text {
+            font-size: .95rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.55;
+            margin-bottom: 14px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .option {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 8px 11px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, .07);
+            background: rgba(255, 255, 255, .02);
+            font-size: .78rem;
+            color: rgba(255, 255, 255, .65);
+        }
+
+        .option.correct {
+            border-color: rgba(52, 211, 153, .4);
+            background: rgba(52, 211, 153, .07);
+            color: #34d399;
+            font-weight: 700;
+        }
+
+        .opt-key {
+            font-weight: 800;
+            font-size: .8rem;
+            flex-shrink: 0;
+        }
+
+        .answer-line {
+            font-size: .72rem;
+            color: #34d399;
+            font-weight: 700;
+            background: rgba(52, 211, 153, .06);
+            border: 1px solid rgba(52, 211, 153, .18);
+            border-radius: 7px;
+            padding: 6px 10px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .explanation {
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .4);
+            margin-top: 6px;
+            padding: 7px 10px;
+            background: rgba(201, 168, 76, .04);
+            border: 1px solid rgba(201, 168, 76, .15);
+            border-radius: 7px;
+            line-height: 1.5;
+        }
+
+        .explanation strong {
+            color: var(--gold);
+        }
+
+        /* Spinner */
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255, 255, 255, .35);
+            font-size: .9rem;
+        }
+
+        .spinner-ring {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(201, 168, 76, .2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+            margin: 0 auto 14px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── PRINT STYLES ───────────────────────────────── */
+        @media print {
+            body {
+                background: #fff !important;
+                color: #000 !important;
+                font-size: 10pt;
+            }
+
+            .top-bar,
+            .print-actions {
+                display: none !important;
+            }
+
+            .wrap {
+                padding: 10mm 10mm 10mm;
+                max-width: none;
+            }
+
+            .book-header {
+                background: #fff !important;
+                border: 1px solid #ccc !important;
+                color: #000 !important;
+                border-radius: 8px;
+            }
+
+            .book-header h1,
+            .book-header .meta,
+            .q-text {
+                color: #000 !important;
+            }
+
+            .book-header .subject {
+                color: #8b6914 !important;
+            }
+
+            .section-label {
+                color: #888 !important;
+            }
+
+            .q-card {
+                background: #fff !important;
+                border: 1px solid #ddd !important;
+                border-radius: 6px;
+                margin-bottom: 10px;
+            }
+
+            .q-num {
+                color: #999 !important;
+            }
+
+            .q-text {
+                color: #000 !important;
+            }
+
+            .option {
+                border: 1px solid #ddd !important;
+                background: #fff !important;
+                color: #333 !important;
+            }
+
+            .option.correct {
+                border-color: #059669 !important;
+                background: #ecfdf5 !important;
+                color: #059669 !important;
+            }
+
+            .answer-line {
+                background: #ecfdf5 !important;
+                border: 1px solid #059669 !important;
+                color: #059669 !important;
+            }
+
+            .explanation {
+                background: #fffbeb !important;
+                border: 1px solid #d97706 !important;
+                color: #555 !important;
+            }
+
+            .explanation strong {
+                color: #b45309 !important;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP ACTION BAR -->
+    <div class="top-bar">
+        <div>
+            <div class="top-bar-title" id="barTitle">📖 Loading...</div>
+            <div class="top-bar-sub" id="barSub">Questions with Answers</div>
+        </div>
+        <div class="print-actions">
+            <button class="btn-back" onclick="history.back()">← Back</button>
+            <button class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+        </div>
+    </div>
+
+    <div class="wrap" id="wrap">
+        <div class="loading">
+            <div class="spinner-ring"></div>
+            Loading questions...
+        </div>
+    </div>
+
+    <script>
+        (async () => {
+            const token = localStorage.getItem('token');
+            if (!token) { location.href = '/login.html'; return; }
+
+            const params = new URLSearchParams(location.search);
+            const bookId = params.get('book_id');
+            const bookTitle = decodeURIComponent(params.get('title') || 'Book');
+            const bookSubject = decodeURIComponent(params.get('subject') || '');
+
+            if (!bookId) {
+                document.getElementById('wrap').innerHTML = '<div class="loading">⚠️ No book selected</div>';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/books/${bookId}/questions`, {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+                const questions = await res.json();
+
+                document.getElementById('barTitle').textContent = `📖 ${bookTitle}`;
+                document.getElementById('barSub').textContent = `${bookSubject} · ${questions.length} Questions with Answers`;
+                document.title = bookTitle + ' — PDF';
+
+                const optLabels = { a: 'A', b: 'B', c: 'C', d: 'D' };
+
+                const html = `
+        <div class="book-header">
+          <div class="subject">${bookSubject}</div>
+          <h1>${bookTitle}</h1>
+          <div class="meta">Total Questions: ${questions.length} &nbsp;·&nbsp; All Answers Included</div>
+        </div>
+        <div class="section-label">📋 All Questions with Correct Answers</div>
+        ${questions.map((q, i) => {
+                    const opts = ['a', 'b', 'c', 'd'];
+                    const optionRows = opts.map(k => {
+                        const isCorrect = q.correct === k;
+                        return `<div class="option${isCorrect ? ' correct' : ''}">
+              <span class="opt-key">${optLabels[k]}.</span>
+              <span>${q['option_' + k] || '—'}</span>
+            </div>`;
+                    }).join('');
+
+                    const ans = q.correct ? q.correct.toUpperCase() : '?';
+                    const ansText = q['option_' + q.correct] || '';
+                    const expHtml = q.explanation
+                        ? `<div class="explanation"><strong>💡 Explanation:</strong> ${q.explanation}</div>` : '';
+
+                    return `
+          <div class="q-card">
+            <div class="q-num">Q${i + 1}</div>
+            <div class="q-text">${q.question_text}</div>
+            <div class="options-grid">${optionRows}</div>
+            <div class="answer-line">✓ Correct Answer: <strong>${ans}. ${ansText}</strong></div>
+            ${expHtml}
+          </div>`;
+                }).join('')}`;
+
+                document.getElementById('wrap').innerHTML = html;
+            } catch (e) {
+                document.getElementById('wrap').innerHTML = `<div class="loading">❌ ${e.message}</div>`;
+            }
+        })();
+    </script>
+</body>
+
+</html>

@@ -647,6 +647,9 @@
         </div>
         <button onclick="startBookQuiz(${book.id})" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--gold-lux);background:rgba(201,168,76,0.1);color:var(--gold-lux);font-size:.95rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;letter-spacing:.5px;">
           ✦ Start Quiz
+        </button>
+        <button onclick="openPDF(${book.id},'${encodeURIComponent(book.title)}','${encodeURIComponent(book.subject)}')" style="width:100%;margin-top:10px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);font-size:.85rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='rgba(255,255,255,.25)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,.1)';this.style.color='rgba(255,255,255,.55)'">
+          🖨️ PDF / Print All Questions
         </button>`;
             document.getElementById('bookModal').classList.add('open');
         }
@@ -671,6 +674,10 @@
             } catch (e) {
                 toast('❌ ' + e.message, 'error');
             }
+        }
+
+        function openPDF(bookId, title, subject) {
+            window.open(`/book-print.html?book_id=${bookId}&title=${title}&subject=${subject}`, '_blank');
         }
 
         function closeModal() {
