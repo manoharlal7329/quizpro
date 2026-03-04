@@ -1475,6 +1475,38 @@
         </div>
     </div>
 
+    <!-- SEED DEMO SESSIONS FLOATING BUTTON -->
+    <div id="seedBtnWrap" style="position:fixed;bottom:80px;right:20px;z-index:9999;">
+        <button id="seedBtn" onclick="seedDemoSessions()"
+            style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:14px;padding:12px 18px;font-size:.82rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.4);display:flex;align-items:center;gap:8px;">
+            🌱 Seed 50 Demo Sessions
+        </button>
+    </div>
+
+    <script>
+        async function seedDemoSessions() {
+            const btn = document.getElementById('seedBtn');
+            btn.disabled = true; btn.textContent = '⏳ Seeding...';
+            try {
+                const res = await fetch('/api/admin/seed-sessions', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('admin_token') || localStorage.getItem('token')), 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('✅ ' + data.message);
+                    document.getElementById('seedBtnWrap').style.display = 'none';
+                } else {
+                    alert('❌ ' + (data.error || 'Error'));
+                    btn.disabled = false; btn.textContent = '🌱 Seed 50 Demo Sessions';
+                }
+            } catch (e) {
+                alert('❌ ' + e.message);
+                btn.disabled = false; btn.textContent = '🌱 Seed 50 Demo Sessions';
+            }
+        }
+    </script>
+
 </body>
 
 </html>
