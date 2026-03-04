@@ -585,16 +585,11 @@
                 return;
             }
             grid.innerHTML = books.map(b => {
-                const price = b.offer_price > 0 ? b.offer_price : b.base_price;
-                const hasOffer = b.offer_price > 0 && b.offer_price < b.base_price;
-                const isFree = price === 0;
                 return `
           <div class="book-card" onclick="openBook(${b.id})">
             <div class="book-cover" style="background:linear-gradient(135deg,${b.cover_color || '#7c3aed'}22,${b.cover_color || '#7c3aed'}44);">
               <div class="book-cover-emoji">${b.cover_emoji || '📚'}</div>
               <div class="book-subject-tag">${b.subject}</div>
-              ${hasOffer ? `<div class="offer-badge">${b.offer_label || 'OFFER'}</div>` : ''}
-              ${b.purchased ? `<div class="offer-badge" style="background:linear-gradient(135deg,#059669,#34d399);">✓ UNLOCKED</div>` : ''}
             </div>
             <div class="book-body">
               <div class="book-title">${b.title}</div>
@@ -604,15 +599,8 @@
                 <div class="book-stat"><span>⭐</span><span>${b.subject}</span></div>
               </div>
               <div class="book-price-row">
-                <div style="display:flex;align-items:baseline;gap:4px;">
-                  ${isFree
-                        ? `<span class="price-free">FREE</span>`
-                        : `<span class="price-offer">₹${price}</span>${hasOffer ? `<span class="price-original">₹${b.base_price}</span>` : ''}`
-                    }
-                </div>
-                <button class="book-btn ${b.purchased ? 'unlocked' : ''}" onclick="event.stopPropagation();openBook(${b.id})">
-                  ${b.purchased ? '✓ Open Book' : isFree ? 'Start Free' : 'Unlock →'}
-                </button>
+                <span class="price-free">FREE</span>
+                <button class="book-btn unlocked" onclick="event.stopPropagation();openBook(${b.id})">Open Book →</button>
               </div>
             </div>
           </div>`;
@@ -622,8 +610,6 @@
         async function openBook(bookId) {
             const book = allBooks.find(b => b.id === bookId);
             if (!book) return;
-            const price = book.offer_price > 0 ? book.offer_price : book.base_price;
-            const isFree = price === 0;
 
             document.getElementById('modalContent').innerHTML = `
         <div style="text-align:center;margin-bottom:24px;">
@@ -633,14 +619,10 @@
           <div style="font-size:.8rem;color:rgba(255,255,255,0.35);margin-top:6px;">${book.description || ''}</div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;">
           <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;text-align:center;">
             <div style="font-size:.6rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:4px;">QUESTIONS</div>
             <div style="font-size:1.1rem;font-weight:900;color:#fff;">${book.q_count || 0}</div>
-          </div>
-          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;text-align:center;">
-            <div style="font-size:.6rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:4px;">PRICE</div>
-            <div style="font-size:1.1rem;font-weight:900;color:var(--gold-lux);">${isFree ? 'FREE' : '₹' + price}</div>
           </div>
           <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;text-align:center;">
             <div style="font-size:.6rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:4px;">SUBJECT</div>
@@ -648,34 +630,24 @@
           </div>
         </div>
 
-        ${book.purchased || isFree ? `
-          <div style="margin-bottom:14px;">
-            <div style="font-size:.7rem;color:rgba(255,255,255,0.35);margin-bottom:10px;font-weight:600;letter-spacing:1px;">CHOOSE QUIZ MODE</div>
-            <div class="quiz-mode-card selected" id="mode20" onclick="selectMode(20,this)">
-              <div class="quiz-mode-label">⚡ Quick Fire — 20 Questions</div>
-              <div class="quiz-mode-sub">15 minutes · Perfect for daily practice</div>
-            </div>
-            <div class="quiz-mode-card" id="mode50" onclick="selectMode(50,this)">
-              <div class="quiz-mode-label">📋 Practice Set — 50 Questions</div>
-              <div class="quiz-mode-sub">40 minutes · Thorough revision</div>
-            </div>
-            <div class="quiz-mode-card" id="modeAll" onclick="selectMode(0,this)">
-              <div class="quiz-mode-label">🏆 Full Mock Test — All Questions</div>
-              <div class="quiz-mode-sub">Complete exam simulation</div>
-            </div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:.7rem;color:rgba(255,255,255,0.35);margin-bottom:10px;font-weight:600;letter-spacing:1px;">CHOOSE QUIZ MODE</div>
+          <div class="quiz-mode-card selected" id="mode20" onclick="selectMode(20,this)">
+            <div class="quiz-mode-label">⚡ Quick Fire — 20 Questions</div>
+            <div class="quiz-mode-sub">15 minutes · Perfect for daily practice</div>
           </div>
-          <button id="startBtn" onclick="startBookQuiz(${book.id})" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--gold-lux);background:rgba(201,168,76,0.1);color:var(--gold-lux);font-size:.95rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;letter-spacing:.5px;">
-            ✦ Start Quiz
-          </button>` : `
-          <div style="background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:16px;margin-bottom:16px;text-align:center;">
-            <div style="font-size:.75rem;color:rgba(255,255,255,0.4);margin-bottom:4px;">Total to Pay</div>
-            <div style="font-size:2rem;font-weight:900;color:var(--gold-lux);">₹${price}</div>
-            ${book.offer_price > 0 ? `<div style="font-size:.75rem;color:#34d399;margin-top:4px;">You save ₹${book.base_price - book.offer_price}!</div>` : ''}
+          <div class="quiz-mode-card" id="mode50" onclick="selectMode(50,this)">
+            <div class="quiz-mode-label">📋 Practice Set — 50 Questions</div>
+            <div class="quiz-mode-sub">40 minutes · Thorough revision</div>
           </div>
-          <button onclick="purchaseBook(${book.id})" style="width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#c9a84c,#e6c05a);color:#000;font-size:.95rem;font-weight:900;cursor:pointer;font-family:'Inter',sans-serif;letter-spacing:.5px;">
-            🔓 Unlock Book — ₹${price}
-          </button>`
-                }`;
+          <div class="quiz-mode-card" id="modeAll" onclick="selectMode(0,this)">
+            <div class="quiz-mode-label">🏆 Full Mock Test — All Questions</div>
+            <div class="quiz-mode-sub">Complete exam simulation</div>
+          </div>
+        </div>
+        <button onclick="startBookQuiz(${book.id})" style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--gold-lux);background:rgba(201,168,76,0.1);color:var(--gold-lux);font-size:.95rem;font-weight:800;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;letter-spacing:.5px;">
+          ✦ Start Quiz
+        </button>`;
             document.getElementById('bookModal').classList.add('open');
         }
 

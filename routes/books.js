@@ -18,16 +18,14 @@ async function adminOnly(req, res, next) {
     next();
 }
 
-// ─── PUBLIC: List all active books ────────────────────────────────────────────
+// ─── PUBLIC: List all active books (all free/open) ───────────────────────────
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const books = await Book.find({ status: 'active' }).sort({ created_at: -1 }).lean();
-        const userId = req.user.id;
 
         const result = await Promise.all(books.map(async (b) => {
             const q_count = await Question.countDocuments({ book_id: b.id });
-            const purchased = await BookPurchase.findOne({ user_id: userId, book_id: b.id }).lean();
-            return { ...b, q_count, purchased: !!purchased };
+            return { ...b, q_count, purchased: true }; // all books open
         }));
 
         res.json(result);
@@ -95,21 +93,13 @@ router.post('/:id/purchase', authMiddleware, async (req, res) => {
     }
 });
 
-// ─── PUBLIC: Get questions from a purchased book (for quiz) ───────────────────
+// ─── PUBLIC: Get questions from a book (FREE for all) ────────────────────────
 router.get('/:id/questions', authMiddleware, async (req, res) => {
     try {
         const book = await Book.findOne({ id: Number(req.params.id) }).lean();
         if (!book) return res.status(404).json({ error: 'Book not found' });
 
-        // If book is paid, verify purchase
-        const price = book.offer_price > 0 ? book.offer_price : book.base_price;
-        if (price > 0) {
-            const purchased = await BookPurchase.findOne({ user_id: req.user.id, book_id: book.id });
-            if (!purchased) return res.status(403).json({ error: 'Please purchase this book first' });
-        }
-
         const questions = await Question.find({ book_id: book.id }).lean();
-        // Shuffle and return all questions
         const shuffled = questions.sort(() => Math.random() - 0.5);
         res.json(shuffled);
     } catch (e) {
