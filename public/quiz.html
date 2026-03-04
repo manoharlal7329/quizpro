@@ -460,7 +460,7 @@
             clearTimeout(autoLockTimeout);
             document.getElementById('submitOverlay').style.display = 'none';
 
-            // ── BOOK MODE: Show inline result ─────────────────────────────────────
+            // ── BOOK MODE: Full Answer Review ─────────────────────────────────────
             if (isBookMode) {
                 let correct = 0, wrong = 0, skipped = 0;
                 questions.forEach(q => {
@@ -473,38 +473,85 @@
                 const pct = Math.round((correct / total) * 100);
                 const grade = pct >= 80 ? '🏆 Excellent!' : pct >= 60 ? '👍 Good!' : pct >= 40 ? '📚 Practice More' : '💪 Keep Going!';
 
-                // Show overlay
-                const overlay = document.createElement('div');
-                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,8,20,.97);backdrop-filter:blur(10px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-                overlay.innerHTML = `
-                    <div style="background:rgba(14,12,26,.95);border:1px solid rgba(201,168,76,.3);border-radius:24px;padding:36px 28px;max-width:420px;width:100%;text-align:center;">
-                        <div style="font-size:3.5rem;margin-bottom:12px;">${pct >= 80 ? '🏆' : pct >= 60 ? '🎉' : pct >= 40 ? '📖' : '💪'}</div>
-                        <div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:4px;">Quiz Complete!</div>
-                        <div style="font-size:.85rem;color:rgba(255,255,255,.4);margin-bottom:28px;">${grade}</div>
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;">
-                            <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:14px;padding:16px;">
-                                <div style="font-size:1.8rem;font-weight:900;color:#34d399;">${correct}</div>
-                                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:1px;">CORRECT</div>
-                            </div>
-                            <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:14px;padding:16px;">
-                                <div style="font-size:1.8rem;font-weight:900;color:#f87171;">${wrong}</div>
-                                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:1px;">WRONG</div>
-                            </div>
-                            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:16px;">
-                                <div style="font-size:1.8rem;font-weight:900;color:rgba(255,255,255,.5);">${skipped}</div>
-                                <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:1px;">SKIPPED</div>
-                            </div>
+                // Build question review HTML
+                const reviewHTML = questions.map((q, idx) => {
+                    const userAns = answers[q.id];
+                    const isCorrect = userAns && userAns !== 'none' && userAns === q.correct;
+                    const isWrong = userAns && userAns !== 'none' && userAns !== q.correct;
+                    const opts = ['a', 'b', 'c', 'd'];
+                    const badge = !userAns || userAns === 'none'
+                        ? `<span style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:99px;">SKIPPED</span>`
+                        : isCorrect
+                            ? `<span style="background:rgba(52,211,153,.15);color:#34d399;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:99px;">✓ CORRECT</span>`
+                            : `<span style="background:rgba(239,68,68,.15);color:#f87171;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:99px;">✗ WRONG</span>`;
+
+                    const optRows = opts.map(k => {
+                        const isUserChoice = userAns === k;
+                        const isRightAns = q.correct === k;
+                        let bg = 'rgba(255,255,255,.03)';
+                        let border = 'rgba(255,255,255,.08)';
+                        let textCol = 'rgba(255,255,255,.6)';
+                        let prefix = '';
+                        if (isRightAns) { bg = 'rgba(52,211,153,.1)'; border = 'rgba(52,211,153,.35)'; textCol = '#34d399'; prefix = '✓ '; }
+                        if (isUserChoice && !isRightAns) { bg = 'rgba(239,68,68,.1)'; border = 'rgba(239,68,68,.35)'; textCol = '#f87171'; prefix = '✗ '; }
+                        return `<div style="padding:9px 12px;border-radius:9px;border:1px solid ${border};background:${bg};color:${textCol};font-size:.8rem;margin-bottom:6px;display:flex;gap:8px;align-items:flex-start;">
+                            <span style="font-weight:800;flex-shrink:0;">${prefix}${k.toUpperCase()}.</span>
+                            <span>${q['option_' + k]}</span>
+                        </div>`;
+                    }).join('');
+
+                    const expHtml = q.explanation ? `<div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:10px;padding:10px 12px;font-size:.75rem;color:rgba(255,255,255,.55);margin-top:8px;"><span style="color:#c9a84c;font-weight:700;">💡 Explanation: </span>${q.explanation}</div>` : '';
+
+                    return `<div style="background:rgba(255,255,255,.03);border:1px solid ${isCorrect ? 'rgba(52,211,153,.2)' : isWrong ? 'rgba(239,68,68,.2)' : 'rgba(255,255,255,.07)'};border-radius:16px;padding:18px;margin-bottom:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:10px;">
+                            <div style="font-size:.72rem;color:rgba(255,255,255,.35);font-weight:700;">Q${idx + 1}</div>
+                            ${badge}
                         </div>
-                        <div style="font-size:3rem;font-weight:900;color:#c9a84c;margin-bottom:6px;">${pct}%</div>
-                        <div style="font-size:.75rem;color:rgba(255,255,255,.35);margin-bottom:28px;">${correct} / ${total} correct</div>
-                        <div style="display:flex;gap:10px;">
-                            <button onclick="window.location='/books.html'" style="flex:1;padding:14px;border-radius:14px;border:1px solid rgba(201,168,76,.3);background:rgba(201,168,76,.08);color:#c9a84c;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--font);">📖 Library</button>
-                            <button onclick="window.location.reload()" style="flex:1;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,#c9a84c,#e6c05a);color:#000;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 Try Again</button>
-                        </div>
+                        <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:14px;line-height:1.5;">${q.question_text}</div>
+                        ${optRows}
+                        ${expHtml}
                     </div>`;
+                }).join('');
+
+                // Full page overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(8,6,18,.98);z-index:9999;overflow-y:auto;';
+                overlay.innerHTML = `
+                    <div style="max-width:680px;margin:0 auto;padding:24px 16px 80px;">
+                        <!-- Score Header -->
+                        <div style="background:rgba(14,12,26,.95);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:28px 24px;text-align:center;margin-bottom:24px;">
+                            <div style="font-size:3rem;margin-bottom:8px;">${pct >= 80 ? '🏆' : pct >= 60 ? '🎉' : pct >= 40 ? '📖' : '💪'}</div>
+                            <div style="font-size:1.3rem;font-weight:900;color:#fff;margin-bottom:4px;">Quiz Complete! — ${grade}</div>
+                            <div style="font-size:2.8rem;font-weight:900;color:#c9a84c;margin:10px 0 4px;">${pct}%</div>
+                            <div style="font-size:.8rem;color:rgba(255,255,255,.35);margin-bottom:20px;">${correct} / ${total} correct</div>
+                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+                                <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:12px;padding:12px;">
+                                    <div style="font-size:1.6rem;font-weight:900;color:#34d399;">${correct}</div>
+                                    <div style="font-size:.6rem;color:rgba(255,255,255,.35);letter-spacing:1px;">CORRECT</div>
+                                </div>
+                                <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:12px;">
+                                    <div style="font-size:1.6rem;font-weight:900;color:#f87171;">${wrong}</div>
+                                    <div style="font-size:.6rem;color:rgba(255,255,255,.35);letter-spacing:1px;">WRONG</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;">
+                                    <div style="font-size:1.6rem;font-weight:900;color:rgba(255,255,255,.4);">${skipped}</div>
+                                    <div style="font-size:.6rem;color:rgba(255,255,255,.35);letter-spacing:1px;">SKIPPED</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:10px;">
+                                <button onclick="window.location='/books.html'" style="flex:1;padding:13px;border-radius:12px;border:1px solid rgba(201,168,76,.3);background:rgba(201,168,76,.08);color:#c9a84c;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--font);">📖 Library</button>
+                                <button onclick="window.location.reload()" style="flex:1;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#c9a84c,#e6c05a);color:#000;font-size:.88rem;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 Try Again</button>
+                            </div>
+                        </div>
+                        <!-- Answer Review -->
+                        <div style="font-size:.7rem;color:rgba(255,255,255,.4);letter-spacing:2px;font-weight:700;margin-bottom:14px;padding:0 4px;">📋 ANSWER REVIEW — ALL ${total} QUESTIONS</div>
+                        ${reviewHTML}
+                    </div>`;
+                document.body.innerHTML = '';
                 document.body.appendChild(overlay);
                 return;
             }
+
 
             // ── SESSION MODE: Submit to server ─────────────────────────────────────
             try {
