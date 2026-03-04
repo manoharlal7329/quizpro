@@ -152,6 +152,37 @@ router.post('/:id/publish', authMiddleware, async (req, res) => {
     }
 });
 
+// ─── MY HISTORY (user's own past quizzes) ─────────────────────────────────────
+router.get('/me/history', authMiddleware, async (req, res) => {
+    try {
+        const attempts = await QuizAttempt.find({ user_id: Number(req.user.id) })
+            .sort({ submitted_at: -1 }).lean();
+
+        const result = await Promise.all(attempts.map(async (a) => {
+            const session = await Session.findOne({ id: Number(a.session_id) }).lean();
+            return {
+                attempt_id: a.id,
+                session_id: a.session_id,
+                session_title: session?.title || `Session #${a.session_id}`,
+                category: session?.subject || '',
+                entry_fee: session?.entry_fee || 0,
+                prize_pool: session?.prize_pool || 0,
+                score: a.score,
+                total_questions: a.total ? a.total : null,
+                rank: a.rank || null,
+                prize_won: a.prize || 0,
+                total_ms: a.total_ms,
+                submitted_at: a.submitted_at
+            };
+        }));
+
+        res.json(result);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 module.exports = router;
+
 module.exports.calcPrizes = calcPrizes;
 module.exports.PRIZE_DIST = PRIZE_DIST;

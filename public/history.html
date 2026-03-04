@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Quiz History — QuizPro Arena</title>
+    <link rel="manifest" href="/manifest.json?v=1.3" />
+    <link rel="stylesheet" href="/css/style.css?v=1.3" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .page-hero {
+            text-align: center;
+            padding: 48px 24px 32px;
+            position: relative;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(ellipse, rgba(201, 168, 76, .07) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            font-size: .62rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold);
+            border: 1px solid rgba(201, 168, 76, .3);
+            padding: 5px 14px;
+            border-radius: 99px;
+            margin-bottom: 16px;
+            background: rgba(201, 168, 76, .05);
+        }
+
+        .hero-title {
+            font-size: 2.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #c9a84c 0%, #f0d080 45%, #c9a84c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .hero-sub {
+            font-size: .85rem;
+            color: rgba(255, 255, 255, .35);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .07);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--gold);
+        }
+
+        .stat-label {
+            font-size: .62rem;
+            color: rgba(255, 255, 255, .35);
+            letter-spacing: 1.5px;
+            margin-top: 4px;
+        }
+
+        /* History card */
+        .history-card {
+            background: rgba(14, 12, 26, .85);
+            border: 1px solid rgba(255, 255, 255, .07);
+            border-radius: 18px;
+            padding: 20px 22px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            transition: border-color .2s, box-shadow .2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .history-card:hover {
+            border-color: rgba(201, 168, 76, .25);
+            box-shadow: 0 0 24px rgba(201, 168, 76, .07);
+        }
+
+        .h-rank {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .h-rank.rank1 {
+            background: rgba(255, 215, 0, .12);
+            border: 1px solid rgba(255, 215, 0, .3);
+            color: #ffd700;
+        }
+
+        .h-rank.rank2 {
+            background: rgba(192, 192, 192, .1);
+            border: 1px solid rgba(192, 192, 192, .3);
+            color: #c0c0c0;
+        }
+
+        .h-rank.rank3 {
+            background: rgba(205, 127, 50, .1);
+            border: 1px solid rgba(205, 127, 50, .3);
+            color: #cd7f32;
+        }
+
+        .h-rank.rankN {
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .1);
+            color: rgba(255, 255, 255, .5);
+            font-size: 1rem;
+        }
+
+        .h-main {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .h-title {
+            font-size: .95rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .h-meta {
+            font-size: .72rem;
+            color: rgba(255, 255, 255, .35);
+        }
+
+        .h-score-col {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .h-pct {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--gold);
+        }
+
+        .h-score-sub {
+            font-size: .68rem;
+            color: rgba(255, 255, 255, .35);
+            margin-top: 2px;
+        }
+
+        .h-fee {
+            font-size: .72rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 99px;
+            background: rgba(52, 211, 153, .08);
+            border: 1px solid rgba(52, 211, 153, .2);
+            color: #34d399;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .h-prize {
+            font-size: .72rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 99px;
+            background: rgba(251, 191, 36, .1);
+            border: 1px solid rgba(251, 191, 36, .25);
+            color: #fbbf24;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .h-date {
+            font-size: .68rem;
+            color: rgba(255, 255, 255, .25);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, .25);
+        }
+
+        .empty .ei {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+
+            .history-card {
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar deep-glass">
+        <a href="/" class="logo" style="font-size:1.3rem;">💎 QuizPro Arena</a>
+        <div class="nav-links">
+            <a href="/dashboard.html" style="color:var(--muted);font-size:.88rem;">Dashboard</a>
+            <a href="/history.html" style="color:var(--gold);font-size:.88rem;font-weight:700;">📋 History</a>
+            <button class="btn btn-outline" style="padding:6px 16px;font-size:.85rem;border-radius:12px;"
+                onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="bottom-nav">
+        <a href="/dashboard.html" class="nav-item"><i
+                style="font-style:normal;font-size:1.6rem;">🏠</i><span>Home</span>
+            <div class="icon-dot"></div>
+        </a>
+        <a href="/history.html" class="nav-item active"><i
+                style="font-style:normal;font-size:1.6rem;">📋</i><span>History</span>
+            <div class="icon-dot"></div>
+        </a>
+        <a href="/wallet.html" class="nav-item"><i
+                style="font-style:normal;font-size:1.6rem;">👤</i><span>Account</span>
+            <div class="icon-dot"></div>
+        </a>
+        <a href="/leaderboard.html" class="nav-item"><i
+                style="font-style:normal;font-size:1.6rem;">🏆</i><span>Ranks</span>
+            <div class="icon-dot"></div>
+        </a>
+    </div>
+
+    <div class="main">
+        <div class="container">
+
+            <div class="page-hero">
+                <div class="hero-tag">✦ Quiz Journey ✦</div>
+                <div class="hero-title">My History</div>
+                <div class="hero-sub">All your past quiz attempts, scores, ranks & invoices</div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="stats-row" id="statsRow">
+                <div class="stat-card">
+                    <div class="stat-val" id="stQuizzes">–</div>
+                    <div class="stat-label">QUIZZES PLAYED</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="stFee">₹–</div>
+                    <div class="stat-label">TOTAL SPENT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="stPrize">₹–</div>
+                    <div class="stat-label">TOTAL WON</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="stBest">–</div>
+                    <div class="stat-label">BEST RANK</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="stAvgPct">–%</div>
+                    <div class="stat-label">AVG SCORE</div>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div id="historyList">
+                <div class="empty">
+                    <div class="ei">⏳</div>
+                    <p>Loading history...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js?v=1.3"></script>
+    <script>
+        requireLogin();
+
+        async function loadHistory() {
+            try {
+                const data = await api('/api/results/me/history');
+                renderStats(data);
+                renderList(data);
+            } catch (e) {
+                document.getElementById('historyList').innerHTML = `<div class="empty"><div class="ei">⚠️</div><p>${e.message}</p></div>`;
+            }
+        }
+
+        function renderStats(data) {
+            const totalFee = data.reduce((s, a) => s + (a.entry_fee || 0), 0);
+            const totalPrize = data.reduce((s, a) => s + (a.prize_won || 0), 0);
+            const bestRank = data.filter(a => a.rank).reduce((min, a) => a.rank < min ? a.rank : min, Infinity);
+            const avgPct = data.length ? Math.round(data.reduce((s, a) => {
+                const pct = (a.total_questions && a.score != null) ? Math.round(a.score / a.total_questions * 100) : 0;
+                return s + pct;
+            }, 0) / data.length) : 0;
+            document.getElementById('stQuizzes').textContent = data.length;
+            document.getElementById('stFee').textContent = '₹' + totalFee;
+            document.getElementById('stPrize').textContent = '₹' + totalPrize;
+            document.getElementById('stBest').textContent = bestRank === Infinity ? '—' : '#' + bestRank;
+            document.getElementById('stAvgPct').textContent = data.length ? avgPct + '%' : '—%';
+        }
+
+        function renderList(data) {
+            const list = document.getElementById('historyList');
+            if (!data.length) {
+                list.innerHTML = `<div class="empty"><div class="ei">📭</div><p>No quizzes played yet. Join a quiz session!</p></div>`;
+                return;
+            }
+            list.innerHTML = data.map(a => {
+                const pct = (a.total_questions && a.score != null) ? Math.round(a.score / a.total_questions * 100) : '—';
+                const timeStr = a.total_ms ? (Math.floor(a.total_ms / 60000) + 'm ' + Math.floor((a.total_ms % 60000) / 1000) + 's') : '—';
+                const date = a.submitted_at ? new Date(a.submitted_at * 1000).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+                const rank = a.rank;
+                let rankDisplay = rank ? '#' + rank : '—';
+                let rankClass = 'rankN';
+                if (rank === 1) { rankDisplay = '🥇'; rankClass = 'rank1'; }
+                else if (rank === 2) { rankDisplay = '🥈'; rankClass = 'rank2'; }
+                else if (rank === 3) { rankDisplay = '🥉'; rankClass = 'rank3'; }
+
+                return `<a class="history-card" href="/results.html?id=${a.session_id}">
+          <div class="h-rank ${rankClass}">${rankDisplay}</div>
+          <div class="h-main">
+            <div class="h-title">${a.session_title}</div>
+            <div class="h-meta">⏱ ${timeStr} &nbsp;·&nbsp; 📅 ${date}</div>
+          </div>
+          <div class="h-score-col">
+            <div class="h-pct">${pct}%</div>
+            <div class="h-score-sub">${a.score ?? '—'} correct</div>
+          </div>
+          ${a.entry_fee > 0 ? `<div class="h-fee">₹${a.entry_fee} fee</div>` : ''}
+          ${a.prize_won > 0 ? `<div class="h-prize">🏆 ₹${a.prize_won} won</div>` : ''}
+        </a>`;
+            }).join('');
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+        loadHistory();
+        renderFooter();
+    </script>
+</body>
+
+</html>
