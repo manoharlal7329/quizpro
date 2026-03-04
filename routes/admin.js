@@ -440,4 +440,94 @@ router.get('/rewards', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
+// ─── SEED DEMO SESSIONS ───────────────────────────────────────────────────────
+router.post('/seed-sessions', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const SESSIONS = [
+      // ROOKIE (cat 1)
+      { title: 'Hindi Vyakaran Rookie Battle', cat: 1, fee: 100, seats: 20, day: 1 },
+      { title: 'English Grammar Beginner Cup', cat: 1, fee: 100, seats: 30, day: 2 },
+      { title: 'Samanya Gyan Daily Arena', cat: 1, fee: 100, seats: 50, day: 3 },
+      { title: 'Math Basics Blitz', cat: 1, fee: 100, seats: 40, day: 4 },
+      { title: 'Computer Gyan Quiz', cat: 1, fee: 100, seats: 60, day: 5 },
+      { title: 'Science Rookie Rumble', cat: 1, fee: 100, seats: 50, day: 6 },
+      { title: 'Current Affairs 7-Day Blast', cat: 1, fee: 100, seats: 100, day: 7 },
+      { title: 'Geography Starter League', cat: 1, fee: 100, seats: 80, day: 8 },
+      { title: 'Indian History Level 1', cat: 1, fee: 100, seats: 60, day: 9 },
+      { title: 'Sports & Games Trivia Cup', cat: 1, fee: 100, seats: 40, day: 10 },
+      { title: 'Polity Rookie Arena', cat: 1, fee: 100, seats: 30, day: 11 },
+      { title: 'Environment Ecology Starter', cat: 1, fee: 100, seats: 25, day: 12 },
+      { title: 'Art & Culture Rookie Sprint', cat: 1, fee: 100, seats: 50, day: 13 },
+      { title: 'Economics Basics Daily Quiz', cat: 1, fee: 100, seats: 40, day: 14 },
+      { title: 'Vigyan Samagra Beginner', cat: 1, fee: 100, seats: 50, day: 15 },
+      // SHARP (cat 2)
+      { title: 'Hindi Sahitya Sharp League', cat: 2, fee: 150, seats: 50, day: 2 },
+      { title: 'Advanced English Showdown', cat: 2, fee: 150, seats: 40, day: 3 },
+      { title: 'GK Sprint Sharp Edition', cat: 2, fee: 200, seats: 80, day: 4 },
+      { title: 'Mathematics Sharp Championship', cat: 2, fee: 150, seats: 60, day: 5 },
+      { title: 'Science Explorer Level 2', cat: 2, fee: 200, seats: 100, day: 6 },
+      { title: 'Modern History Sharp Cup', cat: 2, fee: 150, seats: 50, day: 7 },
+      { title: 'World Geography Sharp Arena', cat: 2, fee: 200, seats: 80, day: 8 },
+      { title: 'Indian Polity Madhyam Level', cat: 2, fee: 150, seats: 60, day: 9 },
+      { title: 'Physics & Chemistry Sharp Quiz', cat: 2, fee: 200, seats: 40, day: 10 },
+      { title: 'Economics Advanced League', cat: 2, fee: 150, seats: 50, day: 11 },
+      { title: 'Current Affairs Weekly Sharp', cat: 2, fee: 200, seats: 100, day: 12 },
+      { title: 'Computer Science Sharp Cup', cat: 2, fee: 150, seats: 30, day: 13 },
+      { title: 'Biology Deep Dive Sharp', cat: 2, fee: 200, seats: 60, day: 14 },
+      { title: 'Art Culture Sports Sharp', cat: 2, fee: 150, seats: 40, day: 15 },
+      { title: 'Ganit Pratiyogita Level 2', cat: 2, fee: 150, seats: 80, day: 16 },
+      { title: 'Tech Innovation Sharp League', cat: 2, fee: 200, seats: 100, day: 17 },
+      { title: 'Rajniti Vigyan Sharp Series', cat: 2, fee: 200, seats: 60, day: 18 },
+      { title: 'Census Statistics Sharp Quiz', cat: 2, fee: 150, seats: 40, day: 19 },
+      { title: 'Hindi Kaushal Sharp Arena', cat: 2, fee: 150, seats: 60, day: 20 },
+      { title: 'History Modern Sharp Cup', cat: 2, fee: 150, seats: 70, day: 21 },
+      // LEGEND (cat 3)
+      { title: '🔴 Legend Championship GK Grand', cat: 3, fee: 500, seats: 100, day: 1 },
+      { title: '🔴 Math Legend Final Season 1', cat: 3, fee: 300, seats: 60, day: 3 },
+      { title: '🔴 Science Legend Battle Royale', cat: 3, fee: 500, seats: 80, day: 5 },
+      { title: '🔴 Indian History Grand Finale', cat: 3, fee: 300, seats: 50, day: 7 },
+      { title: '🔴 Polity & Law Legend Cup', cat: 3, fee: 500, seats: 100, day: 9 },
+      { title: '🔴 English Legend Mastery Quiz', cat: 3, fee: 300, seats: 60, day: 11 },
+      { title: '🔴 Current Affairs Legend Series', cat: 3, fee: 500, seats: 80, day: 13 },
+      { title: '🔴 Geography World Champion Cup', cat: 3, fee: 300, seats: 50, day: 15 },
+      { title: '🔴 Physics Legend Grand Prix', cat: 3, fee: 500, seats: 100, day: 17 },
+      { title: '🔴 Economics Finance Legend', cat: 3, fee: 300, seats: 60, day: 19 },
+      { title: '🔴 Computer Science Legend Final', cat: 3, fee: 500, seats: 80, day: 21 },
+      { title: '🔴 Biology Environment Legend', cat: 3, fee: 300, seats: 50, day: 23 },
+      { title: '🔴 All India GK Champion 2025', cat: 3, fee: 500, seats: 100, day: 25 },
+      { title: '🔴 Samanya Gyan Samrat Grand', cat: 3, fee: 300, seats: 60, day: 27 },
+      { title: '🔴 QuizPro Season 1 Grand Final', cat: 3, fee: 500, seats: 100, day: 30 },
+    ];
+
+    const now = Math.floor(Date.now() / 1000);
+    let created = 0;
+    for (let i = 0; i < SESSIONS.length; i++) {
+      const s = SESSIONS[i];
+      const da = s.day * 86400;
+      const pp = Math.floor(s.fee * s.seats * 0.75);
+      await Session.create({
+        id: Date.now() + i * 500 + Math.round(Math.random() * 499),
+        category_id: s.cat,
+        title: s.title,
+        seat_limit: s.seats,
+        seats_booked: s.seats,
+        entry_fee: s.fee,
+        quiz_delay_minutes: 60,
+        status: 'completed',
+        created_at: now - da - 7200,
+        quiz_start_at: now - da,
+        pdf_at: now - da - 1800,
+        prize_pool: pp,
+        platform_cut: s.fee * s.seats - pp,
+        prizes_paid: true
+      });
+      created++;
+    }
+    res.json({ success: true, created, message: `${created} demo sessions seeded successfully!` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
+
