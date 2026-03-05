@@ -5,6 +5,10 @@ const crypto = require('crypto');
 const Session = require('../database/models/Session');
 const Seat = require('../database/models/Seat');
 const Payment = require('../database/models/Payment');
+const User = require('../database/models/User');
+const Wallet = require('../database/models/Wallet');
+const WalletTxn = require('../database/models/WalletTxn');
+
 
 // Razorpay init (real keys or demo mode)
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
@@ -121,6 +125,35 @@ router.post('/verify', authMiddleware, async (req, res) => {
             }
         } catch (e) { }
 
+        // ── 5% REFERRAL COMMISSION ────────────────────────────────────────
+        try {
+            const payer = await User.findOne({ id: Number(req.user.id) }).lean();
+            if (payer && payer.referred_by) {
+                const referrer = await User.findOne({ referral_code: payer.referred_by }).lean();
+                if (referrer) {
+                    const commission = Math.floor(session.entry_fee * 0.05);
+                    if (commission > 0) {
+                        await Wallet.findOneAndUpdate(
+                            { user_id: referrer.id },
+                            { $inc: { win_bal: commission } },
+                            { upsert: true }
+                        );
+                        await WalletTxn.create({
+                            id: Date.now() + Math.round(Math.random() * 999),
+                            user_id: referrer.id,
+                            wallet: 'real',
+                            type: 'credit',
+                            amount: commission,
+                            note: `🎯 Referral commission — ${payer.name || payer.email} ne session join kiya`,
+                            at: Math.floor(Date.now() / 1000)
+                        });
+                    }
+                }
+            }
+        } catch (refErr) {
+            console.warn('[Referral Commission Error]', refErr.message);
+        }
+
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -129,5 +162,3 @@ router.post('/verify', authMiddleware, async (req, res) => {
 
 module.exports = router;
 
-// Dummy pay removed for production launch
-module.exports = router;
