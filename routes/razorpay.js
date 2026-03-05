@@ -25,7 +25,7 @@ router.post('/webhook', async (req, res) => {
             .digest("hex");
 
         if (signature !== expectedSignature) {
-            console.error('🚨 [FRAUD] Webhook Error: Invalid signature');
+            console.error('Invalid signature');
             return res.status(403).send("Fraud detected");
         }
 
@@ -42,15 +42,23 @@ router.post('/webhook', async (req, res) => {
             const userId = notes.user_id || notes.userId;
             const sessionId = notes.session_id || notes.sessionId;
             const amount = payment.amount / 100;
+            const orderId = payment.order_id;
+            const paymentStatus = payment.status;
+
+            if (paymentStatus !== 'captured') {
+                console.error('Payment not captured');
+            }
 
             console.log(`✅ [Webhook] Captured: ${payment.id} | User: ${userId}`);
 
             if (notes.type === 'wallet_deposit' || notes.purpose === 'wallet_topup') {
-                const success = await creditWallet(userId, amount, payment.id);
-                if (!success) return res.status(409).send("Duplicate payment");
+                const success = await creditWallet(userId, amount, payment.id, "webhook", orderId, paymentStatus);
+                if (!success) {
+                    console.log(`Duplicate payment handled gracefully in Webhook: ${payment.id}`);
+                }
             } else if (sessionId && userId) {
                 const success = await bookSeatAfterPayment(userId, sessionId, payment.id);
-                if (!success) return res.status(409).send("Duplicate booking");
+                if (!success) console.log(`Duplicate booking handled gracefully in Webhook: ${payment.id}`);
             }
         }
         res.json({ status: "ok" });

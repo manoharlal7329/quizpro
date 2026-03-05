@@ -176,11 +176,46 @@ router.post('/confirm-deposit', authMiddleware, async (req, res) => {
             return res.status(400).json({ error: 'Signature verification required' });
         }
 
-        const success = await creditWallet(req.user.id, amount, payment_id, "razorpay_sync");
+        const { isDuplicatePayment } = require('./wallet_utils');
+        const isDup = await isDuplicatePayment(payment_id);
+
+        if (isDup) {
+            // Processed by webhook already (or older payment), return success to avoid frontend error
+            const wallet = await getWallet(req.user.id);
+            return res.json({ success: true, message: "Payment verified and wallet credited", new_balance: (wallet.dep_bal || 0) + (wallet.win_bal || 0) });
+        }
+
+        let verifiedAmount = Number(amount);
+        let paymentStatus = "success";
+
+        // Fetch actual payment details from Razorpay to prevent amount tampering
+        if (RZP_REAL && Razorpay) {
+            const rzp = new Razorpay({ key_id: RZP_KEY_ID, key_secret: RZP_KEY_SECRET });
+            try {
+                const paymentDetails = await rzp.payments.fetch(payment_id);
+
+                if (paymentDetails.order_id !== order_id) {
+                    console.error(`🚨 [FRAUD] Order ID mismatch: Expected ${order_id}, got ${paymentDetails.order_id}`);
+                    return res.status(400).json({ error: 'Order ID mismatch' });
+                }
+                if (paymentDetails.status !== 'captured' && paymentDetails.status !== 'authorized') {
+                    console.error(`🚨 [FRAUD] Payment not captured: Status is ${paymentDetails.status}`);
+                    return res.status(400).json({ error: 'Payment not captured' });
+                }
+
+                verifiedAmount = paymentDetails.amount / 100; // Razorpay returns paise
+                paymentStatus = paymentDetails.status;
+            } catch (err) {
+                console.error(`❌ Razorpay API Error: ${err.message}`);
+                return res.status(500).json({ error: 'Failed to fetch payment details from Razorpay' });
+            }
+        }
+
+        const success = await creditWallet(req.user.id, verifiedAmount, payment_id, "razorpay_sync", order_id, paymentStatus);
         if (!success) return res.status(409).json({ error: 'Duplicate or invalid payment' });
 
         const wallet = await getWallet(req.user.id);
-        res.json({ success: true, new_balance: (wallet.dep_bal || 0) + (wallet.win_bal || 0) });
+        res.json({ success: true, message: "Payment verified and wallet credited", new_balance: (wallet.dep_bal || 0) + (wallet.win_bal || 0) });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

@@ -455,7 +455,7 @@
                                 amount: amt
                             });
                             if (verify.success) {
-                                toast('✅ Wallet updated successfully!', 'success');
+                                toast('✅ ' + (verify.message || 'Wallet updated successfully!'), 'success');
                                 if (window.engine) window.engine.cycleTheme();
                                 loadData();
                             }

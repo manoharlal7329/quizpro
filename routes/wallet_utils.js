@@ -20,7 +20,7 @@ async function getWallet(userId) {
     return w;
 }
 
-async function addTxn(userId, wallet, type, amount, note, paymentId = null) {
+async function addTxn(userId, wallet, type, amount, note, paymentId = null, orderId = null, status = 'success') {
     const txn = new WalletTxnModel({
         id: Date.now() + Math.floor(Math.random() * 999),
         user_id: Number(userId),
@@ -29,7 +29,10 @@ async function addTxn(userId, wallet, type, amount, note, paymentId = null) {
         amount,
         note,
         payment_id: paymentId,
+        order_id: orderId,
+        status: status,
         at: Math.floor(Date.now() / 1000)
+
     });
     await txn.save();
     return txn;
@@ -42,7 +45,7 @@ async function isDuplicatePayment(paymentId) {
     return !!(txnDup || seatDup);
 }
 
-async function creditWallet(userId, amount, paymentId, source = "razorpay") {
+async function creditWallet(userId, amount, paymentId, source = "razorpay", orderId = null, paymentStatus = "success") {
     // 🛡️ ANTI-FRAUD DUPLICATE CHECK
     const isDup = await isDuplicatePayment(paymentId);
     if (isDup) {
@@ -57,6 +60,7 @@ async function creditWallet(userId, amount, paymentId, source = "razorpay") {
         console.error(`🚨 [FRAUD] Duplicate payment blocked: ${paymentId} for User ${userId}`);
         return false;
     }
+
 
     const wallet = await getWallet(userId);
 
@@ -81,7 +85,7 @@ async function creditWallet(userId, amount, paymentId, source = "razorpay") {
     await wallet.save();
 
     // 📝 FULL AUDIT TRAIL
-    await addTxn(userId, 'real', 'credit', totalAmount, `💰 Deposit (ID: ${paymentId})`, paymentId);
+    await addTxn(userId, 'real', 'credit', totalAmount, `💰 Deposit (ID: ${paymentId})`, paymentId, orderId, paymentStatus);
 
     return true;
 }

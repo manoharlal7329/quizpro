@@ -8,7 +8,10 @@ const walletTxnSchema = new mongoose.Schema({
     amount: Number,
     note: String,
     at: { type: Number, default: () => Math.floor(Date.now() / 1000) },
-    payment_id: String
+    payment_id: String,
+    order_id: String,
+    status: String,
+    created_at: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('WalletTxn', walletTxnSchema);
