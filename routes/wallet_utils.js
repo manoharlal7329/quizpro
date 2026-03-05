@@ -76,17 +76,12 @@ async function creditWallet(userId, amount, paymentId, source = "razorpay") {
 
     const totalAmount = Number(amount);
 
-    // 🏗️ PLATFORM EARNING AUTO-CUT (Set to 0% for students - fees taken at session level)
-    const platformFeePercent = Number(process.env.PLATFORM_FEE_PERCENT || 0);
-    const fee = Math.floor((totalAmount * platformFeePercent) / 100);
-    const creditAmount = totalAmount - fee;
-
-    wallet.dep_bal += creditAmount;
+    wallet.dep_bal += totalAmount;
     wallet.last_deposit_at = new Date();
     await wallet.save();
 
     // 📝 FULL AUDIT TRAIL
-    await addTxn(userId, 'real', 'credit', creditAmount, `💰 Deposit (ID: ${paymentId}) | Fee Cut: ₹${fee}`, paymentId);
+    await addTxn(userId, 'real', 'credit', totalAmount, `💰 Deposit (ID: ${paymentId})`, paymentId);
 
     return true;
 }
