@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor — QuizPro Admin</title>
+    <link rel="stylesheet" href="/css/style.css?v=1.3">
+    <style>
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .monitor-card {
+            background: rgba(10, 15, 25, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .monitor-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--blue);
+            opacity: 0.5;
+        }
+
+        .monitor-card.status-ok::before {
+            background: var(--green);
+        }
+
+        .monitor-card.status-warn::before {
+            background: var(--orange);
+        }
+
+        .monitor-card.status-error::before {
+            background: var(--red);
+            box-shadow: 0 0 15px var(--red);
+        }
+
+        .monitor-card h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+        }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        .stat-line:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--muted);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+
+        .val-good {
+            color: var(--green);
+        }
+
+        .val-bad {
+            color: var(--red);
+        }
+
+        .val-warn {
+            color: var(--gold);
+        }
+
+        .log-box {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--orange);
+            height: 120px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        #globalAlert {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--red);
+            color: var(--red);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar deep-glass">
+        <a href="/admin.html" class="logo">⬅ Back to Admin</a>
+        <div class="nav-links">
+            <span style="font-family:monospace; color:var(--green);" id="lastRefresh">Live: 0s ago</span>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="container" style="max-width: 1200px; padding-top: 30px;">
+            <div class="page-hero" style="display:flex; justify-content:space-between; align-items:flex-end;">
+                <div>
+                    <h1 class="text-3d-float" style="font-size:2rem;color:var(--red);">🚨 System Health Monitor</h1>
+                    <p>Real-time AI core diagnostics & framework status.</p>
+                </div>
+                <button class="btn btn-outline" onclick="fetchStatus()">🔄 Force Refresh</button>
+            </div>
+
+            <div id="globalAlert">
+                <h3 style="margin-bottom:8px;">🚨 CRITICAL SYSTEM WARNING</h3>
+                <p id="alertReason">Multiple backend systems are currently failing.</p>
+            </div>
+
+            <div class="grid-3">
+                <!-- 1. SERVER STATUS -->
+                <div class="monitor-card" id="cardServer">
+                    <h3>🖥️ Server Node</h3>
+                    <div class="stat-line"><span class="stat-label">Status</span><span class="stat-value"
+                            id="s_status">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Uptime</span><span class="stat-value"
+                            id="s_uptime">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Environment</span><span class="stat-value"
+                            id="s_env">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Node Version</span><span class="stat-value"
+                            id="s_node">...</span></div>
+                </div>
+
+                <!-- 2. DATABASE STATUS -->
+                <div class="monitor-card" id="cardDB">
+                    <h3>🗄️ Database (MongoDB)</h3>
+                    <div class="stat-line"><span class="stat-label">Connection</span><span class="stat-value"
+                            id="db_conn">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Mongoose State</span><span class="stat-value"
+                            id="db_state">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Read/Write Test</span><span
+                            class="stat-value val-good">OK</span></div>
+                </div>
+
+                <!-- 3. PAYMENT STATUS -->
+                <div class="monitor-card" id="cardPayment">
+                    <h3>💳 Payment Gateway</h3>
+                    <div class="stat-line"><span class="stat-label">Razorpay API</span><span class="stat-value"
+                            id="p_api">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Processing Mode</span><span class="stat-value"
+                            id="p_mode">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Webhook Health</span><span class="stat-value"
+                            id="p_web">...</span></div>
+                </div>
+
+                <!-- 4. SYSTEM METRICS -->
+                <div class="monitor-card" id="cardMetrics">
+                    <h3>📈 System Metrics</h3>
+                    <div class="stat-line"><span class="stat-label">CPU Load (1m)</span><span class="stat-value"
+                            id="m_cpu">...</span></div>
+                    <div class="stat-line"><span class="stat-label">RAM Usage</span><span class="stat-value"
+                            id="m_ram">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Total Memory</span><span class="stat-value"
+                            id="m_tot">...</span></div>
+                </div>
+
+                <!-- 5. QUIZ ENGINE -->
+                <div class="monitor-card" id="cardQuiz">
+                    <h3>⚡ Quiz Engine</h3>
+                    <div class="stat-line"><span class="stat-label">Active/Open Sessions</span><span class="stat-value"
+                            id="q_active">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Total Completed</span><span class="stat-value"
+                            id="q_comp">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Socket IO</span><span
+                            class="stat-value val-good">ONLINE</span></div>
+                </div>
+
+                <!-- 6. WALLET SYSTEM -->
+                <div class="monitor-card" id="cardWallet">
+                    <h3>💰 Wallet Engine</h3>
+                    <div class="stat-line"><span class="stat-label">Total Transactions</span><span class="stat-value"
+                            id="w_tot">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Duplicate Blocker</span><span
+                            class="stat-value val-good">ACTIVE</span></div>
+                    <div class="stat-line"><span class="stat-label">Ledger Integrity</span><span
+                            class="stat-value val-good">VERIFIED</span></div>
+                </div>
+
+                <!-- 7. WITHDRAW SYSTEM -->
+                <div class="monitor-card" id="cardWithdraw">
+                    <h3>🏦 Withdraw Queue</h3>
+                    <div class="stat-line"><span class="stat-label">Pending Payouts</span><span class="stat-value"
+                            id="wd_pend">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Processing Block</span><span
+                            class="stat-value val-good">CLEAR</span></div>
+                </div>
+
+                <!-- 8. FRAUD DETECTION -->
+                <div class="monitor-card" id="cardFraud">
+                    <h3>⚠️ AI Fraud Detection</h3>
+                    <div class="stat-line"><span class="stat-label">Alerts (24h)</span><span class="stat-value"
+                            id="f_alerts">...</span></div>
+                    <div class="log-box" id="fraudLogs" style="margin-top:10px;">
+                        Initializing AI patterns...
+                    </div>
+                </div>
+
+                <!-- 9. AI AUTO ADMIN -->
+                <div class="monitor-card" id="cardAIAdmin" style="border-color:var(--gold);">
+                    <h3 style="color:var(--gold);">🤖 AI Auto Admin (Beta)</h3>
+                    <div class="stat-line"><span class="stat-label">Agent Status</span><span
+                            class="stat-value val-good">LISTENING</span></div>
+                    <div class="stat-line"><span class="stat-label">Interventions</span><span class="stat-value"
+                            id="ai_interventions">...</span></div>
+                    <div class="log-box" id="aiLogs" style="margin-top:10px;">
+                        Initializing AI patterns...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/js/common.js?v=1.3"></script>
+    <script>
+        requireLogin();
+
+        let fetchTimer;
+
+        function formatUptime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            return `${h}h ${m}m`;
+        }
+
+        function setStat(id, val, statusClass = '') {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = val;
+                el.className = 'stat-value ' + statusClass;
+            }
+        }
+
+        function setCardColor(id, status) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('status-ok', 'status-warn', 'status-error');
+            el.classList.add('status-' + status);
+        }
+
+        async function fetchStatus() {
+            try {
+                // Must be an admin to hit this endpoint
+                if (getUser()?.role !== 'admin' && !getUser()?.is_admin) {
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+
+                const res = await api('/api/admin/system-status');
+                if (!res.success) throw new Error('Failed to fetch metrics');
+
+                const d = res.data;
+                const errors = [];
+
+                // Server
+                setStat('s_status', d.server.status, 'val-good');
+                setStat('s_uptime', formatUptime(d.server.uptime));
+                setStat('s_env', d.server.env.toUpperCase());
+                setStat('s_node', d.server.node_version);
+                setCardColor('cardServer', 'ok');
+
+                // DB
+                let dbClass = d.database.status === 'OK' ? 'val-good' : 'val-bad';
+                setStat('db_conn', d.database.status, dbClass);
+                setStat('db_state', d.database.state.toUpperCase(), dbClass);
+                if (d.database.status !== 'OK') {
+                    setCardColor('cardDB', 'error');
+                    errors.push('Database disconnected.');
+                } else {
+                    setCardColor('cardDB', 'ok');
+                }
+
+                // Payment
+                let pApiClass = d.payment.api_configured === 'YES' ? 'val-good' : 'val-bad';
+                let pWebClass = d.payment.webhook === 'ACTIVE' ? 'val-good' : 'val-bad';
+                setStat('p_api', d.payment.api_configured, pApiClass);
+                setStat('p_mode', d.payment.mode, d.payment.mode === 'LIVE' ? 'val-good' : 'val-warn');
+                setStat('p_web', d.payment.webhook, pWebClass);
+
+                if (d.payment.webhook !== 'ACTIVE' || d.payment.api_configured !== 'YES') {
+                    setCardColor('cardPayment', 'error');
+                    errors.push('Payment Gateway misconfigured.');
+                } else {
+                    setCardColor('cardPayment', 'ok');
+                }
+
+                // Metrics
+                setStat('m_cpu', (d.server.cpu_load.toFixed(2)) + '%');
+                setStat('m_ram', d.server.memory_usage_mb + ' MB', d.server.memory_usage_mb > 500 ? 'val-warn' : '');
+                setStat('m_tot', d.server.total_mem_mb + ' MB');
+                setCardColor('cardMetrics', d.server.memory_usage_mb > 800 ? 'warn' : 'ok');
+
+                // Quiz
+                setStat('q_active', d.quiz.active_sessions);
+                setStat('q_comp', d.quiz.completed_sessions);
+                setCardColor('cardQuiz', 'ok');
+
+                // Wallet
+                setStat('w_tot', d.wallet.total_txns);
+                setCardColor('cardWallet', 'ok');
+
+                // Withdraw
+                setStat('wd_pend', d.withdraw.pending, d.withdraw.pending > 0 ? 'val-warn' : '');
+                setCardColor('cardWithdraw', d.withdraw.pending > 5 ? 'warn' : 'ok');
+
+                // Fraud
+                setStat('f_alerts', d.fraud.recent_alerts_24h, d.fraud.recent_alerts_24h > 0 ? 'val-warn' : 'val-good');
+                setCardColor('cardFraud', d.fraud.recent_alerts_24h > 3 ? 'warn' : (d.fraud.recent_alerts_24h > 0 ? 'ok' : 'ok'));
+
+                const fLog = document.getElementById('fraudLogs');
+                if (d.fraud.latest.length > 0) {
+                    fLog.innerHTML = d.fraud.latest.map(f => `<div class="log-item">[${new Date(f.at * 1000).toLocaleTimeString()}] ${f.type} - U:${f.user_id} - ₹${f.amount}</div>`).join('');
+                } else {
+                    fLog.innerHTML = 'No recent fraud events detected. Secure.';
+                }
+
+                // 🤖 AI Auto Admin Alerts
+                const aiAlerts = d.ai_admin.active_alerts || [];
+                const aiAlertBox = document.getElementById('aiLogs');
+                const aiCard = document.getElementById('cardAIAdmin');
+                document.getElementById('ai_interventions').textContent = `${aiAlerts.length} unresolved`;
+
+                if (aiAlerts.length > 0) {
+                    let criticalFound = false;
+                    aiAlertBox.innerHTML = aiAlerts.map(a => {
+                        let color = a.severity === 'critical' ? 'var(--red)' : (a.severity === 'high' ? 'var(--orange)' : 'var(--gold)');
+                        if (a.severity === 'critical') criticalFound = true;
+                        return `<div class="log-item" style="color:${color};"><span style="font-weight:bold;">[${a.type.toUpperCase()}]</span> ${a.message}</div>`;
+                    }).join('');
+
+                    setCardColor('cardAIAdmin', criticalFound ? 'error' : 'warn');
+                    if (criticalFound && !errors.includes('AI DETECTED CRITICAL ANOMALY')) {
+                        errors.push('AI DETECTED CRITICAL ANOMALY');
+                    }
+                } else {
+                    aiAlertBox.innerHTML = '<div style="color:var(--green);">All systems optimal. AI is monitoring.</div>';
+                    setCardColor('cardAIAdmin', 'ok');
+                }
+
+                // Global Alert Logic
+                const alertBox = document.getElementById('globalAlert');
+                if (errors.length > 0) {
+                    alertBox.style.display = 'block';
+                    document.getElementById('alertReason').textContent = errors.join(' | ');
+                } else {
+                    alertBox.style.display = 'none';
+                }
+
+                const now = new Date();
+                document.getElementById('lastRefresh').textContent = `Live: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            } catch (e) {
+                console.error(e);
+                setCardColor('cardServer', 'error');
+                setStat('s_status', 'OFFLINE', 'val-bad');
+            }
+
+            clearTimeout(fetchTimer);
+            fetchTimer = setTimeout(fetchStatus, 5000);
+        }
+
+        // Start check
+        fetchStatus();
+    </script>
+</body>
+
+</html>

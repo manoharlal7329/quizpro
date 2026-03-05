@@ -102,6 +102,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`💳  Gateway:  ${process.env.PAYMENT_GATEWAY || 'RAZORPAY'} | Razorpay: ${rzpStatus} | Pkg: ${rzpPkg}`);
     console.log(`📲  OTP: ${process.env.OTP_PROVIDER || 'console'} | Demo: ${process.env.DEMO_OTP_MODE === 'true' ? 'ON (1234)' : 'OFF'}\n`);
 
+    // ─── START AI AUTO ADMIN ──────────────────────────────────────────────────
+    require('./services/autoAdmin').start();
 });
 
 server.on('error', (e) => {

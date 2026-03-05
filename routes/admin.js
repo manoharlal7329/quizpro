@@ -10,6 +10,12 @@ const Question = require('../database/models/Question');
 const Seat = require('../database/models/Seat');
 const Reward = require('../database/models/Reward');
 const { getWallet, addTxn } = require('./wallet_utils');
+const os = require('os');
+const mongoose = require('mongoose');
+const FraudLog = require('../database/models/FraudLog');
+const WalletTxn = require('../database/models/WalletTxn');
+const Wallet = require('../database/models/Wallet');
+const AIAlert = require('../database/models/AIAlert');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -54,6 +60,69 @@ router.get('/dashboard', authMiddleware, adminOnly, async (req, res) => {
     }
 
     res.json({ stats, recentSessions });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── SYSTEM STATUS MONITOR ────────────────────────────────────────────────────
+router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const uptime = process.uptime();
+    const memoryUsage = process.memoryUsage();
+    const totalMem = os.totalmem();
+
+    const serverStatus = {
+      status: 'ONLINE',
+      uptime: uptime,
+      node_version: process.version,
+      env: process.env.NODE_ENV || 'production',
+      memory_usage_mb: Math.round(memoryUsage.rss / 1024 / 1024),
+      total_mem_mb: Math.round(totalMem / 1024 / 1024),
+      cpu_load: os.loadavg()[0] || 0
+    };
+
+    const dbStateMap = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+    const dbState = mongoose.connection.readyState;
+    const dbStatus = {
+      status: dbState === 1 ? 'OK' : 'ERROR',
+      state: dbStateMap[dbState] || 'unknown',
+    };
+
+    const rzpKey = process.env.RAZORPAY_KEY_ID || '';
+    const paymentStatus = {
+      api_configured: rzpKey.startsWith('rzp_') ? 'YES' : 'NO',
+      mode: rzpKey.startsWith('rzp_live') ? 'LIVE' : 'TEST',
+      webhook: process.env.RAZORPAY_WEBHOOK_SECRET ? 'ACTIVE' : 'INACTIVE'
+    };
+
+    const activeSessionsCount = await Session.countDocuments({ status: { $in: ['open', 'live', 'confirmed'] } });
+    const completedSessionsCount = await Session.countDocuments({ status: 'completed' });
+
+    const totalTxns = await WalletTxn.countDocuments({});
+
+    // In QuizPro, withdrawals might be tracked differently, but we'll adapt:
+    const pendingWithdrawals = await WalletTxn.countDocuments({ type: 'debit', status: 'pending' });
+
+    const fraudAlerts = await FraudLog.countDocuments({ at: { $gte: Math.floor(Date.now() / 1000) - 86400 } });
+    const recentFrauds = await FraudLog.find({}).sort({ at: -1 }).limit(5).lean();
+
+    // 🤖 AI Auto Admin Alerts
+    const activeAIAlerts = await AIAlert.find({ resolved: false }).sort({ created_at: -1 }).lean();
+
+    res.json({
+      success: true,
+      data: {
+        server: serverStatus,
+        database: dbStatus,
+        payment: paymentStatus,
+        quiz: { active_sessions: activeSessionsCount, completed_sessions: completedSessionsCount },
+        wallet: { total_txns: totalTxns },
+        withdraw: { pending: pendingWithdrawals },
+        fraud: { recent_alerts_24h: fraudAlerts, latest: recentFrauds },
+        ai_admin: { active_alerts: activeAIAlerts }
+      }
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
