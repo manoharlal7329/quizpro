@@ -8,7 +8,7 @@ const Seat = require('../database/models/Seat');
 
 const sseClients = new Map();
 
-// ─── LIST SESSIONS ────────────────────────────────────────────────────────────
+// ─── LIST SESSIONS (active only) ─────────────────────────────────────────────
 router.get('/', async (req, res) => {
     try {
         const sessionsRaw = await Session.find({
@@ -16,7 +16,6 @@ router.get('/', async (req, res) => {
         }).sort({ created_at: -1 }).lean();
 
         const categories = await Category.find({}).lean();
-
         const sessions = sessionsRaw.map(s => {
             const cat = categories.find(c => String(c.id) === String(s.category_id));
             return { ...s, category_name: cat?.name, level: cat?.level, color: cat?.color };
@@ -26,6 +25,24 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
+// ─── COMPLETED SESSIONS ───────────────────────────────────────────────────────
+router.get('/completed', async (req, res) => {
+    try {
+        const sessionsRaw = await Session.find({ status: 'completed' })
+            .sort({ created_at: -1 }).limit(100).lean();
+        const categories = await Category.find({}).lean();
+        const sessions = sessionsRaw.map(s => {
+            const cat = categories.find(c => String(c.id) === String(s.category_id));
+            return { ...s, category_name: cat?.name, level: cat?.level, color: cat?.color };
+        });
+        res.json(sessions);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+
 
 // ─── ALL CATEGORIES ───────────────────────────────────────────────────────────
 router.get('/categories', async (req, res) => {

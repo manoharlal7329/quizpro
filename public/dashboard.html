@@ -425,6 +425,11 @@
             <span>History</span>
             <div class="icon-dot"></div>
         </a>
+        <a href="/marathon.html" class="nav-item">
+            <i style="font-style: normal; font-size: 1.6rem;">🏃</i>
+            <span>Marathon</span>
+            <div class="icon-dot" style="background:#ef4444;"></div>
+        </a>
     </div>
 
     <div class="main">
@@ -434,6 +439,28 @@
             <div class="pro-tip">
                 <span style="font-size: 1rem;">💡</span>
                 <span style="font-weight: 600;">PRO TIP — Get study material 30 mins before the Live Quiz starts.</span>
+            </div>
+
+            <!-- MARATHON LIVE BANNER -->
+            <div onclick="window.location='/marathon.html'"
+                style="cursor:pointer;background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(220,38,38,.06));border:1px solid rgba(239,68,68,.3);border-radius:16px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:all .2s;"
+                onmouseover="this.style.borderColor='rgba(239,68,68,.5)';this.style.background='linear-gradient(135deg,rgba(239,68,68,.18),rgba(220,38,38,.1))'"
+                onmouseout="this.style.borderColor='rgba(239,68,68,.3)';this.style.background='linear-gradient(135deg,rgba(239,68,68,.12),rgba(220,38,38,.06))'">
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <div
+                        style="width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 10px #ef4444;animation:pulse 1.2s infinite;">
+                    </div>
+                    <div>
+                        <div
+                            style="font-size:.62rem;letter-spacing:2px;color:#ef4444;font-weight:800;margin-bottom:3px;">
+                            LIVE ALL DAY</div>
+                        <div style="font-size:.95rem;font-weight:900;color:#fff;">🏃 Marathon Class — Abhi Chal Raha
+                            Hai!</div>
+                        <div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-top:2px;">Sabhi books ke
+                            questions · Auto-explained · Board pe live</div>
+                    </div>
+                </div>
+                <div style="font-size:.82rem;font-weight:700;color:#ef4444;white-space:nowrap;">Join Now →</div>
             </div>
 
             <div class="page-hero">
@@ -507,6 +534,15 @@
                         onclick="window.location='/history.html'">
                         📋 My Quiz History
                     </button>
+                    <button
+                        style="border-radius:12px;padding:13px;font-size:.88rem;border:1px solid rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);color:#f87171;font-weight:800;cursor:pointer;font-family:var(--font);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;"
+                        onmouseover="this.style.background='rgba(239,68,68,0.16)'"
+                        onmouseout="this.style.background='rgba(239,68,68,0.08)'"
+                        onclick="window.location='/marathon.html'">
+                        <span
+                            style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;box-shadow:0 0 6px #ef4444;animation:pulse 1.2s infinite;"></span>
+                        🏃 Marathon Live Class
+                    </button>
                 </div>
             </div>
 
@@ -538,6 +574,8 @@
                 <button class="tab-btn" data-cat="1" onclick="filterSessions('1', this)">🟢 Rookie</button>
                 <button class="tab-btn" data-cat="2" onclick="filterSessions('2', this)">🟡 Sharp</button>
                 <button class="tab-btn" data-cat="3" onclick="filterSessions('3', this)">🔴 Legend</button>
+                <button class="tab-btn" data-cat="completed" onclick="loadCompletedSessions(this)"
+                    style="border-color:rgba(52,211,153,.3);color:#34d399;">✅ Completed</button>
             </div>
 
             <div id="sessionsGrid" class="grid-3" style="align-items:start; gap: 24px;"></div>
@@ -797,6 +835,63 @@
         }
 
         function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+        async function loadCompletedSessions(btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('sessionsGrid').innerHTML = '';
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            try {
+                const sessions = await api('/api/sessions/completed');
+                hideLoading('loadingState');
+                if (!sessions.length) { document.getElementById('emptyState').style.display = 'block'; return; }
+                const grid = document.getElementById('sessionsGrid');
+                grid.innerHTML = sessions.map(s => {
+                    const pool = s.prize_pool || Math.floor(s.entry_fee * s.seat_limit * 0.75);
+                    const daysAgo = s.quiz_start_at ? Math.floor((Date.now() / 1000 - s.quiz_start_at) / 86400) : '?';
+                    const pcts = [0.25, 0.15, 0.11];
+                    const prizes = pcts.map(p => Math.floor(pool * p));
+                    const booked = s.seats_booked || s.seat_limit;
+                    const pct = Math.round((booked / s.seat_limit) * 100);
+                    return `<div class="session-card" style="opacity:.9;" onclick="window.location='/results.html?id=${s.id}'">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                        <span class="badge badge-violet" style="border-radius:6px;padding:4px 10px;font-size:.65rem;letter-spacing:.5px;">✅ Completed</span>
+                        <span style="font-size:.7rem;color:rgba(255,255,255,0.3);">${s.category_name || ''}</span>
+                      </div>
+                      <div style="font-size:1.05rem;font-weight:800;color:#fff;margin-bottom:3px;">${s.title}</div>
+                      <div style="font-size:.72rem;color:rgba(255,255,255,0.3);margin-bottom:14px;">${daysAgo} days ago · ${s.seat_limit} Players</div>
+                      <div class="prize-strip">
+                        <div class="prize-top-row">
+                          <div><div style="font-size:.6rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-bottom:2px;">ENTRY FEE</div>
+                          <div style="font-size:1.6rem;font-weight:900;color:rgba(201,168,76,.7);">₹${s.entry_fee}</div></div>
+                          <div style="text-align:right;"><div style="font-size:.6rem;color:rgba(52,211,153,0.6);letter-spacing:1px;margin-bottom:2px;">PRIZE POOL</div>
+                          <div style="font-size:1.1rem;font-weight:900;color:rgba(52,211,153,.7);">₹${pool.toLocaleString()}</div></div>
+                        </div>
+                        <div class="prize-podium">
+                          <div class="prize-item"><div class="plabel" style="color:rgba(201,168,76,.6);">🥇 1ST</div><div class="pamt" style="color:rgba(255,255,255,.6);">₹${prizes[0].toLocaleString()}</div></div>
+                          <div class="prize-item"><div class="plabel" style="color:rgba(255,255,255,0.45);">🥈 2ND</div><div class="pamt" style="color:rgba(255,255,255,.45);">₹${prizes[1].toLocaleString()}</div></div>
+                          <div class="prize-item"><div class="plabel" style="color:rgba(194,119,58,.55);">🥉 3RD</div><div class="pamt" style="color:rgba(255,255,255,.45);">₹${prizes[2].toLocaleString()}</div></div>
+                        </div>
+                      </div>
+                      <!-- SEATS FULL BAR -->
+                      <div style="margin:14px 0 16px;">
+                        <div style="display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:6px;">
+                          <span style="color:#ef4444;font-weight:800;">🔥 HOUSEFULL — ${booked}/${s.seat_limit} Booked</span>
+                          <span style="color:rgba(255,255,255,.3);">100%</span>
+                        </div>
+                        <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;">
+                          <div style="width:100%;height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:99px;box-shadow:0 0 8px rgba(239,68,68,.5);"></div>
+                        </div>
+                      </div>
+                      <div style="margin-top:6px;">
+                        <button class="enter-btn" style="width:100%;opacity:.7;cursor:pointer;">📊 View Results</button>
+                      </div>
+                    </div>`;
+
+                }).join('');
+            } catch (e) { hideLoading('loadingState'); grid.innerHTML = '<p style="color:red;text-align:center;">' + e.message + '</p>'; }
+        }
 
         loadSessions();
         renderFooter();

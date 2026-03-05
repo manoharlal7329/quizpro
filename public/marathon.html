@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="hi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Marathon Live Class — QuizPro Arena</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Noto+Sans+Devanagari:wght@400;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --green: #16a34a;
+            --chalk: #f0f0e8;
+            --chalk-dim: rgba(240, 240, 232, 0.7);
+            --chalk-faint: rgba(240, 240, 232, 0.3);
+            --board: #0d2016;
+            --board2: #0a1a12;
+            --gold: #c9a84c;
+            --red: #ef4444;
+            --correct: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            background: #060606;
+            color: var(--chalk);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── TOP BAR ─────────────────────────────────────────────── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, .6);
+            border-bottom: 1px solid rgba(255, 255, 255, .07);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-logo {
+            font-size: .85rem;
+            font-weight: 900;
+            color: var(--gold);
+            letter-spacing: 2px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .4;
+                transform: scale(.7)
+            }
+        }
+
+        .live-label {
+            font-size: .72rem;
+            font-weight: 800;
+            color: #ef4444;
+            letter-spacing: 2px;
+        }
+
+        .q-counter {
+            font-size: .72rem;
+            color: var(--chalk-dim);
+        }
+
+        /* ── BLACKBOARD ──────────────────────────────────────────── */
+        .board-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px 16px 100px;
+        }
+
+        .blackboard {
+            background: linear-gradient(160deg, #0a1f10, #071509, #0d2a18);
+            border: 3px solid #2d5a3a;
+            border-radius: 8px;
+            box-shadow: 0 0 0 6px #1a1a1a, 0 0 0 8px #2d5a3a33, inset 0 0 60px rgba(0, 0, 0, .4);
+            padding: 36px 40px 40px;
+            position: relative;
+            min-height: 420px;
+        }
+
+        /* Chalk texture effect */
+        .blackboard::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 5px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.025'/%3E%3C/svg%3E");
+            pointer-events: none;
+            opacity: .5;
+        }
+
+        /* ── TIMER BAR ────────────────────────────────────────────── */
+        .timer-section {
+            margin-bottom: 28px;
+        }
+
+        .timer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .phase-badge {
+            font-size: .62rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        .phase-q {
+            background: rgba(96, 165, 250, .15);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, .3);
+        }
+
+        .phase-a {
+            background: rgba(74, 222, 128, .15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, .3);
+        }
+
+        .phase-ex {
+            background: rgba(251, 191, 36, .15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, .3);
+        }
+
+        .timer-countdown {
+            font-size: .75rem;
+            font-weight: 700;
+            color: var(--chalk-dim);
+        }
+
+        .timer-bar-track {
+            height: 4px;
+            background: rgba(255, 255, 255, .08);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width .9s linear, background .5s;
+        }
+
+        /* ── QUESTION NUMBER ──────────────────────────────────────── */
+        .q-num {
+            font-size: .65rem;
+            color: rgba(255, 255, 255, .25);
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        /* ── QUESTION TEXT ────────────────────────────────────────── */
+        .q-text {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--chalk);
+            line-height: 1.5;
+            text-shadow: 0 0 20px rgba(240, 240, 232, .08);
+            margin-bottom: 32px;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            letter-spacing: .3px;
+        }
+
+        /* ── OPTIONS GRID ─────────────────────────────────────────── */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(255, 255, 255, .04);
+            border: 1.5px solid rgba(255, 255, 255, .1);
+            border-radius: 8px;
+            padding: 14px 18px;
+            transition: all .4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-card.correct {
+            background: rgba(74, 222, 128, .12);
+            border-color: rgba(74, 222, 128, .5);
+            box-shadow: 0 0 16px rgba(74, 222, 128, .15);
+        }
+
+        .option-card.wrong {
+            opacity: .35;
+        }
+
+        .opt-letter {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .85rem;
+            font-weight: 900;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .15);
+            color: var(--chalk);
+            transition: all .4s;
+        }
+
+        .option-card.correct .opt-letter {
+            background: rgba(74, 222, 128, .25);
+            border-color: var(--correct);
+            color: var(--correct);
+        }
+
+        .opt-text {
+            font-size: .92rem;
+            color: var(--chalk-dim);
+            line-height: 1.4;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+        }
+
+        .option-card.correct .opt-text {
+            color: var(--chalk);
+            font-weight: 700;
+        }
+
+        .check-icon {
+            position: absolute;
+            right: 14px;
+            font-size: 1.1rem;
+            opacity: 0;
+            transition: opacity .4s;
+        }
+
+        .option-card.correct .check-icon {
+            opacity: 1;
+        }
+
+        /* ── ANSWER REVEAL ────────────────────────────────────────── */
+        .answer-banner {
+            background: linear-gradient(135deg, rgba(74, 222, 128, .15), rgba(16, 185, 129, .08));
+            border: 1px solid rgba(74, 222, 128, .3);
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .answer-banner.visible {
+            display: flex;
+        }
+
+        .answer-emoji {
+            font-size: 1.6rem;
+        }
+
+        .answer-label {
+            font-size: .62rem;
+            color: rgba(74, 222, 128, .7);
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .answer-text {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #4ade80;
+        }
+
+        /* ── EXPLANATION BOX ──────────────────────────────────────── */
+        .explanation-box {
+            background: linear-gradient(135deg, rgba(251, 191, 36, .08), rgba(245, 158, 11, .05));
+            border: 1px solid rgba(251, 191, 36, .25);
+            border-left: 4px solid #fbbf24;
+            border-radius: 10px;
+            padding: 20px 22px;
+            display: none;
+        }
+
+        .explanation-box.visible {
+            display: block;
+        }
+
+        .explanation-title {
+            font-size: .62rem;
+            letter-spacing: 2px;
+            color: #fbbf24;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .explanation-text {
+            font-size: .95rem;
+            color: rgba(255, 255, 255, .75);
+            line-height: 1.7;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+        }
+
+        /* ── BOTTOM INFO BAR ──────────────────────────────────────── */
+        .info-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, .4);
+            border-top: 1px solid rgba(255, 255, 255, .05);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-label {
+            font-size: .62rem;
+            color: rgba(255, 255, 255, .3);
+            letter-spacing: 1px;
+        }
+
+        .info-val {
+            font-size: .78rem;
+            font-weight: 800;
+            color: var(--chalk-dim);
+        }
+
+        .info-sep {
+            width: 1px;
+            height: 16px;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        /* ── LOADING / EMPTY ──────────────────────────────────────── */
+        .marathon-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            gap: 16px;
+            color: rgba(255, 255, 255, .3);
+        }
+
+        .marathon-spinner {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, .1);
+            border-top-color: var(--gold);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── TRANSITION ANIMATION ─────────────────────────────────── */
+        .blackboard {
+            animation: boardIn .5s ease;
+        }
+
+        @keyframes boardIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .q-text,
+        .option-card {
+            animation: fadeSlide .5s ease;
+        }
+
+        @keyframes fadeSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ── CHALK UNDERLINE ──────────────────────────────────────── */
+        .chalk-line {
+            height: 2px;
+            background: linear-gradient(90deg, rgba(240, 240, 232, .2), rgba(240, 240, 232, .08), transparent);
+            margin: 20px 0;
+            border-radius: 2px;
+        }
+
+        /* ── NEXT QUESTION TOAST ──────────────────────────────────── */
+        .next-toast {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: rgba(0, 0, 0, .8);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: .75rem;
+            color: rgba(255, 255, 255, .5);
+            display: none;
+            z-index: 999;
+        }
+
+        .next-toast.visible {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <span class="topbar-logo">💎 QUIZPRO MARATHON</span>
+        <div class="topbar-right">
+            <div class="live-dot"></div>
+            <span class="live-label">LIVE</span>
+            <span class="info-sep"></span>
+            <span class="q-counter" id="qCounter">Loading...</span>
+            <a href="/dashboard.html"
+                style="font-size:.75rem;color:rgba(255,255,255,.35);text-decoration:none;margin-left:8px;">← Back</a>
+        </div>
+    </div>
+
+    <!-- BOARD -->
+    <div class="board-wrap">
+
+        <!-- Loading state -->
+        <div class="marathon-loading" id="loadingBox">
+            <div class="marathon-spinner"></div>
+            <p>Live class shuru ho rahi hai...</p>
+        </div>
+
+        <!-- Main board -->
+        <div class="blackboard" id="boardBox" style="display:none;">
+
+            <!-- Timer -->
+            <div class="timer-section">
+                <div class="timer-top">
+                    <span class="phase-badge phase-q" id="phaseBadge">📖 QUESTION</span>
+                    <span class="timer-countdown" id="timerText">⏱ 30s</span>
+                </div>
+                <div class="timer-bar-track">
+                    <div class="timer-bar-fill" id="timerBar" style="width:100%;background:#60a5fa;"></div>
+                </div>
+            </div>
+
+            <!-- Question Number -->
+            <div class="q-num" id="qNum">QUESTION 1 OF —</div>
+
+            <!-- Question Text -->
+            <div class="q-text" id="qText">Loading...</div>
+
+            <div class="chalk-line"></div>
+
+            <!-- Options -->
+            <div class="options-grid" id="optionsGrid"></div>
+
+            <!-- Answer Banner (phase 2) -->
+            <div class="answer-banner" id="answerBanner">
+                <div class="answer-emoji">✅</div>
+                <div>
+                    <div class="answer-label">SAHI JAWAB HAI</div>
+                    <div class="answer-text" id="answerText">—</div>
+                </div>
+            </div>
+
+            <!-- Explanation Box (phase 3) -->
+            <div class="explanation-box" id="explanationBox">
+                <div class="explanation-title">📝 SAMJHAIYE — EXPLANATION</div>
+                <div class="explanation-text" id="explanationText">—</div>
+            </div>
+
+        </div><!-- /blackboard -->
+
+    </div>
+
+    <!-- Bottom Info Bar -->
+    <div class="info-bar" id="infoBar" style="display:none;">
+        <div class="info-item">
+            <span class="info-label">SUBJECT</span>
+            <span class="info-val">📚 Sabhi Books</span>
+        </div>
+        <div class="info-sep"></div>
+        <div class="info-item">
+            <span class="info-label">MODE</span>
+            <span class="info-val">🔴 Live Sync</span>
+        </div>
+        <div class="info-sep"></div>
+        <div class="info-item">
+            <span class="info-label">TOTAL QUESTIONS</span>
+            <span class="info-val" id="totalQInfo">—</span>
+        </div>
+        <div class="info-sep"></div>
+        <div class="info-item">
+            <span class="info-label">NEXT QUESTION IN</span>
+            <span class="info-val" id="nextQInfo">—</span>
+        </div>
+    </div>
+
+    <!-- Next question toast -->
+    <div class="next-toast" id="nextToast">⏭ Agla question aa raha hai...</div>
+
+    <script>
+        // ── State ────────────────────────────────────────────────────
+        let currentIndex = -1;
+        let pollTimer = null;
+
+        // ── Fetch current state from server ─────────────────────────
+        async function fetchState() {
+            const res = await fetch('/api/marathon/state');
+            if (!res.ok) throw new Error('Server error');
+            return res.json();
+        }
+
+        // ── Render board ─────────────────────────────────────────────
+        function renderState(state) {
+            if (state.empty) {
+                document.getElementById('loadingBox').innerHTML = `
+        <div style="text-align:center;padding:40px;">
+          <div style="font-size:3rem;margin-bottom:12px;">📚</div>
+          <p style="font-size:1rem;color:rgba(255,255,255,.4);">Abhi koi book questions upload nahi hue hain.<br>Admin se request karo!</p>
+        </div>`;
+                return;
+            }
+
+            // Show board
+            document.getElementById('loadingBox').style.display = 'none';
+            document.getElementById('boardBox').style.display = 'block';
+            document.getElementById('infoBar').style.display = 'flex';
+
+            const q = state.question;
+            const idx = state.index;
+
+            // Question changed → animate
+            if (idx !== currentIndex) {
+                currentIndex = idx;
+                // Re-animate board
+                const board = document.getElementById('boardBox');
+                board.style.animation = 'none';
+                setTimeout(() => board.style.animation = 'boardIn .5s ease', 10);
+            }
+
+            // Counter
+            document.getElementById('qCounter').textContent = `Q ${idx + 1} / ${state.total}`;
+            document.getElementById('qNum').textContent = `QUESTION ${idx + 1} of ${state.total}`;
+            document.getElementById('totalQInfo').textContent = state.total;
+
+            // Question text
+            document.getElementById('qText').textContent = q.text;
+
+            // Options
+            const opts = [
+                { key: 'a', label: 'A', text: q.option_a },
+                { key: 'b', label: 'B', text: q.option_b },
+                { key: 'c', label: 'C', text: q.option_c },
+                { key: 'd', label: 'D', text: q.option_d },
+            ].filter(o => o.text);
+
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = opts.map(o => {
+                const isCorrect = state.phase !== 'question' && o.key === q.correct;
+                const isWrong = state.phase !== 'question' && o.key !== q.correct;
+                return `<div class="option-card ${isCorrect ? 'correct' : isWrong ? 'wrong' : ''}">
+        <div class="opt-letter">${o.label}</div>
+        <div class="opt-text">${o.text}</div>
+        <span class="check-icon">✅</span>
+      </div>`;
+            }).join('');
+
+            // Answer Banner
+            const banner = document.getElementById('answerBanner');
+            const ansText = document.getElementById('answerText');
+            if (state.phase !== 'question' && q.correct_text) {
+                banner.classList.add('visible');
+                ansText.textContent = `${q.correct_label}. ${q.correct_text}`;
+            } else {
+                banner.classList.remove('visible');
+            }
+
+            // Explanation
+            const expBox = document.getElementById('explanationBox');
+            const expText = document.getElementById('explanationText');
+            if (state.phase === 'explanation' && q.explanation) {
+                expBox.classList.add('visible');
+                expText.textContent = q.explanation;
+            } else {
+                expBox.classList.remove('visible');
+            }
+
+            // Phase badge
+            const badge = document.getElementById('phaseBadge');
+            if (state.phase === 'question') {
+                badge.className = 'phase-badge phase-q';
+                badge.textContent = '📖 QUESTION';
+            } else if (state.phase === 'answer') {
+                badge.className = 'phase-badge phase-a';
+                badge.textContent = '✅ SAHI JAWAB';
+            } else {
+                badge.className = 'phase-badge phase-ex';
+                badge.textContent = '💡 SAMJHAIYE';
+            }
+
+            // Timer
+            updateTimer(state.secondsLeft, state.phase);
+            document.getElementById('nextQInfo').textContent = state.secondsLeft + 's';
+
+            // Toast when < 5 seconds left
+            const toast = document.getElementById('nextToast');
+            if (state.secondsLeft <= 5) {
+                toast.classList.add('visible');
+                setTimeout(() => toast.classList.remove('visible'), 5000);
+            }
+        }
+
+        // ── Timer bar ─────────────────────────────────────────────────
+        let timerInterval = null;
+        function updateTimer(secsLeft, phase) {
+            clearInterval(timerInterval);
+
+            // Phase-specific total durations
+            const TOTALS = { question: 10, answer: 5, explanation: 15 };
+            const TOTAL = TOTALS[phase] || 10;
+
+            // Compute phase-local remaining seconds from overall secondsLeft
+            // secsLeft = seconds until next question
+            let remaining;
+            if (phase === 'question') remaining = secsLeft - 20; // 30−10=20 ahead
+            else if (phase === 'answer') remaining = secsLeft - 15; // 30−15=15 ahead
+            else /* explanation */             remaining = secsLeft;      // directly
+            if (remaining < 0) remaining = 0;
+            if (remaining > TOTAL) remaining = TOTAL;
+
+            const colors = {
+                question: '#60a5fa',
+                answer: '#4ade80',
+                explanation: '#fbbf24'
+            };
+
+            const bar = document.getElementById('timerBar');
+            const txt = document.getElementById('timerText');
+            const col = colors[phase] || '#60a5fa';
+            bar.style.background = col;
+
+            timerInterval = setInterval(() => {
+                remaining--;
+                if (remaining < 0) remaining = 0;
+                const pct = (remaining / TOTAL) * 100;
+                bar.style.width = pct + '%';
+                txt.textContent = '⏱ ' + remaining + 's';
+                document.getElementById('nextQInfo').textContent = remaining + 's';
+            }, 1000);
+        }
+
+
+        // ── Poll loop ─────────────────────────────────────────────────
+        async function poll() {
+            try {
+                const state = await fetchState();
+                renderState(state);
+            } catch (e) {
+                console.error('Marathon poll error:', e);
+            }
+            // Poll every 5 seconds (syncs to server)
+            pollTimer = setTimeout(poll, 5000);
+        }
+
+        // ── Start ─────────────────────────────────────────────────────
+        poll();
+
+        // Cleanup on page hide
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearTimeout(pollTimer);
+                clearInterval(timerInterval);
+            } else {
+                poll();
+            }
+        });
+    </script>
+</body>
+
+</html>

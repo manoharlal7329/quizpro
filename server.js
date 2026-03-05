@@ -47,6 +47,8 @@ app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/razorpay', require('./routes/razorpay'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/books', require('./routes/books'));
+app.use('/api/marathon', require('./routes/marathon'));
+
 
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────

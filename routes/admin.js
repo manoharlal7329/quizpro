@@ -440,8 +440,10 @@ router.get('/rewards', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// ─── SEED DEMO SESSIONS ───────────────────────────────────────────────────────
-router.post('/seed-sessions', authMiddleware, adminOnly, async (req, res) => {
+// ─── SEED DEMO SESSIONS (secret key protected) ───────────────────────────────
+router.post('/seed-sessions', async (req, res) => {
+  const key = req.headers['x-seed-key'] || req.query.key;
+  if (key !== 'quizpro2026') return res.status(403).json({ error: 'Forbidden' });
   try {
     const SESSIONS = [
       // ROOKIE (cat 1)
