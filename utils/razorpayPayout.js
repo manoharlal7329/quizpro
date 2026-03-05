@@ -1,4 +1,5 @@
 const Withdrawal = require('../database/models/Withdrawal');
+const { getWallet, addTxn } = require('../routes/wallet_utils');
 const razorpay = require('./razorpayClient');
 
 /**
@@ -8,40 +9,69 @@ const razorpay = require('./razorpayClient');
 async function processPayout(withdrawId) {
     const wd = await Withdrawal.findOne({ id: withdrawId });
 
-    if (!wd || wd.status !== "PENDING") {
-        throw new Error("INVALID_WITHDRAW: Request not found or not pending.");
+    if (!wd || wd.status !== "REQUESTED") {
+        throw new Error("INVALID_WITHDRAW: Request not found or not in REQUESTED state.");
     }
 
     try {
-        const payout = await razorpay.payouts.create({
+        const payoutPayload = {
             account_number: process.env.RAZORPAY_PAYOUT_ACCOUNT,
             amount: wd.amount * 100, // convert to paise
             currency: "INR",
-            mode: "UPI",
             purpose: "payout",
-            fund_account: {
+            queue_if_low_balance: true,
+            narration: "QuizPro Arena Reward"
+        };
+
+        if (wd.payment_mode === 'BANK') {
+            payoutPayload.mode = "IMPS";
+            payoutPayload.fund_account = {
+                account_type: "bank_account",
+                bank_account: {
+                    name: wd.bank_account_name,
+                    ifsc: wd.bank_ifsc,
+                    account_number: wd.bank_account_number
+                }
+            };
+        } else {
+            payoutPayload.mode = "UPI";
+            payoutPayload.fund_account = {
                 account_type: "vpa",
                 vpa: {
                     address: wd.upi_id || wd.upi
                 }
-            },
-            queue_if_low_balance: true,
-            narration: "QuizPro Arena Reward"
-        });
+            };
+        }
 
-        wd.status = "PAID";
+        const payout = await razorpay.payouts.create(payoutPayload);
+
+        // Bank is processing it. We wait for monitorPayouts (AI) to hit SUCCESS.
+        wd.status = "PROCESSING";
         wd.payout_id = payout.id;
-        wd.paid_at = Math.floor(Date.now() / 1000);
         await wd.save();
 
-        console.log(`✅ [Payout] Successful: ${withdrawId} | Payout ID: ${payout.id}`);
+        console.log(`⏳ [Payout] Processing: ${withdrawId} | Mode: ${wd.payment_mode} | Payout ID: ${payout.id}`);
         return payout;
 
     } catch (err) {
-        console.error(`❌ [Payout] Failed: ${withdrawId} | Error: ${err.message}`);
+        // Instant Failure -> Refund Locked Amount
+        console.error(`❌ [Payout] Immediate Failure: ${withdrawId} | Error: ${err.message}`);
+
         wd.status = "FAILED";
         wd.error = err.message;
         await wd.save();
+
+        // Unlock funds safely
+        try {
+            const wallet = await getWallet(wd.user_id);
+            wallet.win_bal += wd.amount;
+            await wallet.save();
+            await addTxn(wd.user_id, 'real', 'credit', wd.amount, `🔄 Auto-Refund: Payout Rejected (${withdrawId})`);
+            console.log(`✅ [Refund] Wallet Restored: ₹${wd.amount} for User #${wd.user_id}`);
+        } catch (walletErr) {
+            console.error(`🚨 CRITICAL REFUND FAILURE for ${withdrawId}:`, walletErr);
+        }
+
         throw err;
     }
 }

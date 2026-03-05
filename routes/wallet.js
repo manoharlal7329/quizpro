@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const crypto = require('crypto');
+const axios = require('axios');
 
 // Razorpay config
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
@@ -317,12 +318,31 @@ router.post('/admin/credit-prize', authMiddleware, async (req, res) => {
 
 // ─── POST /api/wallet/withdraw (Anti-Fraud & Fund Lock) ─────────────────────
 router.post('/withdraw', authMiddleware, async (req, res) => {
-    const { amount, upi_id, pin } = req.body;
+    const { amount, pin, payment_mode, upi_id, bank_account_number, bank_ifsc, bank_account_name } = req.body;
     const userId = req.user.id;
 
     try {
         if (!amount || amount < 1) return res.status(400).json({ error: 'MIN_WITHDRAW', message: 'Minimum withdrawal is ₹1' });
-        if (!upi_id || !upi_id.includes('@')) return res.status(400).json({ error: 'INVALID_UPI', message: 'Valid UPI ID required.' });
+        // Validate payment mode and required fields
+        if (payment_mode === 'UPI') {
+            if (!upi_id || !upi_id.includes('@')) return res.status(400).json({ error: 'INVALID_UPI', message: 'Valid UPI ID required.' });
+        } else if (payment_mode === 'BANK') {
+            if (!bank_account_number || !bank_ifsc || !bank_account_name) {
+                return res.status(400).json({ error: 'INVALID_BANK_DETAILS', message: 'Bank account number, IFSC and account name are required.' });
+            }
+        } else {
+            return res.status(400).json({ error: 'INVALID_PAYMENT_MODE', message: 'Payment mode must be UPI or BANK.' });
+        }
+        // Proceed with withdrawal request
+        const result = await requestWithdrawal({
+            userId,
+            amount: Number(amount),
+            payment_mode,
+            upi: upi_id,
+            bank_account_number,
+            bank_ifsc,
+            bank_account_name
+        });
 
         const wallet = await getWallet(userId);
         if (!wallet.pin) return res.status(400).json({ error: 'PIN_NOT_SET', message: 'Please set your Wallet PIN first.' });
@@ -331,20 +351,21 @@ router.post('/withdraw', authMiddleware, async (req, res) => {
             return res.status(403).json({ error: 'INVALID_PIN', message: 'Incorrect Wallet PIN' });
         }
 
-        const result = await requestWithdrawal({ userId, amount: Number(amount), upi: upi_id });
+
         if (result.error) return res.status(403).json(result);
 
-        // 🚀 AUTO-PAYOUT (Pro Level)
-        if (process.env.AUTO_PAYOUT_ENABLED === "true" && result.withdrawId) {
+        // 🚀 SYNCHRONOUS PAYOUT PROCESSING (Required for secure locking)
+        if (result.withdrawId) {
             try {
                 await processPayout(result.withdrawId);
             } catch (payoutErr) {
-                console.error(`⚠️ Auto-payout failed for ${result.withdrawId}:`, payoutErr.message);
-                // We don't fail the request here, as the withdrawal is already created/pending
+                console.error(`⚠️ Payout creation failed for ${result.withdrawId}:`, payoutErr.message);
+                // The frontend should know it failed
+                return res.status(400).json({ error: 'PAYOUT_FAILED', message: payoutErr.message || 'Bank server rejected the withdrawal. Funds reversed.' });
             }
         }
 
-        res.json({ success: true, message: 'Withdraw request submitted.' });
+        res.json({ success: true, message: 'Withdraw request processing...' });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -388,6 +409,66 @@ router.post('/withdraw/auto', authMiddleware, async (req, res) => {
     }
 });
 
+
+// ─── POST /api/wallet/verify-bank (Penny Drop Validation) ───────────────────
+router.post('/verify-bank', authMiddleware, async (req, res) => {
+    const { account_number, ifsc } = req.body;
+    if (!account_number || !ifsc) return res.status(400).json({ error: 'Account Number and IFSC are required' });
+
+    try {
+        console.log(`🔍 [VerifyBank] Checking details for User #${req.user.id}: ${account_number} / ${ifsc}`);
+        // Use Razorpay X Fund Account Validation API
+        const validationPayload = {
+            account_number: process.env.RAZORPAY_PAYOUT_ACCOUNT,
+            fund_account: {
+                account_type: 'bank_account',
+                bank_account: {
+                    name: "User Validation",
+                    ifsc: ifsc,
+                    account_number: account_number
+                }
+            },
+            amount: 100, // INR 1.00 in paise
+            currency: 'INR',
+            notes: { user_id: String(req.user.id) }
+        };
+
+        const auth = Buffer.from(`${RZP_KEY_ID}:${RZP_KEY_SECRET}`).toString('base64');
+
+        const response = await axios.post('https://api.razorpay.com/v1/fund_account_validations', validationPayload, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = response.data;
+        console.log(`✅ [VerifyBank] API Success | Status: ${data.status} | Name: ${data.results?.registered_name}`);
+
+        if (data.status === 'failed' || data.status === 'reversed') {
+            return res.status(400).json({ error: 'Validation failed', message: data.failure_reason || 'Invalid bank details.' });
+        }
+
+        res.json({
+            success: true,
+            account_number: data.fund_account.bank_account.account_number,
+            registered_name: data.results?.registered_name || '',
+            status: data.status
+        });
+
+    } catch (e) {
+        const errorData = e.response?.data || e.message;
+        console.error('❌ [VerifyBank] Error:', JSON.stringify(errorData));
+
+        // Log to file for deep inspection
+        const fs = require('fs');
+        const logMsg = `[${new Date().toISOString()}] User #${req.user.id} | Account: ${account_number} | IFSC: ${ifsc} | Error: ${JSON.stringify(errorData)}\n`;
+        fs.appendFileSync('verify_bank_errors.log', logMsg);
+
+        const errMsg = e.response?.data?.error?.description || e.message;
+        res.status(500).json({ error: 'Verification failed', message: errMsg });
+    }
+});
 
 module.exports = router;
 

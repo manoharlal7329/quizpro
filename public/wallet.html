@@ -167,6 +167,25 @@
                 gap: 30px;
             }
         }
+
+        .spinner-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
@@ -224,42 +243,135 @@
                     </button>
                 </div>
 
-                <!-- WITHDRAW BOX -->
+                <!-- WITHDRAWAL SECTION -->
                 <div class="deposit-section" style="border-color: var(--gold);">
                     <h3 style="margin-bottom: 8px;">🏦 Redeem Rewards</h3>
                     <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Transfer rewards to your
                         Reward Account</p>
 
-                    <div
-                        style="font-size: 0.85rem; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; margin-bottom: 15px; color: var(--gold); text-align: center;">
-                        Redeemable: <strong id="withdrawableDisplay" style="font-size: 1.1rem;">₹0</strong>
+                    <div style="margin-bottom: 16px;">
+                        <label for="withdrawMode"
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Payment
+                            Mode</label>
+                        <select id="withdrawMode" onchange="toggleWithdrawFields()"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none;">
+                            <option value="UPI">UPI</option>
+                            <option value="BANK">Bank Transfer (IMPS/NEFT)</option>
+                        </select>
                     </div>
 
-                    <div class="amt-input-wrap">
-                        <span>₹</span>
-                        <input type="number" id="withdrawAmt" placeholder="Enter Amount" min="1" value="100"
-                            oninput="updateWithdrawPreview()">
+                    <div id="upiFields">
+                        <label
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Reward
+                            UPI ID</label>
+                        <input type="text" id="withdrawUpi" placeholder="e.g. name@upi"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 16px;">
                     </div>
 
-                    <input type="text" id="withdrawUpi" placeholder="Enter Reward UPI (e.g. name@upi)"
-                        style="width: 100%; padding: 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; color: var(--text); margin-bottom: 12px;">
+                    <div id="bankFields" style="display: none;">
+                        <label
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Choose
+                            Bank (Searchable)</label>
+                        <input type="text" id="bankNameSearch" list="bankList"
+                            placeholder="Search Bank (e.g. SBI, HDFC)" oninput="handleBankSelect()"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 12px;">
+                        <datalist id="bankList">
+                            <option value="State Bank of India (SBIN)">
+                            <option value="HDFC Bank (HDFC)">
+                            <option value="ICICI Bank (ICIC)">
+                            <option value="Axis Bank (UTIB)">
+                            <option value="Punjab National Bank (PUNB)">
+                            <option value="Bank of Baroda (BARB)">
+                            <option value="Bank of India (BKID)">
+                            <option value="Canara Bank (CNRB)">
+                            <option value="Union Bank of India (UBIN)">
+                            <option value="Central Bank of India (CBIN)">
+                            <option value="Indian Bank (IDIB)">
+                            <option value="Indian Overseas Bank (IOB)">
+                            <option value="Bank of Maharashtra (MAHB)">
+                            <option value="Punjab & Sind Bank (PSIB)">
+                            <option value="UCO Bank (UCBA)">
+                            <option value="Kotak Mahindra Bank (KOTK)">
+                            <option value="IDBI Bank (IBKL)">
+                            <option value="IndusInd Bank (INDB)">
+                            <option value="Yes Bank (YESB)">
+                            <option value="Federal Bank (FDRL)">
+                            <option value="IDFC First Bank (IDFB)">
+                            <option value="Bandhan Bank (BDBL)">
+                            <option value="South Indian Bank (SIBL)">
+                            <option value="Karur Vysya Bank (KVBL)">
+                            <option value="Karnataka Bank (KARB)">
+                            <option value="RBL Bank (RATN)">
+                            <option value="Jammu & Kashmir Bank (JAKA)">
+                            <option value="Tamilnad Mercantile Bank (TMBL)">
+                            <option value="City Union Bank (CIUB)">
+                            <option value="DBS Bank India (DBSS)">
+                            <option value="Airtel Payments Bank (AIRP)">
+                            <option value="Paytm Payments Bank (PYTM)">
+                            <option value="India Post Payments Bank (IPPB)">
+                            <option value="Jio Payments Bank (JIOP)">
+                            <option value="Fino Payments Bank (FINO)">
+                            <option value="AU Small Finance Bank (AUBL)">
+                            <option value="Equitas Small Finance Bank (ESFB)">
+                        </datalist>
 
-                    <input type="password" id="withdrawPin" placeholder="Enter 4-Digit Wallet PIN" maxlength="4"
-                        style="width: 100%; padding: 12px; border: 1px solid var(--blue); background: rgba(0,0,0,0.3); border-radius: 10px; color: #fff; margin-bottom: 12px; font-family: monospace; letter-spacing: 4px;">
+                        <label
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Account
+                            Number</label>
+                        <input type="text" id="bankAccountNumber" placeholder="Enter Bank Account Number"
+                            oninput="checkVerifyBank()"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 12px;">
 
-                    <div id="withdrawBreakdown"
-                        style="font-size: 0.75rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                        <div
-                            style="display: flex; justify-content: space-between; font-weight: 700; color: var(--green);">
-                            <span>Net Payout:</span>
-                            <span id="wtNet">₹0</span>
+                        <label style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Bank
+                            IFSC</label>
+                        <input type="text" id="bankIfsc" placeholder="Enter IFSC Code (11 chars)" maxlength="11"
+                            oninput="checkVerifyBank(); this.value = this.value.toUpperCase();"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 12px;">
+
+                        <label
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Account
+                            Holder Name</label>
+                        <div style="position: relative;">
+                            <input type="text" id="bankAccountName" placeholder="Auto-fetching legal name..."
+                                style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 16px;">
+                            <div id="nameLoader" style="display: none; position: absolute; right: 12px; top: 12px;">
+                                <div class="spinner-small"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <button class="btn btn-outline" id="withdrawBtn"
-                        style="width: 100%; margin-top: 20px; border-color: var(--gold); color: var(--gold);"
-                        onclick="requestWithdrawal()">
-                        Request Withdrawal
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Redeem
+                            Amount (Minimum ₹1)</label>
+                        <input type="number" id="withdrawAmt" value="100" min="1" oninput="updateWithdrawPreview()"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; font-size: 1.2rem; font-weight: bold;">
+                    </div>
+
+                    <div id="withdrawBreakdown"
+                        style="font-size: 0.75rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Requested Amount:</span>
+                            <span id="wtRequested" style="color: #fff;">₹0</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                            <span style="font-weight: bold; color: var(--gold);">Net Reward Payout:</span>
+                            <span id="wtNet" style="font-weight: bold; color: var(--gold);">₹0</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Confirm
+                            with 4-Digit PIN</label>
+                        <input type="password" id="withdrawPin" maxlength="4" placeholder="••••"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; text-align: center; font-size: 1.2rem; letter-spacing: 8px; outline: none;">
+                    </div>
+
+                    <button class="btn btn-outline" id="withdrawBtn" onclick="requestWithdrawal()"
+                        style="width: 100%; border-color: var(--gold); color: var(--gold); padding: 14px; font-weight: bold;">
+                        Withdraw to Rewards Account
                     </button>
                 </div>
 
@@ -328,9 +440,7 @@
 
                 // Update withdrawable amount
                 window.withdrawableAmt = w.withdrawable || 0;
-                document.getElementById('withdrawableDisplay').textContent = '₹' + window.withdrawableAmt;
                 document.getElementById('pinStatus').textContent = w.has_pin ? '✅ PIN is active' : '⚠️ PIN not set yet';
-                updateWithdrawPreview();
 
                 // Load txns
                 const txns = await api('/api/wallet/txns');
@@ -358,49 +468,6 @@
 
         function setAmt(val) {
             document.getElementById('depositAmt').value = val;
-        }
-
-        function updateWithdrawPreview() {
-            const amt = parseInt(document.getElementById('withdrawAmt').value) || 0;
-            // Removed 30% TDS for students
-            const net = amt;
-
-            document.getElementById('wtNet').textContent = '₹' + net;
-        }
-
-        // Initialize preview
-        updateWithdrawPreview();
-
-        async function requestWithdrawal() {
-            const amt = parseInt(document.getElementById('withdrawAmt').value);
-            const upi = document.getElementById('withdrawUpi').value.trim();
-            const pin = document.getElementById('withdrawPin').value;
-
-            if (!amt || amt < 1) return toast('Min redemption is ₹1', 'error');
-            if (amt > window.withdrawableAmt) return toast(`Insufficient redeemable points. (Max ${window.withdrawableAmt})`, 'error');
-            if (!upi) return toast('Please enter UPI ID', 'error');
-            if (!pin || pin.length !== 4) return toast('Please enter a 4-digit Wallet PIN', 'error');
-
-            const btn = document.getElementById('withdrawBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Processing...';
-
-            try {
-                const res = await api('/api/wallet/withdraw', 'POST', {
-                    amount: amt,
-                    upi_id: upi,
-                    pin: pin
-                });
-                toast(res.message, 'success');
-                if (window.engine) window.engine.cycleTheme();
-                document.getElementById('withdrawPin').value = '';
-                loadData();
-            } catch (e) {
-                toast(e.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Redeem Skill Points & Badges';
-            }
         }
 
         async function updateWalletPin() {
@@ -479,8 +546,127 @@
             }
         }
 
+        function handleBankSelect() {
+            const val = document.getElementById('bankNameSearch').value;
+            const ifscInput = document.getElementById('bankIfsc');
+
+            // Extract IFSC from string like "State Bank of India (SBIN)"
+            const match = val.match(/\(([A-Z]{4})\)/);
+            if (match && match[1]) {
+                ifscInput.value = match[1];
+                checkVerifyBank();
+            }
+        }
+
+        let verifyDebounce;
+        function checkVerifyBank() {
+            const acc = document.getElementById('bankAccountNumber').value;
+            const ifsc = document.getElementById('bankIfsc').value;
+
+            if (acc.length >= 8 && ifsc.length === 11) {
+                clearTimeout(verifyDebounce);
+                verifyDebounce = setTimeout(verifyBankDetail, 1000);
+            }
+        }
+
+        async function verifyBankDetail() {
+            const acc = document.getElementById('bankAccountNumber').value;
+            const ifsc = document.getElementById('bankIfsc').value;
+            const nameInput = document.getElementById('bankAccountName');
+            const loader = document.getElementById('nameLoader');
+
+            if (!acc || !ifsc) return;
+
+            // Show loading
+            loader.style.display = 'block';
+            nameInput.placeholder = 'Fetching legal name...';
+            nameInput.disabled = true;
+
+            try {
+                const res = await api('/api/wallet/verify-bank', 'POST', { account_number: acc, ifsc: ifsc });
+                if (res.success && res.registered_name) {
+                    nameInput.value = res.registered_name;
+                    toast('✅ Bank Account Verified: ' + res.registered_name, 'success');
+                } else {
+                    toast('Bank details could not be verified automatically.', 'warn');
+                    nameInput.placeholder = 'Enter Name as per Bank';
+                    nameInput.disabled = false;
+                }
+            } catch (e) {
+                console.error('Verify Error:', e);
+                // On error, let them type manually
+                nameInput.disabled = false;
+                nameInput.placeholder = 'Enter Name as per Bank (Verification Unavailable)';
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function toggleWithdrawFields() {
+            const mode = document.getElementById('withdrawMode').value;
+            document.getElementById('upiFields').style.display = mode === 'UPI' ? 'block' : 'none';
+            document.getElementById('bankFields').style.display = mode === 'BANK' ? 'block' : 'none';
+
+            if (mode === 'BANK') {
+                document.getElementById('bankNameSearch').value = '';
+                document.getElementById('bankAccountName').value = '';
+            }
+        }
+
+        function updateWithdrawPreview() {
+            const amt = parseInt(document.getElementById('withdrawAmt').value) || 0;
+            document.getElementById('wtRequested').textContent = '₹' + amt;
+            document.getElementById('wtNet').textContent = '₹' + amt;
+        }
+
+        async function requestWithdrawal() {
+            const amt = parseInt(document.getElementById('withdrawAmt').value);
+            const pin = document.getElementById('withdrawPin').value;
+            const mode = document.getElementById('withdrawMode').value;
+            const btn = document.getElementById('withdrawBtn');
+
+            if (!amt || amt < 1) return toast('Min withdrawal is ₹1', 'error');
+            if (!pin || pin.length !== 4) return toast('Please enter your 4-digit Wallet PIN', 'error');
+
+            const payload = {
+                amount: amt,
+                pin: pin,
+                payment_mode: mode
+            };
+
+            if (mode === 'UPI') {
+                const upi = document.getElementById('withdrawUpi').value;
+                if (!upi || !upi.includes('@')) return toast('Enter a valid UPI ID', 'error');
+                payload.upi_id = upi;
+            } else {
+                const acc = document.getElementById('bankAccountNumber').value;
+                const ifsc = document.getElementById('bankIfsc').value;
+                const name = document.getElementById('bankAccountName').value;
+                if (!acc || !ifsc || !name) return toast('Fill all bank details', 'error');
+                payload.bank_account_number = acc;
+                payload.bank_ifsc = ifsc;
+                payload.bank_account_name = name;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+
+            try {
+                const res = await api('/api/wallet/withdraw', 'POST', payload);
+                toast('✅ ' + (res.message || 'Withdrawal requested successfully!'), 'success');
+                document.getElementById('withdrawPin').value = '';
+                loadData();
+            } catch (e) {
+                toast(e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Withdraw to Rewards Account';
+            }
+        }
+
         function logout() { localStorage.clear(); window.location.href = '/login.html'; }
 
+        updateWithdrawPreview();
         loadData();
         renderFooter();
     </script>

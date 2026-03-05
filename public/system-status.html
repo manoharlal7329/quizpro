@@ -235,10 +235,14 @@
                 <!-- 7. WITHDRAW SYSTEM -->
                 <div class="monitor-card" id="cardWithdraw">
                     <h3>🏦 Withdraw Queue</h3>
-                    <div class="stat-line"><span class="stat-label">Pending Payouts</span><span class="stat-value"
-                            id="wd_pend">...</span></div>
-                    <div class="stat-line"><span class="stat-label">Processing Block</span><span
-                            class="stat-value val-good">CLEAR</span></div>
+                    <div class="stat-line"><span class="stat-label">Pending / Requested</span><span class="stat-value"
+                            id="wd_req">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Processing (Bank)</span><span class="stat-value"
+                            id="wd_proc">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Failed (Refunded)</span><span class="stat-value"
+                            id="wd_fail">...</span></div>
+                    <div class="stat-line"><span class="stat-label">Success (Paid)</span><span class="stat-value"
+                            id="wd_succ">...</span></div>
                 </div>
 
                 <!-- 8. FRAUD DETECTION -->
@@ -356,8 +360,13 @@
                 setCardColor('cardWallet', 'ok');
 
                 // Withdraw
-                setStat('wd_pend', d.withdraw.pending, d.withdraw.pending > 0 ? 'val-warn' : '');
-                setCardColor('cardWithdraw', d.withdraw.pending > 5 ? 'warn' : 'ok');
+                setStat('wd_req', d.withdraw.requested, d.withdraw.requested > 0 ? 'val-warn' : '');
+                setStat('wd_proc', d.withdraw.processing, d.withdraw.processing > 0 ? 'val-warn' : '');
+                setStat('wd_fail', d.withdraw.failed, d.withdraw.failed > 3 ? 'val-bad' : '');
+                setStat('wd_succ', d.withdraw.success, 'val-good');
+
+                const totalPending = d.withdraw.requested + d.withdraw.processing;
+                setCardColor('cardWithdraw', totalPending > 10 ? 'warn' : (d.withdraw.failed > 5 ? 'error' : 'ok'));
 
                 // Fraud
                 setStat('f_alerts', d.fraud.recent_alerts_24h, d.fraud.recent_alerts_24h > 0 ? 'val-warn' : 'val-good');

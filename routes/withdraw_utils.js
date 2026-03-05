@@ -9,7 +9,7 @@ const DAILY_WITHDRAW_LIMIT = 1;
  * Request a withdrawal with anti-fraud checks
  * @param {Object} params { userId, amount, upi }
  */
-async function requestWithdrawal({ userId, amount, upi }) {
+async function requestWithdrawal({ userId, amount, payment_mode, upi, bank_account_number, bank_ifsc, bank_account_name }) {
     try {
         const wallet = await getWallet(userId);
 
@@ -26,10 +26,10 @@ async function requestWithdrawal({ userId, amount, upi }) {
             return { error: "RATE_LIMIT", message: "Kripya apne agle withdrawal ke liye thoda intezar karein (5 min)." };
         }
 
-        // 2. Pending Request Check
-        const pending = await Withdrawal.findOne({ user_id: Number(userId), status: "PENDING" });
+        // 2. Pending/Processing Request Check
+        const pending = await Withdrawal.findOne({ user_id: Number(userId), status: { $in: ["PENDING", "REQUESTED", "PROCESSING"] } });
         if (pending) {
-            return { error: "PENDING_EXISTS", message: "Aapka ek withdrawal pehle se pending hai." };
+            return { error: "PENDING_EXISTS", message: "Aapka ek withdrawal pehle se processing mein hai." };
         }
 
         // 3. Daily Limit Check
@@ -57,18 +57,27 @@ async function requestWithdrawal({ userId, amount, upi }) {
         await wallet.save();
 
         const withdrawId = "WD_" + Date.now();
-        const wd = new Withdrawal({
+        const wdData = {
             id: withdrawId,
             user_id: Number(userId),
             amount: amount,
-            upi_id: upi,
-            status: "PENDING",
-            at: Math.floor(Date.now() / 1000)
-        });
+            status: "REQUESTED",
+            at: Math.floor(Date.now() / 1000),
+            payment_mode: payment_mode || 'UPI'
+        };
+        if (payment_mode === 'UPI') {
+            wdData.upi = upi;
+        } else if (payment_mode === 'BANK') {
+            wdData.bank_account_number = bank_account_number;
+            wdData.bank_ifsc = bank_ifsc;
+            wdData.bank_account_name = bank_account_name;
+        }
+        const wd = new Withdrawal(wdData);
         await wd.save();
 
-        // Audit Trail
-        await addTxn(userId, 'real', 'debit', amount, `🏦 Withdrawal Requested: ${withdrawId} | UPI: ${upi}`);
+        // 5. NO AUDIT TRAIL YET. We only debit the ledger when the Bank returns SUCCESS.
+        // We log it only for internal tracing.
+        console.log(`🔒 [Withdrawal] Locked ₹${amount} for ${withdrawId}. Status: REQUESTED`);
 
         return { success: true, withdrawId };
     } catch (e) {
