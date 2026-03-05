@@ -93,32 +93,22 @@ router.post('/pay', authMiddleware, async (req, res) => {
         await wallet.save();
         await addTxn(userId, type, 'debit', fee, `Seat booked: ${session.title}`);
 
-        const seatId = Date.now();
-        const seat = new Seat({
-            id: seatId,
-            session_id: Number(session_id),
-            user_id: Number(userId),
-            paid_at: Math.floor(Date.now() / 1000),
-            payment_id: `WALLET_${type.toUpperCase()}_${Date.now()}`
+        const { finalizeBooking } = require('./booking_utils');
+        const paymentId = `WALLET_${type.toUpperCase()}_${Date.now()}`;
+        const booking = await finalizeBooking(userId, session_id, paymentId);
+
+        if (booking.error) return res.status(400).json({ error: booking.error });
+
+        res.json({
+            success: true,
+            seat_id: Date.now(),
+            wallet_type: type,
+            balance_after: type === 'real' ? (wallet.dep_bal + wallet.win_bal) : wallet.demo,
+            session_confirmed: booking.confirmed
         });
-        await seat.save();
 
-        session.seats_booked = (session.seats_booked || 0) + 1;
 
-        const result = { success: true, seat_id: seatId, wallet_type: type, balance_after: type === 'real' ? (wallet.dep_bal + wallet.win_bal) : wallet.demo };
 
-        if (session.seats_booked >= session.seat_limit) {
-            const delaySeconds = (session.quiz_delay_minutes || 60) * 60;
-            session.status = 'confirmed';
-            session.quiz_start_at = Math.floor(Date.now() / 1000) + delaySeconds;
-            session.pdf_at = session.quiz_start_at - 1800;
-            session.prize_pool = Math.floor(session.entry_fee * session.seat_limit * 0.75);
-            session.platform_cut = Math.floor(session.entry_fee * session.seat_limit * 0.25);
-            result.session_confirmed = true;
-        }
-        await session.save();
-
-        res.json(result);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -243,11 +233,12 @@ router.get('/admin/list', authMiddleware, async (req, res) => {
             };
         });
 
-        res.json(result);
+        // res.json(result); // Removed double response
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
+
 
 // ── POST /api/wallet/admin/credit-prize ──────────────────────────────────────
 router.post('/admin/credit-prize', authMiddleware, async (req, res) => {

@@ -75,17 +75,10 @@ router.post('/verify', authMiddleware, async (req, res) => {
             }
         }
 
-        const dup = await Seat.findOne({ session_id: Number(session_id), payment_id: payment_id }).lean();
-        if (dup) return res.status(400).json({ error: 'Payment ID already used' });
+        const { finalizeBooking } = require('./booking_utils');
+        const booking = await finalizeBooking(req.user.id, session_id, payment_id);
 
-        const seat = new Seat({
-            id: Date.now(),
-            session_id: Number(session_id),
-            user_id: Number(req.user.id),
-            paid_at: Math.floor(Date.now() / 1000),
-            payment_id: payment_id || 'manual'
-        });
-        await seat.save();
+        if (booking.error) return res.status(400).json({ error: booking.error });
 
         const pay = await Payment.findOne({ order_id: order_id });
         if (pay) {
@@ -94,67 +87,14 @@ router.post('/verify', authMiddleware, async (req, res) => {
             await pay.save();
         }
 
-        session.seats_booked = (session.seats_booked || 0) + 1;
+        res.json({
+            booked: true,
+            session_confirmed: booking.confirmed,
+            seats_remaining: booking.seats_remaining
+        });
 
-        let result = { booked: true, session_confirmed: false, seats_remaining: session.seat_limit - session.seats_booked };
 
-        if (session.seats_booked >= session.seat_limit) {
-            const delaySeconds = (session.quiz_delay_minutes || 60) * 60;
-            session.status = 'confirmed';
-            session.quiz_start_at = Math.floor(Date.now() / 1000) + delaySeconds;
-            session.pdf_at = session.quiz_start_at - 1800;
-            session.prize_pool = Math.floor(session.entry_fee * session.seat_limit * 0.75);
-            session.platform_cut = Math.floor(session.entry_fee * session.seat_limit * 0.25);
-            result.session_confirmed = true;
-            result.quiz_start_at = session.quiz_start_at;
-            result.pdf_at = session.pdf_at;
-            result.seats_remaining = 0;
-        }
-        await session.save();
-
-        // Broadcast
-        try {
-            const sessionsRouter = require('./sessions');
-            if (sessionsRouter.broadcastSession) {
-                sessionsRouter.broadcastSession(String(session_id), {
-                    seats_booked: session.seats_booked,
-                    status: session.status,
-                    quiz_start_at: session.quiz_start_at || null,
-                    pdf_at: session.pdf_at || null
-                });
-            }
-        } catch (e) { }
-
-        // ── 5% REFERRAL COMMISSION ────────────────────────────────────────
-        try {
-            const payer = await User.findOne({ id: Number(req.user.id) }).lean();
-            if (payer && payer.referred_by) {
-                const referrer = await User.findOne({ referral_code: payer.referred_by }).lean();
-                if (referrer) {
-                    const commission = Math.floor(session.entry_fee * 0.05);
-                    if (commission > 0) {
-                        await Wallet.findOneAndUpdate(
-                            { user_id: referrer.id },
-                            { $inc: { win_bal: commission } },
-                            { upsert: true }
-                        );
-                        await WalletTxn.create({
-                            id: Date.now() + Math.round(Math.random() * 999),
-                            user_id: referrer.id,
-                            wallet: 'real',
-                            type: 'credit',
-                            amount: commission,
-                            note: `🎯 Referral commission — ${payer.name || payer.email} ne session join kiya`,
-                            at: Math.floor(Date.now() / 1000)
-                        });
-                    }
-                }
-            }
-        } catch (refErr) {
-            console.warn('[Referral Commission Error]', refErr.message);
-        }
-
-        res.json(result);
+        // Result is sent above within the res.json block
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

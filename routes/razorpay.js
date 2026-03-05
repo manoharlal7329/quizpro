@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { creditWallet, isDuplicatePayment } = require('./wallet_utils');
-const { data, save } = require('../database/db');
-
+const { creditWallet, isDuplicatePayment, addTxn } = require('./wallet_utils');
+const User = require('../database/models/User');
+const WalletModel = require('../database/models/Wallet');
+const WalletTxnModel = require('../database/models/WalletTxn');
 const Session = require('../database/models/Session');
 const Seat = require('../database/models/Seat');
 
@@ -61,50 +62,12 @@ router.post('/webhook', async (req, res) => {
 
 // Helper: Logic to book a seat
 async function bookSeatAfterPayment(userId, sessionId, paymentId) {
-    const isDup = await isDuplicatePayment(paymentId);
-    if (isDup) return false;
-
-    const session = await Session.findOne({ id: Number(sessionId) });
-    if (!session) return false;
-
-    const already = await Seat.findOne({ session_id: Number(sessionId), user_id: Number(userId) });
-    if (already) return true;
-
-    const seat = new Seat({
-        id: Date.now(),
-        session_id: Number(sessionId),
-        user_id: Number(userId),
-        paid_at: Math.floor(Date.now() / 1000),
-        payment_id: paymentId
-    });
-    await seat.save();
-
-    session.seats_booked = (session.seats_booked || 0) + 1;
-
-    if (session.seats_booked >= session.seat_limit) {
-        const delaySeconds = (session.quiz_delay_minutes || 60) * 60;
-        session.status = 'confirmed';
-        session.quiz_start_at = Math.floor(Date.now() / 1000) + delaySeconds;
-        session.pdf_at = session.quiz_start_at - 1800;
-        session.prize_pool = Math.floor(session.entry_fee * session.seat_limit * 0.75);
-        session.platform_cut = Math.floor(session.entry_fee * session.seat_limit * 0.25);
-    }
-    await session.save();
-
-    // Broadcast
-    try {
-        const sessionsRouter = require('./sessions');
-        if (sessionsRouter.broadcastSession) {
-            sessionsRouter.broadcastSession(String(sessionId), {
-                seats_booked: session.seats_booked,
-                status: session.status,
-                quiz_start_at: session.quiz_start_at || null,
-                pdf_at: session.pdf_at || null
-            });
-        }
-    } catch (e) { }
+    const { finalizeBooking } = require('./booking_utils');
+    const booking = await finalizeBooking(userId, sessionId, paymentId);
+    if (booking.error) return false;
     return true;
 }
 
 
 module.exports = router;
+
