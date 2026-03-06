@@ -1,0 +1,24 @@
+require('dotenv').config();
+const axios = require('axios');
+
+async function forceError() {
+    const key = process.env.RAZORPAY_KEY_ID;
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const auth = Buffer.from(`${key}:${secret}`).toString('base64');
+
+    try {
+        console.log('--- Triggering Error to Reveal ID ---');
+        // Purposely send invalid request to see if error reveals the ID
+        const response = await axios.post('https://api.razorpay.com/v1/payouts', {
+            // Missing account_number
+            amount: 100,
+            currency: 'INR'
+        }, {
+            headers: { 'Authorization': `Basic ${auth}` }
+        });
+    } catch (err) {
+        console.log('REVEAL_ERROR:', JSON.stringify(err.response?.data || err.message, null, 2));
+    }
+}
+
+forceError();

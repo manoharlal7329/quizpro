@@ -1,0 +1,33 @@
+require('dotenv').config();
+const axios = require('axios');
+
+async function discoverAccount() {
+    const key = process.env.RAZORPAY_KEY_ID;
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const auth = Buffer.from(`${key}:${secret}`).toString('base64');
+
+    try {
+        console.log('--- Discovering Razorpay X Account ID ---');
+        // Try to fetch payouts. The response often contains the account_number.
+        const response = await axios.get('https://api.razorpay.com/v1/payouts', {
+            headers: { 'Authorization': `Basic ${auth}` },
+            params: { count: 1 }
+        });
+        
+        if (response.data && response.data.items && response.data.items.length > 0) {
+            const acc = response.data.items[0].account_number;
+            console.log('FOUND_ACCOUNT_ID:', acc);
+        } else {
+            console.log('No payouts found. Trying Balance endpoint...');
+            // Try to fetch balance for the default account
+            const balanceRes = await axios.get('https://api.razorpay.com/v1/payouts/accounts/balance', {
+                headers: { 'Authorization': `Basic ${auth}` }
+            });
+            console.log('BALANCE_RESPONSE:', JSON.stringify(balanceRes.data, null, 2));
+        }
+    } catch (err) {
+        console.error('DISCOVERY_ERROR:', JSON.stringify(err.response?.data || err.message, null, 2));
+    }
+}
+
+discoverAccount();

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-03-06T04:08:52.417Z",
+  "accounts_error": {
+    "message": "no Route matched with those values"
+  },
+  "payouts_error": {
+    "error": {
+      "code": "BAD_REQUEST_ERROR",
+      "description": "Access to requested resource not available",
+      "source": null,
+      "step": null,
+      "reason": null,
+      "metadata": {}
+    }
+  }
+}
