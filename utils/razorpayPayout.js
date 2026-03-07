@@ -9,8 +9,8 @@ const razorpay = require('./razorpayClient');
 async function processPayout(withdrawId) {
     const wd = await Withdrawal.findOne({ id: withdrawId });
 
-    if (!wd || wd.status !== "REQUESTED") {
-        throw new Error("INVALID_WITHDRAW: Request not found or not in REQUESTED state.");
+    if (!wd || wd.status !== "approved") {
+        throw new Error("INVALID_WITHDRAW: Request not found or not in 'approved' state.");
     }
 
     try {
@@ -21,10 +21,17 @@ async function processPayout(withdrawId) {
                 notes: { withdraw_id: withdrawId, user_id: String(wd.user_id) }
             });
 
-            wd.status = "SUCCESS";
+            wd.status = "completed";
             wd.payout_id = refund.id; // Refund ID
             wd.paid_at = Math.floor(Date.now() / 1000);
             await wd.save();
+
+            // Update Lifetime Metrics
+            const wallet = await getWallet(wd.user_id);
+            if (wallet) {
+                wallet.total_withdrawn = (wallet.total_withdrawn || 0) + wd.amount;
+                await wallet.save();
+            }
 
             // Notify via ledger txn
             await addTxn(wd.user_id, 'real', 'debit', wd.amount, `Withdrawal: Refund to Source (${withdrawId})`);
@@ -63,8 +70,8 @@ async function processPayout(withdrawId) {
 
         const payout = await razorpay.payouts.create(payoutPayload);
 
-        // Bank is processing it. We wait for monitorPayouts (AI) to hit SUCCESS.
-        wd.status = "PROCESSING";
+        // Bank is processing it. We wait for monitorPayouts (AI) to hit completed.
+        wd.status = "processing";
         wd.payout_id = payout.id;
         await wd.save();
 
@@ -75,7 +82,7 @@ async function processPayout(withdrawId) {
         // Instant Failure -> Refund Locked Amount
         console.error(`❌ [Payout] Immediate Failure: ${withdrawId} | Error: ${err.message}`);
 
-        wd.status = "FAILED";
+        wd.status = "failed";
         wd.error = err.message;
         await wd.save();
 

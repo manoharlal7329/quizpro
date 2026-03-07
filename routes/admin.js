@@ -102,11 +102,11 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
 
     const totalTxns = await WalletTxn.countDocuments({});
 
-    // Withdrawal Statistics from new Model
-    const reqWithdrawals = await Withdrawal.countDocuments({ status: 'REQUESTED' });
-    const procWithdrawals = await Withdrawal.countDocuments({ status: 'PROCESSING' });
-    const failWithdrawals = await Withdrawal.countDocuments({ status: 'FAILED' });
-    const succWithdrawals = await Withdrawal.countDocuments({ status: 'SUCCESS' });
+    // Withdrawal Statistics (New Flow)
+    const pendingWD = await Withdrawal.countDocuments({ status: 'pending' });
+    const approvedWD = await Withdrawal.countDocuments({ status: 'approved' });
+    const completedWD = await Withdrawal.countDocuments({ status: 'completed' });
+    const rejectedWD = await Withdrawal.countDocuments({ status: 'rejected' });
 
     const fraudAlerts = await FraudLog.countDocuments({ at: { $gte: Math.floor(Date.now() / 1000) - 86400 } });
     const recentFrauds = await FraudLog.find({}).sort({ at: -1 }).limit(5).lean();
@@ -123,15 +123,70 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
         quiz: { active_sessions: activeSessionsCount, completed_sessions: completedSessionsCount },
         wallet: { total_txns: totalTxns },
         withdraw: {
-          requested: reqWithdrawals,
-          processing: procWithdrawals,
-          failed: failWithdrawals,
-          success: succWithdrawals
+          pending: pendingWD,
+          approved: approvedWD,
+          completed: completedWD,
+          rejected: rejectedWD
         },
         fraud: { recent_alerts_24h: fraudAlerts, latest: recentFrauds },
-        ai_admin: { active_alerts: activeAIAlerts }
       }
     });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── WITHDRAWALS — LIST ───────────────────────────────────────────────────────
+router.get('/withdrawals', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const list = await Withdrawal.find({}).sort({ created_at: -1 }).limit(50).lean();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── WITHDRAWALS — APPROVE ────────────────────────────────────────────────────
+router.post('/withdrawals/:id/approve', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const wd = await Withdrawal.findOne({ id: req.params.id });
+    if (!wd || wd.status !== 'pending') return res.status(400).json({ error: 'Invalid or processed' });
+
+    wd.status = 'approved';
+    await wd.save();
+
+    // Trigger Razorpay Payout
+    const { processPayout } = require('../utils/razorpayPayout');
+    try {
+      await processPayout(wd.id);
+      res.json({ success: true, message: 'Withdrawal approved and payout initiated.' });
+    } catch (err) {
+      console.error('Payout trigger failed:', err.message);
+      res.status(500).json({ error: 'Approval semi-success', message: 'Marked as approved but Payout API failed. Check logs.', details: err.message });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── WITHDRAWALS — REJECT ─────────────────────────────────────────────────────
+router.post('/withdrawals/:id/reject', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const wd = await Withdrawal.findOne({ id: req.params.id });
+    if (!wd || wd.status !== 'pending') return res.status(400).json({ error: 'Invalid or processed' });
+
+    wd.status = 'rejected';
+    await wd.save();
+
+    // Return funds to winnings
+    const wallet = await getWallet(wd.user_id);
+    if (wallet) {
+      wallet.win_bal = (wallet.win_bal || 0) + wd.amount;
+      await wallet.save();
+      await addTxn(wd.user_id, 'real', 'credit', wd.amount, `🔄 REJECTED: Withdrawal #${wd.id} returned to winnings.`);
+    }
+
+    res.json({ success: true, message: 'Withdrawal rejected and funds restored.' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -482,12 +537,16 @@ router.post('/wallet/topup', authMiddleware, adminOnly, async (req, res) => {
     if (!user_id || !wallet_type || !amount) return res.status(400).json({ error: 'Missing params' });
 
     const w = await getWallet(user_id);
-    const typeKey = wallet_type === 'real' ? 'dep_bal' : 'demo';
+    let typeKey = 'dep_bal';
+    if (wallet_type === 'demo') typeKey = 'demo';
+    if (wallet_type === 'winnings') typeKey = 'win_bal';
+    if (wallet_type === 'deposit' || wallet_type === 'real') typeKey = 'dep_bal';
+
     w[typeKey] = (w[typeKey] || 0) + Number(amount);
     await w.save();
 
-    await addTxn(user_id, wallet_type === 'real' ? 'real' : 'demo', 'credit', Number(amount), note || 'Admin top-up');
-    res.json({ success: true, new_balance: w[typeKey] });
+    await addTxn(user_id, wallet_type === 'demo' ? 'demo' : 'real', 'credit', Number(amount), note || `Admin top-up (${wallet_type})`);
+    res.json({ success: true, new_balance: w[typeKey], type: wallet_type });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -673,9 +732,9 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
         recent_alerts_24h: recentFraudsCount,
         latest: latestFrauds.map(f => ({
           at: f.at,
-          type: f.reason,
+          type: f.type || 'Anomaly',
           user_id: f.user_id,
-          amount: f.metadata?.amount || 0
+          amount: f.amount || 0
         }))
       },
       ai_admin: {

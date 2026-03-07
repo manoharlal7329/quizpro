@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Withdrawals Management — QuizPro Arena</title>
+    <link rel="stylesheet" href="/css/style.css?v=1.3" />
+    <style>
+        .admin-layout {
+            display: flex;
+            gap: 24px;
+            padding: 30px 0;
+        }
+
+        .sidebar-nav {
+            width: 220px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: .9rem;
+            font-weight: 500;
+            transition: all .2s;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: rgba(14, 165, 233, .1);
+            color: var(--text);
+        }
+
+        .admin-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-approved {
+            background: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-failed {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-processing {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar deep-glass">
+        <span class="logo">⚡ QuizPro Admin — Withdrawals</span>
+        <div class="nav-links">
+            <a href="/admin.html" style="color:var(--muted); font-size:.88rem; text-decoration:none;">Dashboard</a>
+            <button class="btn btn-outline" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="container">
+            <div class="admin-layout">
+                <div class="sidebar-nav glass-card" style="padding: 14px;">
+                    <a href="/admin.html">📊 Dashboard</a>
+                    <a href="/admin_withdrawals.html" class="active">💰 Withdrawals</a>
+                    <a href="/system-status.html" style="color:#ef4444;">🚨 System Monitor</a>
+                </div>
+
+                <div class="admin-content">
+                    <div class="page-hero" style="padding-top:0;">
+                        <h1>💰 Payout Approvals</h1>
+                        <p>Manage withdrawal requests and trigger Razorpay X payouts manually.</p>
+                    </div>
+
+                    <div class="glass-card" style="padding: 20px; margin-bottom: 20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3>Recent Requests</h3>
+                            <button class="btn btn-outline" onclick="loadWithdrawals()">🔄 Refresh</button>
+                        </div>
+                        <div id="wdTableWrap" style="margin-top:20px; overflow-x:auto;">
+                            <div style="padding:40px; text-align:center; color:var(--muted);">Loading requests...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js?v=1.2"></script>
+    <script>
+        requireAdmin();
+
+        async function loadWithdrawals() {
+            try {
+                const list = await api('/api/admin/withdrawals');
+                const wrap = document.getElementById('wdTableWrap');
+
+                if (!list || list.length === 0) {
+                    wrap.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted);">No withdrawal requests found.</div>';
+                    return;
+                }
+
+                wrap.innerHTML = `
+                    <table style="width:100%; text-align:left; border-collapse:collapse;">
+                        <thead>
+                            <tr style="border-bottom:1px solid var(--border);">
+                                <th style="padding:12px;">ID / User</th>
+                                <th style="padding:12px;">Amount</th>
+                                <th style="padding:12px;">Method</th>
+                                <th style="padding:12px;">Status</th>
+                                <th style="padding:12px;">Date</th>
+                                <th style="padding:12px; text-align:right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${list.map(w => `
+                                <tr style="border-bottom:1px solid var(--border);">
+                                    <td style="padding:12px;">
+                                        <div style="font-weight:bold;">${w.id}</div>
+                                        <div style="font-size:0.7rem; color:var(--muted);">User ID: ${w.user_id}</div>
+                                    </td>
+                                    <td style="padding:12px; font-weight:bold;">₹${w.amount}</td>
+                                    <td style="padding:12px; font-size:0.8rem;">
+                                        ${w.payment_mode}
+                                        <div style="font-size:0.65rem; color:var(--muted);">
+                                            ${getPaymentDetail(w)}
+                                        </div>
+                                    </td>
+                                    <td style="padding:12px;">
+                                        <span class="status-pill status-${w.status.toLowerCase()}">${w.status}</span>
+                                    </td>
+                                    <td style="padding:12px; font-size:0.75rem; color:var(--muted);">
+                                        ${new Date(w.created_at * 1000).toLocaleString()}
+                                    </td>
+                                    <td style="padding:12px; text-align:right;">
+                                        ${w.status === 'pending' ? `
+                                            <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="approveWd('${w.id}')">Approve</button>
+                                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem; border-color:var(--red); color:var(--red);" onclick="rejectWd('${w.id}')">Reject</button>
+                                        ` : `
+                                            <span style="font-size:0.7rem; color:var(--muted);">Processed</span>
+                                        `}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (e) {
+                toast('Failed to load withdrawals', 'error');
+            }
+        }
+
+        function getPaymentDetail(w) {
+            if (w.payment_mode === 'UPI') return w.upi || w.upi_id || 'N/A';
+            if (w.payment_mode === 'BANK') return `${w.bank_account_number} (${w.bank_ifsc})`;
+            if (w.payment_mode === 'REFUND') return `Original ID: ${w.original_payment_id}`;
+            return '';
+        }
+
+        async function approveWd(id) {
+            if (!confirm('Are you sure you want to APPROVE this withdrawal and trigger Payout?')) return;
+            try {
+                toast('Approving...', 'info');
+                const res = await api('/api/admin/withdrawals/' + id + '/approve', 'POST');
+                toast('✅ ' + res.message, 'success');
+                loadWithdrawals();
+            } catch (e) {
+                toast('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        async function rejectWd(id) {
+            if (!confirm('Are you sure you want to REJECT this withdrawal? Funds will be returned to user.')) return;
+            try {
+                toast('Rejecting...', 'info');
+                const res = await api('/api/admin/withdrawals/' + id + '/reject', 'POST');
+                toast('✅ ' + res.message, 'success');
+                loadWithdrawals();
+            } catch (e) {
+                toast('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+        loadWithdrawals();
+    </script>
+</body>
+
+</html>

@@ -60,6 +60,45 @@ router.post('/webhook', async (req, res) => {
                 const success = await bookSeatAfterPayment(userId, sessionId, payment.id);
                 if (!success) console.log(`Duplicate booking handled gracefully in Webhook: ${payment.id}`);
             }
+        } else if (event.event === "payout.processed" || event.event === "payout.updated" && event.payload.payout.entity.status === 'processed') {
+            const payout = event.payload.payout.entity;
+            const withdrawId = payout.reference_id || (payout.notes && payout.notes.withdraw_id);
+            if (!withdrawId) return res.json({ status: "ignored_no_ref" });
+
+            const Withdrawal = require('../database/models/Withdrawal');
+            const wd = await Withdrawal.findOne({ id: withdrawId });
+            if (wd && wd.status !== 'completed') {
+                wd.status = 'completed';
+                wd.paid_at = Math.floor(Date.now() / 1000);
+                await wd.save();
+
+                const wallet = await getWallet(wd.user_id);
+                if (wallet) {
+                    wallet.total_withdrawn = (wallet.total_withdrawn || 0) + wd.amount;
+                    await wallet.save();
+                }
+                console.log(`✅ [Webhook] Payout Processed: ${withdrawId}`);
+            }
+        } else if (event.event === "payout.reversed" || event.event === "payout.failed") {
+            const payout = event.payload.payout.entity;
+            const withdrawId = payout.reference_id || (payout.notes && payout.notes.withdraw_id);
+            if (!withdrawId) return res.json({ status: "ignored_no_ref" });
+
+            const Withdrawal = require('../database/models/Withdrawal');
+            const wd = await Withdrawal.findOne({ id: withdrawId });
+            if (wd && wd.status !== 'failed' && wd.status !== 'rejected') {
+                wd.status = 'failed';
+                wd.error = event.payload.payout.entity.status_details?.description || 'Payout reversed by bank';
+                await wd.save();
+
+                const wallet = await getWallet(wd.user_id);
+                if (wallet) {
+                    wallet.win_bal += wd.amount;
+                    await wallet.save();
+                    await addTxn(wd.user_id, 'real', 'credit', wd.amount, `🔄 Auto-Refund: Withdrawal Failed (${withdrawId})`);
+                }
+                console.log(`❌ [Webhook] Payout Failed/Reversed: ${withdrawId} | User #${wd.user_id} Refunded`);
+            }
         }
         res.json({ status: "ok" });
     } catch (e) {

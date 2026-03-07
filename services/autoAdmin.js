@@ -91,18 +91,25 @@ class AutoAdminService {
 
     async monitorPayouts() {
         // Check for payouts that have been processing
-        const processingWithdrawals = await Withdrawal.find({ status: 'PROCESSING', payout_id: { $exists: true } });
+        const processingWithdrawals = await Withdrawal.find({ status: 'processing', payout_id: { $exists: true } });
 
         for (const wd of processingWithdrawals) {
             try {
                 const payoutData = await razorpay.payouts.fetch(wd.payout_id);
 
                 if (payoutData.status === 'processed') {
-                    wd.status = 'SUCCESS';
+                    wd.status = 'completed';
                     wd.paid_at = Math.floor(Date.now() / 1000);
                     await wd.save();
 
-                    // The money has officially left the bank. Now we log the Debit.
+                    // Update Lifetime Metrics
+                    const wallet = await getWallet(wd.user_id);
+                    if (wallet) {
+                        wallet.total_withdrawn = (wallet.total_withdrawn || 0) + wd.amount;
+                        await wallet.save();
+                    }
+
+                    // Log the Debit in ledger
                     await addTxn(wd.user_id, 'real', 'debit', wd.amount, `🏦 Withdrawal Successful: ${wd.id} | UTR: ${payoutData.utr || wd.payout_id}`);
                     console.log(`✅ [Monitor] Payout Success Verified: ${wd.id}`);
                 }
@@ -112,23 +119,22 @@ class AutoAdminService {
                     if (wd.retry_count < 3) {
                         // AUTO RETRY
                         wd.retry_count += 1;
-                        wd.status = 'REQUESTED'; // Reset state so processPayout picks it up anew
+                        wd.status = 'approved'; // Re-trigger via retry logic (Reset to approved)
                         await wd.save();
                         console.log(`🔄 [Monitor] Auto-Retrying Payout ${wd.id} (Attempt ${wd.retry_count}/3)...`);
 
                         try {
                             await processPayout(wd.id);
                         } catch (err) {
-                            // If processPayout outright fails again, the catch block in processPayout handles FAILED/Refund.
                             console.error(`⚠️ [Monitor] Retry failed immediately for ${wd.id}`);
                         }
                     } else {
                         // EXHAUSTED RETRIES -> REFUND
-                        wd.status = 'FAILED';
+                        wd.status = 'failed';
                         wd.error = `Bank ${payoutData.status} after 3 retries.`;
                         await wd.save();
 
-                        // Complete Lock Release
+                        // Return funds to winnings
                         const wallet = await getWallet(wd.user_id);
                         wallet.win_bal += wd.amount;
                         await wallet.save();

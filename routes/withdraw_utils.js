@@ -13,46 +13,43 @@ async function requestWithdrawal({ userId, amount, payment_mode, upi, bank_accou
     try {
         const wallet = await getWallet(userId);
 
-        // 1. Balance Check (total real = dep_bal + win_bal)
-        const totalReal = (wallet.dep_bal || 0) + (wallet.win_bal || 0);
-        if (!wallet || totalReal < amount) {
-            await logFraud(userId, "INSUFFICIENT_BALANCE", { requested: amount, balance: totalReal });
-            return { error: "INSUFFICIENT_BALANCE", message: `Insufficient balance. Available: ₹${totalReal}` };
+        // 1. Requirement: Min ₹100, Max ₹10,000
+        if (amount < 100 || amount > 10000) {
+            return { error: "INVALID_AMOUNT", message: "Withdrawal amount must be between ₹100 and ₹10,000." };
         }
 
-        // 🛡️ ANTI-FRAUD RATE LIMIT (Pro Level)
-        if (!antiFraud.canWithdraw(wallet)) {
-            await logFraud(userId, "RAPID_WITHDRAW", { amount, upi });
-            return { error: "RATE_LIMIT", message: "Kripya apne agle withdrawal ke liye thoda intezar karein (5 min)." };
+        // 2. Requirement: Only from winnings
+        if (!wallet || (wallet.win_bal || 0) < amount) {
+            await logFraud(userId, "INSUFFICIENT_WINNINGS", { requested: amount, win_bal: wallet.win_bal });
+            return { error: "INSUFFICIENT_WINNINGS", message: `Insufficient winnings. Aap sirf winning balance hi nikal sakte hain. Available: ₹${wallet.win_bal || 0}` };
         }
 
-        // 2. Pending/Processing Request Check
-        const pending = await Withdrawal.findOne({ user_id: Number(userId), status: { $in: ["PENDING", "REQUESTED", "PROCESSING"] } });
-        if (pending) {
-            return { error: "PENDING_EXISTS", message: "Aapka ek withdrawal pehle se processing mein hai." };
-        }
-
-        // 3. Daily Limit Check
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
+        // 5. Requirement: Limit maximum withdrawals per day
+        const todayStart = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
         const todayCount = await Withdrawal.countDocuments({
             user_id: Number(userId),
-            at: { $gte: Math.floor(startOfDay.getTime() / 1000) }
+            created_at: { $gte: todayStart },
+            status: { $ne: 'rejected' }
         });
 
         if (todayCount >= DAILY_WITHDRAW_LIMIT) {
-            return { error: "DAILY_LIMIT", message: "Aap din mein sirf ek hi withdrawal kar sakte hain." };
+            return { error: "DAILY_LIMIT_EXCEEDED", message: `Aap ek din mein sirf ${DAILY_WITHDRAW_LIMIT} withdrawals hi kar sakte hain.` };
         }
 
-        // 4. Deduct from dep_bal first, then win_bal
-        let remaining = amount;
-        if (wallet.dep_bal >= remaining) {
-            wallet.dep_bal -= remaining;
-        } else {
-            remaining -= wallet.dep_bal;
-            wallet.dep_bal = 0;
-            wallet.win_bal -= remaining;
+        // 🛡️ ANTI-FRAUD RATE LIMIT (5 min between calls)
+        if (!antiFraud.canWithdraw(wallet)) {
+            await logFraud(userId, "RAPID_WITHDRAW", { amount });
+            return { error: "RATE_LIMIT", message: "Kripya agle withdrawal ke liye thoda intezar karein (5 min)." };
         }
+
+        // 3. Requirement: Prevent duplicate requests
+        const pending = await Withdrawal.findOne({ user_id: Number(userId), status: { $in: ["pending", "approved", "processing"] } });
+        if (pending) {
+            return { error: "PENDING_EXISTS", message: "Aapka ek withdrawal pehle se processing ya approval mein hai." };
+        }
+
+        // 4. Requirement: Deduct ONLY from win_bal (Locks funds)
+        wallet.win_bal -= amount;
         wallet.last_withdraw_at = new Date();
         await wallet.save();
 
@@ -61,8 +58,8 @@ async function requestWithdrawal({ userId, amount, payment_mode, upi, bank_accou
             id: withdrawId,
             user_id: Number(userId),
             amount: amount,
-            status: "REQUESTED",
-            at: Math.floor(Date.now() / 1000),
+            status: "pending",
+            created_at: Math.floor(Date.now() / 1000),
             payment_mode: payment_mode || 'UPI'
         };
         if (payment_mode === 'UPI') {
@@ -72,14 +69,12 @@ async function requestWithdrawal({ userId, amount, payment_mode, upi, bank_accou
             wdData.bank_ifsc = bank_ifsc;
             wdData.bank_account_name = bank_account_name;
         } else if (payment_mode === 'REFUND') {
-            wdData.original_payment_id = params.original_payment_id;
+            wdData.original_payment_id = arguments[0].original_payment_id;
         }
         const wd = new Withdrawal(wdData);
         await wd.save();
 
-        // 5. NO AUDIT TRAIL YET. We only debit the ledger when the Bank returns SUCCESS.
-        // We log it only for internal tracing.
-        console.log(`🔒 [Withdrawal] Locked ₹${amount} for ${withdrawId}. Status: REQUESTED`);
+        console.log(`🔒 [Withdrawal] Locked ₹${amount} from winnings for ${withdrawId}. Status: pending (Awaiting Admin Approval)`);
 
         return { success: true, withdrawId };
     } catch (e) {
@@ -94,8 +89,9 @@ async function requestWithdrawal({ userId, amount, payment_mode, upi, bank_accou
 async function logFraud(userId, reason, metadata = {}) {
     const log = new FraudLog({
         user_id: Number(userId),
-        reason: reason,
-        metadata: metadata,
+        type: reason,
+        details: metadata,
+        amount: metadata.amount || 0,
         at: Math.floor(Date.now() / 1000)
     });
     await log.save();

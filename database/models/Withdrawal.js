@@ -15,7 +15,7 @@ const withdrawalSchema = new mongoose.Schema({
     bank_account_number: { type: String },
     bank_ifsc: { type: String },
     bank_account_name: { type: String },
-    status: { type: String, enum: ['REQUESTED', 'PROCESSING', 'SUCCESS', 'FAILED', 'PENDING', 'PAID', 'REJECTED'], default: 'REQUESTED' },
+    status: { type: String, enum: ['pending', 'approved', 'rejected', 'completed', 'processing', 'failed'], default: 'pending' },
     created_at: { type: Number, default: () => Math.floor(Date.now() / 1000) },
     paid_at: Number,
     payout_id: String,

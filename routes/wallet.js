@@ -32,8 +32,11 @@ router.get('/me', authMiddleware, async (req, res) => {
         const totalReal = (w.dep_bal || 0) + (w.win_bal || 0);
         res.json({
             demo: w.demo || 0,
-            real: totalReal,
-            withdrawable: totalReal, // Students can withdraw full real balance (dep + win)
+            deposit: w.dep_bal || 0,
+            winnings: w.win_bal || 0,
+            withdrawn: w.total_withdrawn || 0,
+            real: (w.dep_bal || 0) + (w.win_bal || 0),
+            withdrawable: w.win_bal || 0,
             has_pin: !!w.pin
         });
     } catch (e) {
@@ -269,7 +272,7 @@ router.get('/admin/list', authMiddleware, async (req, res) => {
             };
         });
 
-        // res.json(result); // Removed double response
+        res.json(result);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -353,18 +356,7 @@ router.post('/withdraw', authMiddleware, async (req, res) => {
 
         if (result.error) return res.status(403).json(result);
 
-        // 🚀 SYNCHRONOUS PAYOUT PROCESSING (Required for secure locking)
-        if (result.withdrawId) {
-            try {
-                await processPayout(result.withdrawId);
-            } catch (payoutErr) {
-                console.error(`⚠️ Payout creation failed for ${result.withdrawId}:`, payoutErr.message);
-                // The frontend should know it failed
-                return res.status(400).json({ error: 'PAYOUT_FAILED', message: payoutErr.message || 'Bank server rejected the withdrawal. Funds reversed.' });
-            }
-        }
-
-        res.json({ success: true, message: 'Withdraw request processing...' });
+        res.json({ success: true, message: 'Withdrawal request submitted for approval.', withdraw_id: result.withdrawId });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
