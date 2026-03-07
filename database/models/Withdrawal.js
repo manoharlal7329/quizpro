@@ -5,10 +5,12 @@ const withdrawalSchema = new mongoose.Schema({
     id: { type: String, unique: true, default: () => 'WD' + Date.now() },
     user_id: { type: Number, ref: 'User', required: true },
     amount: { type: Number, required: true },
-    // Payment mode: UPI or BANK
-    payment_mode: { type: String, enum: ['UPI', 'BANK'], default: 'UPI' },
+    // Payment mode: UPI or BANK or REFUND
+    payment_mode: { type: String, enum: ['UPI', 'BANK', 'REFUND'], default: 'UPI' },
     // UPI field (used when payment_mode is UPI)
     upi: { type: String },
+    // Refund field (used when payment_mode is REFUND)
+    original_payment_id: { type: String },
     // Bank transfer fields (used when payment_mode is BANK)
     bank_account_number: { type: String },
     bank_ifsc: { type: String },

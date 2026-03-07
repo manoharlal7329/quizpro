@@ -14,6 +14,24 @@ async function processPayout(withdrawId) {
     }
 
     try {
+        if (wd.payment_mode === 'REFUND') {
+            console.log(`🔄 [Refund] Initiating refund for WD: ${withdrawId} | PaymentID: ${wd.original_payment_id}`);
+            const refund = await razorpay.payments.refund(wd.original_payment_id, {
+                amount: wd.amount * 100, // convert to paise
+                notes: { withdraw_id: withdrawId, user_id: String(wd.user_id) }
+            });
+
+            wd.status = "SUCCESS";
+            wd.payout_id = refund.id; // Refund ID
+            wd.paid_at = Math.floor(Date.now() / 1000);
+            await wd.save();
+
+            // Notify via ledger txn
+            await addTxn(wd.user_id, 'real', 'debit', wd.amount, `Withdrawal: Refund to Source (${withdrawId})`);
+            console.log(`✅ [Refund] Success: ${withdrawId} | Refund ID: ${refund.id}`);
+            return refund;
+        }
+
         const payoutPayload = {
             account_number: process.env.RAZORPAY_PAYOUT_ACCOUNT,
             amount: wd.amount * 100, // convert to paise

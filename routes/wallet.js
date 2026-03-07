@@ -318,7 +318,7 @@ router.post('/admin/credit-prize', authMiddleware, async (req, res) => {
 
 // ─── POST /api/wallet/withdraw (Anti-Fraud & Fund Lock) ─────────────────────
 router.post('/withdraw', authMiddleware, async (req, res) => {
-    const { amount, pin, payment_mode, upi_id, bank_account_number, bank_ifsc, bank_account_name } = req.body;
+    const { amount, pin, payment_mode, upi_id, original_payment_id, bank_account_number, bank_ifsc, bank_account_name } = req.body;
     const userId = req.user.id;
 
     try {
@@ -326,12 +326,10 @@ router.post('/withdraw', authMiddleware, async (req, res) => {
         // Validate payment mode and required fields
         if (payment_mode === 'UPI') {
             if (!upi_id || !upi_id.includes('@')) return res.status(400).json({ error: 'INVALID_UPI', message: 'Valid UPI ID required.' });
-        } else if (payment_mode === 'BANK') {
-            if (!bank_account_number || !bank_ifsc || !bank_account_name) {
-                return res.status(400).json({ error: 'INVALID_BANK_DETAILS', message: 'Bank account number, IFSC and account name are required.' });
-            }
+        } else if (payment_mode === 'REFUND') {
+            if (!original_payment_id) return res.status(400).json({ error: 'INVALID_REFUND', message: 'Original Payment ID required for refund.' });
         } else {
-            return res.status(400).json({ error: 'INVALID_PAYMENT_MODE', message: 'Payment mode must be UPI or BANK.' });
+            return res.status(400).json({ error: 'INVALID_PAYMENT_MODE', message: 'Payment mode must be UPI, BANK, or REFUND.' });
         }
         // Proceed with withdrawal request
         const result = await requestWithdrawal({
@@ -339,6 +337,7 @@ router.post('/withdraw', authMiddleware, async (req, res) => {
             amount: Number(amount),
             payment_mode,
             upi: upi_id,
+            original_payment_id,
             bank_account_number,
             bank_ifsc,
             bank_account_name
@@ -412,20 +411,30 @@ router.post('/withdraw/auto', authMiddleware, async (req, res) => {
 
 // ─── POST /api/wallet/verify-bank (Penny Drop Validation) ───────────────────
 router.post('/verify-bank', authMiddleware, async (req, res) => {
-    const { account_number, ifsc } = req.body;
-    if (!account_number || !ifsc) return res.status(400).json({ error: 'Account Number and IFSC are required' });
+    const { account_number: target_account, ifsc } = req.body;
+    if (!target_account || !ifsc) return res.status(400).json({ error: 'Account Number and IFSC are required' });
+
+    // Explicitly check for valid Razorpay X Payout Account ID (14 digits)
+    const payoutAccount = process.env.RAZORPAY_PAYOUT_ACCOUNT;
+    if (!payoutAccount || !/^\d{14}$/.test(payoutAccount)) {
+        console.error(`❌ [VerifyBank] Config Error: RAZORPAY_PAYOUT_ACCOUNT is '${payoutAccount}'. Needs 14-digit Account ID.`);
+        return res.status(500).json({
+            error: 'MISCONFIGURED_PAYOUT_ACCOUNT',
+            message: 'Razorpay Payout Account is not correctly configured. Please provide the 14-digit Account ID from your Razorpay X Dashboard.'
+        });
+    }
 
     try {
-        console.log(`🔍 [VerifyBank] Checking details for User #${req.user.id}: ${account_number} / ${ifsc}`);
+        console.log(`🔍 [VerifyBank] Checking details for User #${req.user.id}: ${target_account} / ${ifsc}`);
         // Use Razorpay X Fund Account Validation API
         const validationPayload = {
-            account_number: process.env.RAZORPAY_PAYOUT_ACCOUNT,
+            account_number: payoutAccount,
             fund_account: {
                 account_type: 'bank_account',
                 bank_account: {
                     name: "User Validation",
                     ifsc: ifsc,
-                    account_number: account_number
+                    account_number: target_account
                 }
             },
             amount: 100, // INR 1.00 in paise

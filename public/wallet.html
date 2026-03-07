@@ -255,8 +255,8 @@
                             Mode</label>
                         <select id="withdrawMode" onchange="toggleWithdrawFields()"
                             style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none;">
-                            <option value="UPI">UPI</option>
-                            <option value="BANK">Bank Transfer (IMPS/NEFT)</option>
+                            <option value="UPI">UPI Withdrawal</option>
+                            <option value="REFUND">Refund to Source (Original Method)</option>
                         </select>
                     </div>
 
@@ -266,6 +266,17 @@
                             UPI ID</label>
                         <input type="text" id="withdrawUpi" placeholder="e.g. name@upi"
                             style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 16px;">
+                    </div>
+
+                    <div id="refundFields"
+                        style="display: none; border: 1px dashed var(--gold); padding: 12px; border-radius: 10px; margin-bottom: 16px;">
+                        <p style="font-size: 0.75rem; color: var(--gold); margin: 0;">
+                            <b>Refund to:</b> <span id="lastPaymentLabel">Loading details...</span>
+                            <input type="hidden" id="lastPaymentId">
+                        </p>
+                        <p style="font-size: 0.65rem; color: var(--muted); margin-top: 4px;">
+                            Funds will be returned to the payment method used in your last successful deposit.
+                        </p>
                     </div>
 
                     <div id="bankFields" style="display: none;">
@@ -604,12 +615,42 @@
 
         function toggleWithdrawFields() {
             const mode = document.getElementById('withdrawMode').value;
-            document.getElementById('upiFields').style.display = mode === 'UPI' ? 'block' : 'none';
-            document.getElementById('bankFields').style.display = mode === 'BANK' ? 'block' : 'none';
+            const upi = document.getElementById('upiFields');
+            const bank = document.getElementById('bankFields');
+            const refund = document.getElementById('refundFields');
 
-            if (mode === 'BANK') {
-                document.getElementById('bankNameSearch').value = '';
-                document.getElementById('bankAccountName').value = '';
+            upi.style.display = 'none';
+            bank.style.display = 'none';
+            refund.style.display = 'none';
+
+            if (mode === 'UPI') {
+                upi.style.display = 'block';
+            } else if (mode === 'REFUND') {
+                refund.style.display = 'block';
+                fetchLastDeposit();
+            }
+        }
+
+        async function fetchLastDeposit() {
+            const label = document.getElementById('lastPaymentLabel');
+            const hidden = document.getElementById('lastPaymentId');
+            try {
+                label.textContent = "Checking transactions...";
+                const txns = await api('/api/wallet/txns');
+                // Find last successful deposit
+                const lastDep = txns.find(t => t.type === 'credit' && t.payment_id && t.note && t.note.toLowerCase().includes('deposit'));
+                if (lastDep) {
+                    label.textContent = `Razorpay ID: ${lastDep.payment_id} (₹${lastDep.amount})`;
+                    label.style.color = "var(--gold)";
+                    hidden.value = lastDep.payment_id;
+                } else {
+                    label.textContent = "No recent deposit found. Please use UPI.";
+                    label.style.color = "#ff4444";
+                    hidden.value = "";
+                }
+            } catch (e) {
+                label.textContent = "Error fetching details.";
+                label.style.color = "#ff4444";
             }
         }
 
@@ -638,14 +679,10 @@
                 const upi = document.getElementById('withdrawUpi').value;
                 if (!upi || !upi.includes('@')) return toast('Enter a valid UPI ID', 'error');
                 payload.upi_id = upi;
-            } else {
-                const acc = document.getElementById('bankAccountNumber').value;
-                const ifsc = document.getElementById('bankIfsc').value;
-                const name = document.getElementById('bankAccountName').value;
-                if (!acc || !ifsc || !name) return toast('Fill all bank details', 'error');
-                payload.bank_account_number = acc;
-                payload.bank_ifsc = ifsc;
-                payload.bank_account_name = name;
+            } else if (mode === 'REFUND') {
+                const paymentId = document.getElementById('lastPaymentId').value;
+                if (!paymentId) return toast('No original payment record found to refund. Please use UPI.', 'error');
+                payload.original_payment_id = paymentId;
             }
 
             btn.disabled = true;

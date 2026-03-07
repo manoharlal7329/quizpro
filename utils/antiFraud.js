@@ -8,6 +8,6 @@ module.exports = {
     canWithdraw(wallet) {
         if (!wallet || !wallet.last_withdraw_at) return true;
         const diff = Date.now() - new Date(wallet.last_withdraw_at).getTime();
-        return diff > 5 * 60 * 1000; // 5 minutes gap
+        return diff > 1 * 60 * 1000; // 1 minute gap
     }
 };

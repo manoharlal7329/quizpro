@@ -3,7 +3,7 @@ const FraudLog = require('../database/models/FraudLog');
 const { getWallet, addTxn } = require('./wallet_utils');
 const antiFraud = require('../utils/antiFraud');
 
-const DAILY_WITHDRAW_LIMIT = 1;
+const DAILY_WITHDRAW_LIMIT = 5;
 
 /**
  * Request a withdrawal with anti-fraud checks
@@ -71,6 +71,8 @@ async function requestWithdrawal({ userId, amount, payment_mode, upi, bank_accou
             wdData.bank_account_number = bank_account_number;
             wdData.bank_ifsc = bank_ifsc;
             wdData.bank_account_name = bank_account_name;
+        } else if (payment_mode === 'REFUND') {
+            wdData.original_payment_id = params.original_payment_id;
         }
         const wd = new Withdrawal(wdData);
         await wd.save();
