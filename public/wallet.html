@@ -368,7 +368,7 @@
                     </div>
 
                     <div style="margin-bottom: 16px;">
-                        <label
+                        <label for="withdrawAmt"
                             style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Redeem
                             Amount (Minimum ₹100)</label>
                         <input type="number" id="withdrawAmt" value="100" min="100" max="10000"
@@ -477,8 +477,10 @@
 
                 // If admin, update limits text
                 if (window.isAdmin) {
-                    document.querySelector('label[for="withdrawAmt"]').innerHTML = 'Redeem Amount (Admin Mode: No Limits)';
-                    document.getElementById('withdrawAmt').min = 1;
+                    const label = document.querySelector('label[for="withdrawAmt"]');
+                    if (label) label.innerHTML = 'Redeem Amount (Admin Mode: No Limits)';
+                    const input = document.getElementById('withdrawAmt');
+                    if (input) input.min = 1;
                 }
 
                 // Load txns
