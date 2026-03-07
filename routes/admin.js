@@ -66,75 +66,7 @@ router.get('/dashboard', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// ─── SYSTEM STATUS MONITOR ────────────────────────────────────────────────────
-router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
-  try {
-    const uptime = process.uptime();
-    const memoryUsage = process.memoryUsage();
-    const totalMem = os.totalmem();
-
-    const serverStatus = {
-      status: 'ONLINE',
-      uptime: uptime,
-      node_version: process.version,
-      env: process.env.NODE_ENV || 'production',
-      memory_usage_mb: Math.round(memoryUsage.rss / 1024 / 1024),
-      total_mem_mb: Math.round(totalMem / 1024 / 1024),
-      cpu_load: os.loadavg()[0] || 0
-    };
-
-    const dbStateMap = ['disconnected', 'connected', 'connecting', 'disconnecting'];
-    const dbState = mongoose.connection.readyState;
-    const dbStatus = {
-      status: dbState === 1 ? 'OK' : 'ERROR',
-      state: dbStateMap[dbState] || 'unknown',
-    };
-
-    const rzpKey = process.env.RAZORPAY_KEY_ID || '';
-    const paymentStatus = {
-      api_configured: rzpKey.startsWith('rzp_') ? 'YES' : 'NO',
-      mode: rzpKey.startsWith('rzp_live') ? 'LIVE' : 'TEST',
-      webhook: process.env.RAZORPAY_WEBHOOK_SECRET ? 'ACTIVE' : 'INACTIVE'
-    };
-
-    const activeSessionsCount = await Session.countDocuments({ status: { $in: ['open', 'live', 'confirmed'] } });
-    const completedSessionsCount = await Session.countDocuments({ status: 'completed' });
-
-    const totalTxns = await WalletTxn.countDocuments({});
-
-    // Withdrawal Statistics (New Flow)
-    const pendingWD = await Withdrawal.countDocuments({ status: 'pending' });
-    const approvedWD = await Withdrawal.countDocuments({ status: 'approved' });
-    const completedWD = await Withdrawal.countDocuments({ status: 'completed' });
-    const rejectedWD = await Withdrawal.countDocuments({ status: 'rejected' });
-
-    const fraudAlerts = await FraudLog.countDocuments({ at: { $gte: Math.floor(Date.now() / 1000) - 86400 } });
-    const recentFrauds = await FraudLog.find({}).sort({ at: -1 }).limit(5).lean();
-
-    // 🤖 AI Auto Admin Alerts
-    const activeAIAlerts = await AIAlert.find({ resolved: false }).sort({ created_at: -1 }).lean();
-
-    res.json({
-      success: true,
-      data: {
-        server: serverStatus,
-        database: dbStatus,
-        payment: paymentStatus,
-        quiz: { active_sessions: activeSessionsCount, completed_sessions: completedSessionsCount },
-        wallet: { total_txns: totalTxns },
-        withdraw: {
-          pending: pendingWD,
-          approved: approvedWD,
-          completed: completedWD,
-          rejected: rejectedWD
-        },
-        fraud: { recent_alerts_24h: fraudAlerts, latest: recentFrauds },
-      }
-    });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
+// (Duplicate system-status route removed and merged below)
 
 // ─── WITHDRAWALS — LIST ───────────────────────────────────────────────────────
 router.get('/withdrawals', authMiddleware, adminOnly, async (req, res) => {
@@ -149,8 +81,17 @@ router.get('/withdrawals', authMiddleware, adminOnly, async (req, res) => {
 // ─── WITHDRAWALS — APPROVE ────────────────────────────────────────────────────
 router.post('/withdrawals/:id/approve', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const wd = await Withdrawal.findOne({ id: req.params.id });
-    if (!wd || wd.status !== 'pending') return res.status(400).json({ error: 'Invalid or processed' });
+    const wdId = String(req.params.id).trim();
+    console.log(`[Admin] Attempting to approve WD: "${wdId}"`);
+    const wd = await Withdrawal.findOne({ id: wdId });
+    if (!wd) {
+      console.error(`[Admin] WD Not Found: "${wdId}"`);
+      return res.status(404).json({ error: 'Withdrawal not found' });
+    }
+    if (wd.status !== 'pending') {
+      console.error(`[Admin] WD Status Mismatch: ID ${wdId} is "${wd.status}", expected "pending"`);
+      return res.status(400).json({ error: 'Already processed or invalid status', status: wd.status });
+    }
 
     wd.status = 'approved';
     await wd.save();
@@ -172,8 +113,13 @@ router.post('/withdrawals/:id/approve', authMiddleware, adminOnly, async (req, r
 // ─── WITHDRAWALS — REJECT ─────────────────────────────────────────────────────
 router.post('/withdrawals/:id/reject', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const wd = await Withdrawal.findOne({ id: req.params.id });
-    if (!wd || wd.status !== 'pending') return res.status(400).json({ error: 'Invalid or processed' });
+    const wdId = String(req.params.id).trim();
+    console.log(`[Admin] Attempting to reject WD: "${wdId}"`);
+    const wd = await Withdrawal.findOne({ id: wdId });
+    if (!wd || wd.status !== 'pending') {
+      console.error(`[Admin] Reject failed: Row not found or status not pending for ID ${wdId}`);
+      return res.status(400).json({ error: 'Invalid or processed' });
+    }
 
     wd.status = 'rejected';
     await wd.save();
@@ -678,10 +624,10 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
 
     const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown';
 
-    const requestedWD = await Withdrawal.countDocuments({ status: { $in: ['REQUESTED', 'PENDING'] } });
-    const processingWD = await Withdrawal.countDocuments({ status: 'PROCESSING' });
-    const failedWD = await Withdrawal.countDocuments({ status: { $in: ['FAILED', 'REJECTED'] } });
-    const successWD = await Withdrawal.countDocuments({ status: { $in: ['SUCCESS', 'PAID'] } });
+    const requestedWD = await Withdrawal.countDocuments({ status: { $in: ['pending', 'approved'] } });
+    const processingWD = await Withdrawal.countDocuments({ status: 'processing' });
+    const failedWD = await Withdrawal.countDocuments({ status: { $in: ['failed', 'rejected'] } });
+    const successWD = await Withdrawal.countDocuments({ status: { $in: ['completed', 'paid'] } });
 
     const totalTxns = await WalletTxn.countDocuments({});
     const recentFraudsCount = await FraudLog.countDocuments({ at: { $gte: Math.floor(Date.now() / 1000) - 86400 } });

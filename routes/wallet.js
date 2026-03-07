@@ -29,8 +29,15 @@ const { processPayout } = require('../utils/razorpayPayout');
 router.get('/me', authMiddleware, async (req, res) => {
     try {
         const w = await getWallet(req.user.id);
-        const totalReal = (w.dep_bal || 0) + (w.win_bal || 0);
-        const user = await User.findOne({ id: Number(req.user.id) });
+        const userId = req.user ? req.user.id : null;
+        if (!userId) {
+            console.error('[Wallet] No userId in req.user');
+            return res.status(401).json({ error: 'User authenticated but ID missing' });
+        }
+
+        const user = await User.findOne({ id: Number(userId) });
+        if (!user) console.warn(`[Wallet] User model not found for ID: ${userId}`);
+
         res.json({
             demo: w.demo || 0,
             deposit: w.dep_bal || 0,
@@ -42,7 +49,8 @@ router.get('/me', authMiddleware, async (req, res) => {
             is_admin: user && user.is_admin === 1
         });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        console.error('[Wallet] error in /me:', e.message);
+        res.status(500).json({ error: `Server error: ${e.message}` });
     }
 });
 
