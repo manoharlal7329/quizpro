@@ -10,7 +10,9 @@ const DAILY_WITHDRAW_LIMIT = 5;
  * Request a withdrawal with anti-fraud checks
  * @param {Object} params { userId, amount, upi }
  */
-async function requestWithdrawal({ userId, amount, payment_mode, upi, bank_account_number, bank_ifsc, bank_account_name }) {
+async function requestWithdrawal(params) {
+    const { userId, amount, payment_mode, bank_account_number, bank_ifsc, bank_account_name } = params;
+    const upi = params.upi || params.upi_id; // Handle both common names
     try {
         const wallet = await getWallet(userId);
 

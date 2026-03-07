@@ -501,7 +501,8 @@
                     </div>
                 `).join('');
             } catch (e) {
-                toast('Error loading wallet data', 'error');
+                console.error('Wallet Load Error:', e);
+                toast('Error loading wallet data: ' + (e.message || 'Check connection'), 'error');
             }
         }
 
@@ -712,7 +713,7 @@
             if (mode === 'UPI') {
                 const upi = document.getElementById('withdrawUpi').value;
                 if (!upi || !upi.includes('@')) return toast('Enter a valid UPI ID', 'error');
-                payload.upi_id = upi;
+                payload.upi = upi;
             } else if (mode === 'REFUND') {
                 const paymentId = document.getElementById('lastPaymentId').value;
                 if (!paymentId) return toast('No original payment record found to refund. Please use UPI.', 'error');

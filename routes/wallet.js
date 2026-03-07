@@ -49,7 +49,7 @@ router.get('/me', authMiddleware, async (req, res) => {
             is_admin: user && user.is_admin === 1
         });
     } catch (e) {
-        console.error('[Wallet] error in /me:', e.message);
+        console.error(`[Wallet] error in /me for User ${req.user?.id}:`, e.message);
         res.status(500).json({ error: `Server error: ${e.message}` });
     }
 });
@@ -57,11 +57,15 @@ router.get('/me', authMiddleware, async (req, res) => {
 // ── GET /api/wallet/txns ──────────────────────────────────────────────────────
 router.get('/txns', authMiddleware, async (req, res) => {
     try {
-        const txns = await WalletTxnModel.find({ user_id: Number(req.user.id) })
+        const userId = Number(req.user.id);
+        if (isNaN(userId)) throw new Error('Invalid user ID in token');
+
+        const txns = await WalletTxnModel.find({ user_id: userId })
             .sort({ at: -1 })
             .limit(30);
         res.json(txns);
     } catch (e) {
+        console.error(`[Wallet] error in /txns for User ${req.user?.id}:`, e.message);
         res.status(500).json({ error: e.message });
     }
 });

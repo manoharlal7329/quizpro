@@ -99,10 +99,11 @@ router.post('/withdrawals/:id/approve', authMiddleware, adminOnly, async (req, r
     // Trigger Razorpay Payout
     const { processPayout } = require('../utils/razorpayPayout');
     try {
+      console.log(`[Admin] Initializing Payout Transfer for WD: ${wdId} | Mode: ${wd.payment_mode}`);
       await processPayout(wd.id);
       res.json({ success: true, message: 'Withdrawal approved and payout initiated.' });
     } catch (err) {
-      console.error('Payout trigger failed:', err.message);
+      console.error(`[Admin] Payout trigger failed for ${wdId}:`, err.message);
       res.status(500).json({ error: 'Approval semi-success', message: 'Marked as approved but Payout API failed. Check logs.', details: err.message });
     }
   } catch (e) {
