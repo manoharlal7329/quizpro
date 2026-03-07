@@ -469,9 +469,17 @@
                 document.getElementById('winBal').textContent = '₹' + (w.winnings || 0);
                 document.getElementById('totalWithdrawn').textContent = '₹' + (w.withdrawn || 0);
 
-                // Update withdrawable amount
+                // Update context
                 window.withdrawableAmt = w.withdrawable || 0;
+                window.isAdmin = w.is_admin || false;
+
                 document.getElementById('pinStatus').textContent = w.has_pin ? '✅ PIN is active' : '⚠️ PIN not set yet';
+
+                // If admin, update limits text
+                if (window.isAdmin) {
+                    document.querySelector('label[for="withdrawAmt"]').innerHTML = 'Redeem Amount (Admin Mode: No Limits)';
+                    document.getElementById('withdrawAmt').min = 1;
+                }
 
                 // Load txns
                 const txns = await api('/api/wallet/txns');
@@ -686,8 +694,13 @@
             const mode = document.getElementById('withdrawMode').value;
             const btn = document.getElementById('withdrawBtn');
 
-            if (!amt || amt < 100) return toast('Min withdrawal limit is ₹100', 'error');
-            if (amt > 10000) return toast('Max withdrawal per request is ₹10,000', 'error');
+            if (!window.isAdmin) {
+                if (!amt || amt < 100) return toast('Min withdrawal limit is ₹100', 'error');
+                if (amt > 10000) return toast('Max withdrawal per request is ₹10,000', 'error');
+            } else if (!amt || amt < 1) {
+                return toast('Please enter a valid amount', 'error');
+            }
+
             if (!pin || pin.length !== 4) return toast('Please enter your 4-digit Wallet PIN', 'error');
 
             const payload = {

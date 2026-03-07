@@ -30,6 +30,7 @@ router.get('/me', authMiddleware, async (req, res) => {
     try {
         const w = await getWallet(req.user.id);
         const totalReal = (w.dep_bal || 0) + (w.win_bal || 0);
+        const user = await User.findOne({ id: Number(req.user.id) });
         res.json({
             demo: w.demo || 0,
             deposit: w.dep_bal || 0,
@@ -37,7 +38,8 @@ router.get('/me', authMiddleware, async (req, res) => {
             withdrawn: w.total_withdrawn || 0,
             real: (w.dep_bal || 0) + (w.win_bal || 0),
             withdrawable: w.win_bal || 0,
-            has_pin: !!w.pin
+            has_pin: !!w.pin,
+            is_admin: user && user.is_admin === 1
         });
     } catch (e) {
         res.status(500).json({ error: e.message });
