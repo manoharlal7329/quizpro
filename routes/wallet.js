@@ -335,14 +335,15 @@ router.post('/admin/credit-prize', authMiddleware, async (req, res) => {
 
 // ─── POST /api/wallet/withdraw (Anti-Fraud & Fund Lock) ─────────────────────
 router.post('/withdraw', authMiddleware, async (req, res) => {
-    const { amount, pin, payment_mode, upi_id, original_payment_id, bank_account_number, bank_ifsc, bank_account_name } = req.body;
+    const { amount, pin, payment_mode, upi, upi_id, original_payment_id, bank_account_number, bank_ifsc, bank_account_name } = req.body;
     const userId = req.user.id;
+    const finalUpi = upi || upi_id;
 
     try {
         if (!amount || amount < 1) return res.status(400).json({ error: 'MIN_WITHDRAW', message: 'Minimum withdrawal is ₹1' });
         // Validate payment mode and required fields
         if (payment_mode === 'UPI') {
-            if (!upi_id || !upi_id.includes('@')) return res.status(400).json({ error: 'INVALID_UPI', message: 'Valid UPI ID required.' });
+            if (!finalUpi || !finalUpi.includes('@')) return res.status(400).json({ error: 'INVALID_UPI', message: 'Valid UPI ID required.' });
         } else if (payment_mode === 'REFUND') {
             if (!original_payment_id) return res.status(400).json({ error: 'INVALID_REFUND', message: 'Original Payment ID required for refund.' });
         } else {
@@ -353,7 +354,7 @@ router.post('/withdraw', authMiddleware, async (req, res) => {
             userId,
             amount: Number(amount),
             payment_mode,
-            upi: upi_id,
+            upi: finalUpi,
             original_payment_id,
             bank_account_number,
             bank_ifsc,
