@@ -4,7 +4,9 @@ const mongoose = require('mongoose');
 const withdrawalSchema = new mongoose.Schema({
     id: { type: String, unique: true, default: () => 'WD' + Date.now() },
     user_id: { type: Number, ref: 'User', required: true },
-    amount: { type: Number, required: true },
+    amount: { type: Number, required: true }, // Requested amount
+    tds_amount: { type: Number, default: 0 }, // 30% Tax
+    net_amount: { type: Number, required: true }, // Amount to be paid (amount - tds)
     // Payment mode: UPI or BANK or REFUND
     payment_mode: { type: String, enum: ['UPI', 'BANK', 'REFUND'], default: 'UPI' },
     // UPI field (used when payment_mode is UPI)

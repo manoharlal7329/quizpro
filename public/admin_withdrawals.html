@@ -151,7 +151,9 @@
                         <thead>
                             <tr style="border-bottom:1px solid var(--border);">
                                 <th style="padding:12px;">ID / User</th>
-                                <th style="padding:12px;">Amount</th>
+                                <th style="padding:12px;">Requested</th>
+                                <th style="padding:12px;">TDS (30%)</th>
+                                <th style="padding:12px; color:var(--gold);">Net Payout</th>
                                 <th style="padding:12px;">Method</th>
                                 <th style="padding:12px;">Status</th>
                                 <th style="padding:12px;">Date</th>
@@ -167,7 +169,9 @@
                                         <div style="font-size:0.75rem; color:var(--blue);">${w.user_phone}</div>
                                         <div style="font-size:0.65rem; color:var(--muted);">UID: ${w.user_id}</div>
                                     </td>
-                                    <td style="padding:12px; font-weight:bold;">₹${w.amount}</td>
+                                    <td style="padding:12px;">₹${w.amount.toLocaleString()}</td>
+                                    <td style="padding:12px; color:var(--red);">₹${(w.tds_amount || 0).toLocaleString()}</td>
+                                    <td style="padding:12px; font-weight:bold; color:var(--gold);">₹${(w.net_amount || w.amount).toLocaleString()}</td>
                                     <td style="padding:12px; font-size:0.8rem;">
                                         ${w.payment_mode}
                                         <div style="font-size:0.65rem; color:var(--muted);">

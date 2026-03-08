@@ -57,11 +57,18 @@ async function requestWithdrawal(params) {
         wallet.last_withdraw_at = new Date();
         await wallet.save();
 
+        // TDS CALCULATION (30% as per Indian Law for Online Gaming)
+        const tdsRate = 0.30;
+        const tdsAmount = Math.round(amount * tdsRate);
+        const netAmount = amount - tdsAmount;
+
         const withdrawId = "WD_" + Date.now();
         const wdData = {
             id: withdrawId,
             user_id: Number(userId),
-            amount: amount,
+            amount: amount, // Requested
+            tds_amount: tdsAmount,
+            net_amount: netAmount, // Paid to user
             status: "pending",
             created_at: Math.floor(Date.now() / 1000),
             payment_mode: payment_mode || 'UPI'

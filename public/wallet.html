@@ -378,15 +378,22 @@
 
                     <div id="withdrawBreakdown"
                         style="font-size: 0.75rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; margin-bottom: 16px;">
-                        <div style="display: flex; justify-content: space-between;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <span>Requested Amount:</span>
                             <span id="wtRequested" style="color: #fff;">₹0</span>
                         </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>Govt. TDS (30%):</span>
+                            <span id="wtTDS" style="color: var(--red);">₹0</span>
+                        </div>
                         <div
-                            style="display: flex; justify-content: space-between; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
-                            <span style="font-weight: bold; color: var(--gold);">Net Reward Payout:</span>
+                            style="display: flex; justify-content: space-between; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                            <span style="font-weight: bold; color: var(--gold);">Net Payout (to Bank/UPI):</span>
                             <span id="wtNet" style="font-weight: bold; color: var(--gold);">₹0</span>
                         </div>
+                        <p style="font-size: 0.6rem; color: var(--muted); margin-top: 8px; font-style: italic;">
+                            *TDS is calculated as per Section 194BA of Income Tax Act for online gaming.
+                        </p>
                     </div>
 
                     <div style="margin-bottom: 16px;">
@@ -428,18 +435,20 @@
 
             <!-- TAX EDUCATION CARDS -->
             <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div class="card" style="border-left: 4px solid var(--green);">
-                    <h4 style="color: var(--green); margin-bottom: 10px;">🛡️ Purely Skill Based</h4>
+                <div class="card" style="border-left: 4px solid var(--blue);">
+                    <h4 style="color: var(--blue); margin-bottom: 10px;">📊 Why TDS is deducted?</h4>
                     <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.6;">
-                        This platform is designed for learning and skill improvement. All participation is voluntary and
-                        based purely on user expertise.
+                        As per Govt. of India rules (Section 194BA), a <b>30% TDS</b> must be deducted on net winnings
+                        from online games.
+                        This tax is paid to the government against your PAN card. You can download your TDS certificate
+                        every quarter to claim tax credits.
                     </p>
                 </div>
-                <div class="card" style="border-left: 4px solid var(--orange);">
-                    <h4 style="color: var(--gold); margin-bottom: 10px;">🏆 Performance Rewards</h4>
+                <div class="card" style="border-left: 4px solid var(--gold);">
+                    <h4 style="color: var(--gold); margin-bottom: 10px;">🏆 How to get TDS back?</h4>
                     <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.6;">
-                        As per standard guidelines, fixed platform management fees are adjusted for high-value
-                        rewards. No real-money prizes are offered directly through the platform.
+                        If your total income is below the taxable limit, you can claim a refund of this TDS by filing
+                        your Income Tax Return (ITR) at the end of the financial year.
                     </p>
                 </div>
             </div>
@@ -687,8 +696,12 @@
 
         function updateWithdrawPreview() {
             const amt = parseInt(document.getElementById('withdrawAmt').value) || 0;
-            document.getElementById('wtRequested').textContent = '₹' + amt;
-            document.getElementById('wtNet').textContent = '₹' + amt;
+            const tds = Math.round(amt * 0.30);
+            const net = amt - tds;
+
+            document.getElementById('wtRequested').textContent = '₹' + amt.toLocaleString();
+            document.getElementById('wtTDS').textContent = '₹' + tds.toLocaleString();
+            document.getElementById('wtNet').textContent = '₹' + net.toLocaleString();
         }
 
         async function requestWithdrawal() {
