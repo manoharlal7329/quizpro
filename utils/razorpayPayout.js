@@ -68,7 +68,17 @@ async function processPayout(withdrawId) {
             };
         }
 
-        const payout = await razorpay.payouts.create(payoutPayload);
+        const axios = require('axios');
+        const auth = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString('base64');
+
+        const response = await axios.post('https://api.razorpay.com/v1/payouts', payoutPayload, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const payout = response.data;
 
         // Bank is processing it. We wait for monitorPayouts (AI) to hit completed.
         wd.status = "processing";
@@ -80,10 +90,11 @@ async function processPayout(withdrawId) {
 
     } catch (err) {
         // Instant Failure -> Refund Locked Amount
-        console.error(`❌ [Payout] Immediate Failure: ${withdrawId} | Error: ${err.message}`);
+        const errorMsg = err.response?.data?.error?.description || err.message;
+        console.error(`❌ [Payout] Immediate Failure: ${withdrawId} | Error: ${errorMsg}`);
 
         wd.status = "failed";
-        wd.error = err.message;
+        wd.error = errorMsg;
         await wd.save();
 
         // Unlock funds safely
@@ -97,7 +108,9 @@ async function processPayout(withdrawId) {
             console.error(`🚨 CRITICAL REFUND FAILURE for ${withdrawId}:`, walletErr);
         }
 
-        throw err;
+        const finalErr = new Error(errorMsg);
+        finalErr.details = errorMsg;
+        throw finalErr;
     }
 }
 
