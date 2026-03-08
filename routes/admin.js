@@ -741,6 +741,7 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
         users: userCount,
         sessions: sessionCount,
         questions: quizCount,
+        books: bookCount
       }
     };
     res.json({ success: true, data });
