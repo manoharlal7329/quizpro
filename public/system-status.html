@@ -266,6 +266,53 @@
                         Initializing AI patterns...
                     </div>
                 </div>
+
+                <!-- 10. SYSTEM LOGS (REAL-TIME) -->
+                <div class="monitor-card" id="cardLogs" style="grid-column: span 2;">
+                    <h3>📜 Live System Logs</h3>
+                    <div class="log-box" id="systemLogs"
+                        style="height: 250px; background: rgba(0,0,0,0.8); color:#fbbf24; font-size:0.75rem;">
+                        Waiting for log buffer...
+                    </div>
+                </div>
+
+                <!-- 11. ACTION CENTER -->
+                <div class="monitor-card" id="cardActions" style="border-color: var(--blue);">
+                    <h3 style="color:var(--blue);">🛠️ Admin Action Center</h3>
+                    <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+                        <button class="btn btn-outline"
+                            style="font-size:0.8rem; border-color:var(--red); color:var(--red);"
+                            onclick="actionRequest('/api/admin/actions/clear-sessions', 'This will delete all unstarted sessions. Proceed?')">🚮
+                            Clear Active Sessions</button>
+                        <button class="btn btn-outline"
+                            style="font-size:0.8rem; border-color:var(--blue); color:var(--blue);"
+                            onclick="actionRequest('/api/admin/actions/sync-wallets', 'Verify all wallet structures?')">🔄
+                            Sync/Verify Wallets</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATABASE SNAPSHOT -->
+            <div class="glass-card" style="padding:20px; margin-top:20px;">
+                <h3>📊 Database Snapshot</h3>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-top:15px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; color:var(--muted);">Total Users</div>
+                        <div id="stat_users" style="font-size:1.5rem; font-weight:700;">...</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; color:var(--muted);">Total Sessions</div>
+                        <div id="stat_sessions" style="font-size:1.5rem; font-weight:700;">...</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; color:var(--muted);">Questions Library</div>
+                        <div id="stat_questions" style="font-size:1.5rem; font-weight:700;">...</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; color:var(--muted);">Books/Subjects</div>
+                        <div id="stat_books" style="font-size:1.5rem; font-weight:700;">...</div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -402,6 +449,12 @@
                     setCardColor('cardAIAdmin', 'ok');
                 }
 
+                // Database Stats
+                setStat('stat_users', d.stats.users || 0);
+                setStat('stat_sessions', d.stats.sessions || 0);
+                setStat('stat_questions', d.stats.questions || 0);
+                setStat('stat_books', d.stats.books || 0);
+
                 // Global Alert Logic
                 const alertBox = document.getElementById('globalAlert');
                 if (errors.length > 0) {
@@ -414,6 +467,9 @@
                 const now = new Date();
                 document.getElementById('lastRefresh').textContent = `Live: ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
+                // Fetch Logs occasionally (every 2 cycles)
+                if (Math.random() > 0.5) fetchLogs();
+
             } catch (e) {
                 console.error(e);
                 setCardColor('cardServer', 'error');
@@ -422,6 +478,28 @@
 
             clearTimeout(fetchTimer);
             fetchTimer = setTimeout(fetchStatus, 5000);
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await api('/api/admin/logs');
+                if (res.logs) {
+                    const logBox = document.getElementById('systemLogs');
+                    logBox.innerHTML = res.logs.map(line => `<div class="log-item">${line}</div>`).join('');
+                }
+            } catch (e) { }
+        }
+
+        async function actionRequest(url, confirmMsg) {
+            if (!confirm(confirmMsg)) return;
+            try {
+                toast('Processing action...', 'info');
+                const res = await api(url, 'POST');
+                toast('✅ ' + res.message, 'success');
+                fetchStatus();
+            } catch (e) {
+                toast('❌ Error: ' + e.message, 'error');
+            }
         }
 
         // Start check

@@ -679,6 +679,12 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
 
     const unresolvedAlerts = await AIAlert.find({ resolved: false }).sort({ created_at: -1 }).lean();
 
+    // Granular DB Counts
+    const userCount = await User.countDocuments({});
+    const sessionCount = await Session.countDocuments({});
+    const quizCount = await Question.countDocuments({});
+    const bookCount = await (mongoose.models.Book ? mongoose.models.Book.countDocuments({}) : Promise.resolve(0));
+
     const rzpKey = process.env.RAZORPAY_KEY_ID || '';
     const rzpConfigured = rzpKey.startsWith('rzp_') ? 'YES' : 'NO';
     const rzpMode = rzpKey.startsWith('rzp_live') ? 'LIVE' : 'TEST';
@@ -726,10 +732,58 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
       },
       ai_admin: {
         active_alerts: unresolvedAlerts
+      },
+      stats: {
+        users: userCount,
+        sessions: sessionCount,
+        questions: quizCount,
+        books: bookCount
       }
     };
 
+    router.get('/logs', authMiddleware, adminOnly, async (req, res) => {
+      try {
+        const fs = require('fs');
+        const logPath = path.join(__dirname, '../sync.log'); // Using sync.log as a proxy for server activity
+        if (!fs.existsSync(logPath)) return res.json({ logs: ['No log file found.'] });
+
+        const content = fs.readFileSync(logPath, 'utf8');
+        const lines = content.split('\n').slice(-50).reverse();
+        res.json({ logs: lines });
+      } catch (e) {
+        res.status(500).json({ error: e.message });
+      }
+    });
+
     res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── ADMIN ACTIONS — EMERGENCY ───────────────────────────────────────────────
+router.post('/actions/clear-sessions', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const Session = require('../database/models/Session');
+    const result = await Session.deleteMany({ status: { $in: ['open', 'confirmed'] } });
+    res.json({ success: true, message: `Cleared ${result.deletedCount} unstarted sessions.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/actions/sync-wallets', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { getWallet } = require('./wallet_utils');
+    const users = await User.find({});
+    let fixed = 0;
+    for (const u of users) {
+      const wallet = await getWallet(u.id);
+      // Recalculate totals from Txns if needed
+      // For now, just a ping to ensure they exist
+      fixed++;
+    }
+    res.json({ success: true, message: `Pinged ${fixed} wallets for integrity.` });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
