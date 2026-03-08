@@ -17,6 +17,9 @@ const WalletTxn = require('../database/models/WalletTxn');
 const Wallet = require('../database/models/Wallet');
 const AIAlert = require('../database/models/AIAlert');
 const Withdrawal = require('../database/models/Withdrawal');
+const Notification = require('../database/models/Notification');
+const Banner = require('../database/models/Banner');
+const PlatformConfig = require('../database/models/PlatformConfig');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -761,10 +764,8 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// ─── ADMIN ACTIONS — EMERGENCY ───────────────────────────────────────────────
 router.post('/actions/clear-sessions', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const Session = require('../database/models/Session');
     const result = await Session.deleteMany({ status: { $in: ['open', 'confirmed'] } });
     res.json({ success: true, message: `Cleared ${result.deletedCount} unstarted sessions.` });
   } catch (e) {
@@ -778,12 +779,92 @@ router.post('/actions/sync-wallets', authMiddleware, adminOnly, async (req, res)
     const users = await User.find({});
     let fixed = 0;
     for (const u of users) {
-      const wallet = await getWallet(u.id);
-      // Recalculate totals from Txns if needed
-      // For now, just a ping to ensure they exist
+      await getWallet(u.id);
       fixed++;
     }
     res.json({ success: true, message: `Pinged ${fixed} wallets for integrity.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+router.get('/notifications', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const list = await Notification.find({}).sort({ created_at: -1 }).limit(50).lean();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/notifications', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { user_id, title, message, type } = req.body;
+    const count = await Notification.countDocuments({});
+    const notif = new Notification({
+      id: count + 1,
+      user_id: user_id || 0,
+      title,
+      message,
+      type: type || 'info'
+    });
+    await notif.save();
+    res.json({ success: true, notif });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── BANNERS ─────────────────────────────────────────────────────────────────
+router.get('/banners', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const list = await Banner.find({}).sort({ order: 1 }).lean();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/banners', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const count = await Banner.countDocuments({});
+    const banner = new Banner({ ...req.body, id: count + 1 });
+    await banner.save();
+    res.json({ success: true, banner });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/banners/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await Banner.findOneAndUpdate({ id: req.params.id }, req.body);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+router.get('/settings', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const list = await PlatformConfig.find({}).lean();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/settings', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { key, value, description } = req.body;
+    await PlatformConfig.findOneAndUpdate(
+      { key },
+      { value, description, updated_at: Math.floor(Date.now() / 1000) },
+      { upsert: true }
+    );
+    res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

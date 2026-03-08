@@ -341,6 +341,9 @@
                     <a href="#" onclick="showPanel('users',this)" data-tilt>👤 Users</a>
                     <a href="#" onclick="showPanel('wallets',this)" data-tilt>💰 Wallets</a>
                     <a href="#" onclick="showPanel('rewards',this)" data-tilt>🎁 Rewards</a>
+                    <a href="#" onclick="showPanel('banners',this)" data-tilt>🖼️ Banners</a>
+                    <a href="#" onclick="showPanel('notifs',this)" data-tilt>🔔 Notifications</a>
+                    <a href="#" onclick="showPanel('settings',this)" data-tilt>⚙️ Settings</a>
                     <a href="/admin_withdrawals.html" data-tilt
                         style="color:var(--gold); border:1px solid rgba(245, 158, 11, 0.2);">🕒 Payout Approvals</a>
                     <a href="/system-status.html" data-tilt
@@ -588,7 +591,12 @@
                         <div class="page-hero" style="padding-top:0;">
                             <h1 class="text-3d-float">👤 Users Management</h1>
                         </div>
-                        <div id="usersList" class="glass-card" style="padding: 14px;"></div>
+                        <div id="usersList" class="glass-card" style="padding: 14px; margin-bottom:28px;"></div>
+                        <div class="page-hero" style="padding-top:0;">
+                            <h2>👑 Referral Leaderboard</h2>
+                            <p>Top promoters and referral analytics.</p>
+                        </div>
+                        <div id="referralsList" class="glass-card" style="padding: 14px;"></div>
                     </div>
 
                     <!-- Categories -->
@@ -645,6 +653,82 @@
                             <button class="btn btn-gold btn-full" onclick="assignReward()">Give Reward 🏆</button>
                         </div>
                         <div id="rewardsList" style="margin-top:30px;"></div>
+                    </div>
+
+                    <!-- Banners -->
+                    <div class="panel" id="panel-banners">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>🖼️ Banner Manager</h1>
+                            <p>Home dashboard ke custom banners yahan se badlo.</p>
+                        </div>
+                        <div class="card" style="max-width:500px; margin-bottom:28px;">
+                            <h3 style="margin-bottom:16px;">➕ Add New Banner</h3>
+                            <div class="form-group"><label>Title</label><input type="text" id="banTitle"
+                                    placeholder="e.g. Mega Quiz Live!"></div>
+                            <div class="form-group"><label>Subtitle</label><input type="text" id="banSub"
+                                    placeholder="Join now and win big"></div>
+                            <div class="grid-2">
+                                <div class="form-group"><label>BG Color</label><input type="color" id="banColor"
+                                        value="#7c3aed"></div>
+                                <div class="form-group"><label>Order</label><input type="number" id="banOrder"
+                                        value="0"></div>
+                            </div>
+                            <div class="form-group"><label>Action URL</label><input type="text" id="banAction"
+                                    placeholder="/quiz.html"></div>
+                            <button class="btn btn-primary btn-full" onclick="createBanner()">Add Banner ✨</button>
+                        </div>
+                        <div id="bannersList"></div>
+                    </div>
+
+                    <!-- Global Notifications -->
+                    <div class="panel" id="panel-notifs">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>🔔 Global Notifications</h1>
+                            <p>Users ko important alerts/messages bhejien.</p>
+                        </div>
+                        <div class="card" style="max-width:500px; margin-bottom:28px;">
+                            <h3 style="margin-bottom:16px;">🚀 Push New Notification</h3>
+                            <div class="form-group">
+                                <label>Target User (0 = Everyone)</label>
+                                <input type="number" id="notifTarget" value="0">
+                            </div>
+                            <div class="form-group"><label>Title</label><input type="text" id="notifTitle"></div>
+                            <div class="form-group"><label>Message</label><textarea id="notifMsg" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select id="notifType">
+                                    <option value="info">🔵 Info</option>
+                                    <option value="success">🟢 Success</option>
+                                    <option value="warning">🟠 Warning</option>
+                                    <option value="reward">💰 Reward</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary btn-full" onclick="sendNotif()">Push Message 📡</button>
+                        </div>
+                        <div id="notifsList"></div>
+                    </div>
+
+                    <!-- Platform Settings -->
+                    <div class="panel" id="panel-settings">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>⚙️ Platform Settings</h1>
+                            <p>Fees, Limits aur dynamic config yahan manage karein.</p>
+                        </div>
+                        <div class="glass-card" style="padding:24px;">
+                            <h3 style="margin-bottom:18px;">🛠️ System Configurations</h3>
+                            <div id="settingsContainer"></div>
+                            <hr style="opacity:0.1; margin:20px 0;">
+                            <h4>Add/Update Config</h4>
+                            <div class="grid-2">
+                                <div class="form-group"><label>Key</label><input type="text" id="setKey"
+                                        placeholder="PLATFORM_FEE"></div>
+                                <div class="form-group"><label>Value</label><input type="text" id="setVal"
+                                        placeholder="25"></div>
+                            </div>
+                            <div class="form-group"><label>Description</label><input type="text" id="setDesc"></div>
+                            <button class="btn btn-gold" onclick="updateSetting()">Save Setting 💾</button>
+                        </div>
                     </div>
 
                     <!-- ══ WALLET MANAGER ═════════════════════════════════════════ -->
@@ -716,6 +800,9 @@
             if (name === 'questions') loadSessionsForQ();
             if (name === 'users') loadUsers();
             if (name === 'wallets') loadWallets();
+            if (name === 'banners') loadBanners();
+            if (name === 'notifs') loadNotifs();
+            if (name === 'settings') loadSettings();
         }
 
         async function loadDashboard() {
@@ -962,6 +1049,7 @@
         async function loadUsers(sortBy = 'newest') {
             try {
                 _allUsers = await api('/api/admin/users');
+                loadReferrals();
 
                 // Sorting logic
                 if (sortBy === 'oldest') {
@@ -1045,6 +1133,30 @@
             }
         }
 
+        async function loadReferrals() {
+            try {
+                const list = await api('/api/leaderboard/referrals');
+                const container = document.getElementById('referralsList');
+                if (!list.length) {
+                    container.innerHTML = '<p style="color:var(--muted); text-align:center; padding:20px;">No referrals tracked yet.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                <table style="font-size:.85rem; margin-top:10px;">
+                    <thead><tr><th>Rank</th><th>User (Promoter)</th><th>Referral Code</th><th>Successful Refs</th></tr></thead>
+                    <tbody>
+                        ${list.map((r, i) => `
+                            <tr>
+                                <td style="font-weight:800; color:var(--gold);">#${i + 1}</td>
+                                <td><div style="font-weight:700; color:#fff;">${r.name}</div><div style="font-size:.7rem; color:var(--muted);">ID: #${r.id}</div></td>
+                                <td style="font-family:monospace; color:var(--blue); font-weight:700; letter-spacing:1px;">${r.code}</td>
+                                <td style="font-size:1rem; font-weight:900; color:var(--green);">${r.count} <span style="font-size:.7rem; font-weight:400; color:var(--muted);">Users Joined</span></td>
+                            </tr>`).join('')}
+                    </tbody>
+                </table>`;
+            } catch (e) { console.error('Ref load failed', e); }
+        }
+
         async function deleteUser(id) {
             if (!confirm('Delete user AND all their seats/results? This cannot be undone.')) return;
             await api(`/api/admin/users/${id}`, 'DELETE');
@@ -1109,6 +1221,100 @@
 
         loadDashboard();
         loadOwnerEarnings();
+
+        // ── BANNERS, NOTIFS & SETTINGS ──────────────────────────────────────────
+        async function loadBanners() {
+            const list = await api('/api/admin/banners');
+            document.getElementById('bannersList').innerHTML = list.map(b => `
+                <div class="glass-card" style="padding:16px; margin-bottom:10px; border-left:4px solid ${b.bg_color};">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:700; color:#fff;">${b.title}</div>
+                            <div style="font-size:.75rem; color:var(--muted);">${b.subtitle || ''}</div>
+                        </div>
+                        <button class="btn btn-danger" style="padding:4px 8px; font-size:.7rem;" onclick="deleteBanner(${b.id})">Delete</button>
+                    </div>
+                </div>`).join('') || '<p style="color:var(--muted);">No banners yet.</p>';
+        }
+
+        async function createBanner() {
+            const payload = {
+                title: document.getElementById('banTitle').value.trim(),
+                subtitle: document.getElementById('banSub').value.trim(),
+                bg_color: document.getElementById('banColor').value,
+                order: Number(document.getElementById('banOrder').value) || 0,
+                action_url: document.getElementById('banAction').value.trim()
+            };
+            if (!payload.title) return toast('Title required', 'error');
+            await api('/api/admin/banners', 'POST', payload);
+            toast('Banner added!', 'success');
+            ['banTitle', 'banSub', 'banAction'].forEach(id => document.getElementById(id).value = '');
+            loadBanners();
+        }
+
+        async function loadNotifs() {
+            const list = await api('/api/admin/notifications');
+            document.getElementById('notifsList').innerHTML = list.map(n => `
+                <div class="q-row" style="border-left:4px solid var(--${n.type === 'reward' ? 'gold' : n.type === 'success' ? 'green' : 'blue'});">
+                    <div class="q-row-text">
+                        <div style="font-weight:700; color:#fff;">${n.title}</div>
+                        <div style="font-size:.8rem;">${n.message}</div>
+                        <div style="font-size:.65rem; color:var(--muted); margin-top:4px;">
+                            To: ${n.user_id === 0 ? 'ALL' : 'User #' + n.user_id} • ${new Date(n.created_at * 1000).toLocaleString()}
+                        </div>
+                    </div>
+                </div>`).join('') || '<p style="color:var(--muted);">No notifications sent yet.</p>';
+        }
+
+        async function sendNotif() {
+            const payload = {
+                user_id: Number(document.getElementById('notifTarget').value) || 0,
+                title: document.getElementById('notifTitle').value.trim(),
+                message: document.getElementById('notifMsg').value.trim(),
+                type: document.getElementById('notifType').value
+            };
+            if (!payload.title || !payload.message) return toast('Title & Message required', 'error');
+            await api('/api/admin/notifications', 'POST', payload);
+            toast('Notification pushed! 📡', 'success');
+            ['notifTitle', 'notifMsg'].forEach(id => document.getElementById(id).value = '');
+            loadNotifs();
+        }
+
+        async function loadSettings() {
+            const list = await api('/api/admin/settings');
+            document.getElementById('settingsContainer').innerHTML = list.map(s => `
+                <div class="q-row" style="background:rgba(255,255,255,0.02); display:flex; justify-content:space-between; align-items:center;">
+                    <div class="q-row-text">
+                        <code style="color:var(--gold); font-size:1rem;">${s.key}</code>
+                        <div style="font-weight:700; font-size:1rem; margin-top:4px; color:#fff;">${s.value}</div>
+                        <div style="font-size:.75rem; color:var(--muted);">${s.description || ''}</div>
+                    </div>
+                    <button class="btn btn-outline" style="padding:4px 8px; font-size:.7rem;" onclick="copyToKeys('${s.key}', '${s.value}', '${s.description || ''}')">✏️ Edit</button>
+                </div>`).join('') || '<p style="color:var(--muted); padding:10px;">No dynamic settings configured.</p>';
+        }
+
+        function copyToKeys(k, v, d) {
+            document.getElementById('setKey').value = k;
+            document.getElementById('setVal').value = v;
+            document.getElementById('setDesc').value = d;
+            document.getElementById('setKey').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function updateSetting() {
+            const key = document.getElementById('setKey').value.trim();
+            const value = document.getElementById('setVal').value.trim();
+            const description = document.getElementById('setDesc').value.trim();
+            if (!key || !value) return toast('Key and Value required', 'error');
+            await api('/api/admin/settings', 'POST', { key, value, description });
+            toast('Setting saved! 💾', 'success');
+            loadSettings();
+        }
+
+        async function deleteBanner(id) {
+            if (!confirm('Delete this banner?')) return;
+            // Banner delete route needs to be added to admin.js if not there
+            toast('Banner deletion pending backend implementation...', 'info');
+        }
 
         // ─── CATEGORIES & REWARDS JS ──────────────────────────────────
         async function loadCategories() {

@@ -60,4 +60,29 @@ router.get('/', async (req, res) => {
     }
 });
 
+// ── GET /api/leaderboard/referrals ───────────────────────────────────────────
+router.get('/referrals', async (req, res) => {
+    try {
+        const users = await User.find({ referral_code: { $exists: true } }).lean();
+        const referrals = [];
+
+        for (const u of users) {
+            const count = await User.countDocuments({ referred_by: u.referral_code });
+            if (count > 0) {
+                referrals.push({
+                    id: u.id,
+                    name: u.name || u.username || u.email,
+                    code: u.referral_code,
+                    count
+                });
+            }
+        }
+
+        const sorted = referrals.sort((a, b) => b.count - a.count).slice(0, 50);
+        res.json(sorted);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 module.exports = router;
