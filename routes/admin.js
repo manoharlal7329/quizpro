@@ -847,6 +847,15 @@ router.put('/banners/:id', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
+router.delete('/banners/:id', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    await Banner.deleteOne({ id: req.params.id });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
 router.get('/settings', authMiddleware, adminOnly, async (req, res) => {
   try {
