@@ -1455,8 +1455,8 @@
             const type = document.getElementById('rewardType').value;
             const detail = document.getElementById('rewardDetail').value.trim();
             if (!mobile || !detail) return toast('Fill all fields', 'error');
-            await api('/api/admin/rewards', 'POST', { mobile, type, detail });
-            toast('Reward assigned! 🏆', 'success');
+            const res = await api('/api/admin/rewards', 'POST', { mobile, type, detail });
+            toast(res.message || 'Reward assigned! 🏆', 'success');
             ['rewardMobile', 'rewardDetail'].forEach(id => document.getElementById(id).value = '');
             loadRewards();
         }

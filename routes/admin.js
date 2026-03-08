@@ -547,12 +547,50 @@ router.post('/wallet/topup', authMiddleware, adminOnly, async (req, res) => {
 router.post('/rewards', authMiddleware, adminOnly, async (req, res) => {
   try {
     const { mobile, type, detail } = req.body;
+
+    // 1. Create the reward record
     const reward = new Reward({
       mobile, type, detail,
       assigned_at: Math.floor(Date.now() / 1000)
     });
     await reward.save();
-    res.json({ success: true });
+
+    // 2. Try to find the user to notify them & credit wallet
+    const user = await User.findOne({ $or: [{ phone: mobile }, { mobile: mobile }] });
+    let statusMsg = 'Reward logged.';
+
+    if (user) {
+      // A. Create Notification
+      const notif = new Notification({
+        id: Date.now(),
+        user_id: user.id,
+        title: '🎁 New Reward Assigned!',
+        message: `Congratulations! You have been awarded a ${type} reward: ${detail}. Check your wallet or contact support.`,
+        type: 'reward',
+        created_at: Math.floor(Date.now() / 1000)
+      });
+      await notif.save();
+      statusMsg += ' User notified 🔔.';
+
+      // B. If Cash, auto-credit Winnings wallet
+      if (type === 'Cash') {
+        // Extract amount if possible (e.g. "₹500" -> 500)
+        let amt = parseInt(detail.replace(/[^0-9]/g, '')) || 0;
+        if (amt > 0) {
+          const wallet = await getWallet(user.id);
+          wallet.win_bal = (wallet.win_bal || 0) + amt;
+          await wallet.save();
+          await addTxn(user.id, 'real', 'credit', amt, `🏆 REWARD: ${detail}`);
+          statusMsg += ` ₹${amt} credited to Winnings Wallet 💰.`;
+        } else {
+          statusMsg += ' (Cash amount not detected in "Detail", wallet skipped).';
+        }
+      }
+    } else {
+      statusMsg += ' (User not found in DB, notification/wallet skipped).';
+    }
+
+    res.json({ success: true, message: statusMsg });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
