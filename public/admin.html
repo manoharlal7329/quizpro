@@ -398,6 +398,18 @@
                                 <div class="spinner"></div>
                             </div>
                         </div>
+
+                        <!-- DEV TOOLS SECTION -->
+                        <div style="margin-top:40px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px;">
+                            <div
+                                style="font-size:.65rem; color:var(--muted); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px;">
+                                🛠️ Developer / Admin Tools</div>
+                            <button class="btn"
+                                style="background:rgba(124,58,237,0.1); color:#a78bfa; border:1px dashed rgba(124,58,237,0.3); font-size:.75rem; padding:8px 16px; border-radius:10px;"
+                                onclick="seedDemoSessions()">🌱 Seed 50 Demo Sessions</button>
+                            <p style="font-size:.68rem; color:var(--muted); margin-top:8px;">Only for testing. Adds 50
+                                sessions across Rookie/Sharp/Legend categories.</p>
+                        </div>
                     </div>
 
                     <!-- Books Library Panel -->
@@ -1087,75 +1099,105 @@
 
                 const list = document.getElementById('usersList');
                 list.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; background:rgba(255,255,255,0.03); padding:12px; border-radius:12px;">
-                        <h3 style="font-size:.95rem;">👤 Total Users: ${_allUsers.length}</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; gap:12px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:16px;">
+                            <h3 style="font-size:.95rem; margin:0;">👤 Total Users: <span style="color:var(--blue);">${_allUsers.length}</span></h3>
+                            <input type="text" id="userListSearch" placeholder="Search users..." oninput="filterUsersList()"
+                                style="padding:7px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:.8rem; width:180px;" />
+                        </div>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <label style="font-size:.75rem; color:var(--muted);">Sort By:</label>
                             <select onchange="loadUsers(this.value)" style="padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:.8rem;">
                                 <option value="newest" ${sortBy === 'newest' ? 'selected' : ''}>📅 Newest First</option>
                                 <option value="oldest" ${sortBy === 'oldest' ? 'selected' : ''}>⏳ Oldest Members</option>
-                                <option value="most_active" ${sortBy === 'most_active' ? 'selected' : ''}>🔥 Most Active (Quizzes)</option>
+                                <option value="most_active" ${sortBy === 'most_active' ? 'selected' : ''}>🔥 Most Active</option>
                             </select>
                         </div>
                     </div>
-                    <table style="font-size:.85rem;">
-                        <thead>
-                            <tr>
-                                <th>User ID</th>
-                                <th>Full Name / Username</th>
-                                <th>Contact Details</th>
-                                <th>Joined / Referral</th>
-                                <th>Quizzes</th>
-                                <th>Wallets</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${_allUsers.map(u => {
-                    const days = Math.floor((Math.floor(Date.now() / 1000) - u.created_at) / 86400);
-                    return `
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td>#${u.id}</td>
-                                    <td>
-                                        <div style="font-weight:700; color:var(--text);">${u.full_name || u.name || 'User'}</div>
-                                        <div style="font-size:.7rem; color:var(--muted);">@${u.username || u.name || 'unknown'}</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-size:.8rem; font-weight:600; color:var(--text);">📞 ${u.phone || 'N/A'}</div>
-                                        <div style="font-size:.7rem; color:var(--muted);">📧 ${u.email}</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-size:.75rem; color:var(--blue); font-weight:700;">📅 ${new Date(u.created_at * 1000).toLocaleDateString()}</div>
-                                        <div style="font-size:.65rem; color:var(--muted); margin-top:2px;">
-                                            🎟️ Code: <span style="color:var(--gold); font-weight:700;">${u.referral_code}</span><br>
-                                            🔗 By: <span style="color:var(--violet);">${u.referred_by}</span>
-                                        </div>
-                                        ${u.is_admin ? '<span class="badge badge-gold" style="font-size:.6rem; padding:1px 4px; display:inline-block; margin-top:4px;">Admin</span>' : ''}
-                                    </td>
-                                    <td>
-                                        <div style="font-size:1.1rem; font-weight:900; color:var(--gold);">${u.quizzes_solved}</div>
-                                        <div style="font-size:.65rem; color:var(--muted);">Solved</div>
-                                    </td>
-                                    <td>
-                                        <div style="font-size:.75rem; color:var(--muted); line-height:1.4;">
-                                            💰 Dep: <span style="color:var(--text); font-weight:700;">₹${u.wallet_real - u.withdrawable}</span><br>
-                                            🏆 Win: <span style="color:var(--green); font-weight:700;">₹${u.withdrawable}</span><br>
-                                            📊 Sum: <span style="color:var(--gold); font-weight:800;">₹${u.wallet_real}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style="display:flex; gap:6px;">
-                                            <button class="btn btn-gold" style="padding:4px 10px; font-size:.7rem;" onclick="showPanel('wallets'); quickTopup('${u.id}', '${u.phone || u.email}')">💰 Topup</button>
-                                            ${u.id == 1 ? '' : `<button class="btn btn-danger" style="padding:4px 8px; font-size:.75rem;" onclick="deleteUser(${u.id})">Delete</button>`}
-                                        </div>
-                                    </td>
-                                </tr>`;
-                }).join('')}
-                        </tbody>
-                    </table>`;
+                                    <th>ID / Joined</th>
+                                    <th>User Details</th>
+                                    <th>Referral Info</th>
+                                    <th style="text-align:center;">Quizzes</th>
+                                    <th>Wallet Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersListBody">
+                                ${renderUsersBody(_allUsers)}
+                            </tbody>
+                        </table>
+                    </div>`;
             } catch (e) {
                 document.getElementById('usersList').innerHTML = `<p style="color:var(--red);">Error loading users: ${e.message}</p>`;
             }
+        }
+
+        function filterUsersList() {
+            const q = document.getElementById('userListSearch').value.toLowerCase();
+            const filtered = _allUsers.filter(u =>
+                (u.full_name || u.name || '').toLowerCase().includes(q) ||
+                (u.username || '').toLowerCase().includes(q) ||
+                (u.phone || '').includes(q) ||
+                (u.email || '').toLowerCase().includes(q)
+            );
+            document.getElementById('usersListBody').innerHTML = renderUsersBody(filtered);
+        }
+
+        function renderUsersBody(users) {
+            return users.map(u => {
+                const dep = u.wallet_real - (u.withdrawable || 0);
+                const win = (u.withdrawable || 0);
+                return `
+                    <tr>
+                        <td style="font-size:.72rem; color:var(--muted); line-height:1.4;">
+                            <div style="font-weight:700; color:rgba(255,255,255,0.4);">#${u.id}</div>
+                            <div>${new Date(u.created_at * 1000).toLocaleDateString()}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:800; color:#fff; font-size:.9rem;">${u.full_name || u.name || 'User'}</div>
+                            <div style="font-size:.7rem; color:var(--blue); margin-bottom:4px;">@${u.username || u.name || 'unknown'}</div>
+                            <div style="font-size:.72rem; color:var(--muted); display:flex; align-items:center; gap:5px;">
+                                <span>📞 ${u.phone || 'N/A'}</span>
+                            </div>
+                            <div style="font-size:.72rem; color:var(--muted);">📧 ${u.email}</div>
+                        </td>
+                        <td>
+                            <div style="font-size:.75rem; color:var(--gold); font-weight:700;">Code: ${u.referral_code}</div>
+                            <div style="font-size:.7rem; color:var(--muted);">By: <span style="color:var(--violet); font-weight:600;">${u.referred_by || 'Organic'}</span></div>
+                            ${u.is_admin ? '<span class="badge badge-gold" style="font-size:.6rem; padding:1px 6px; margin-top:4px;">ADMIN</span>' : ''}
+                        </td>
+                        <td style="text-align:center;">
+                            <div style="font-size:1.1rem; font-weight:900; color:var(--green);">${u.quizzes_solved}</div>
+                            <div style="font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Solved</div>
+                        </td>
+                        <td>
+                            <div style="font-size:.72rem; line-height:1.6;">
+                                <div style="display:flex; justify-content:space-between; gap:10px;">
+                                    <span style="color:var(--muted);">Dep:</span>
+                                    <span style="color:#fff; font-weight:700;">₹${dep.toLocaleString()}</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; gap:10px;">
+                                    <span style="color:var(--muted);">Win:</span>
+                                    <span style="color:var(--green); font-weight:700;">₹${win.toLocaleString()}</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; gap:10px; margin-top:2px; padding-top:2px; border-top:1px solid rgba(255,255,255,0.05);">
+                                    <span style="color:var(--blue); font-weight:600;">Sum:</span>
+                                    <span style="color:var(--gold); font-weight:900;">₹${u.wallet_real.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <button class="btn btn-gold" style="padding:5px 12px; font-size:.72rem; border-radius:8px; font-weight:700;" onclick="showPanel('wallets'); quickTopup('${u.id}', '${u.phone || u.email}')">💰 Topup</button>
+                                ${u.id == 1 ? '' : `<button class="btn" style="padding:5px 12px; font-size:.72rem; border-radius:8px; background:rgba(239,68,68,0.1); color:#fca5a5; border:1px solid rgba(239,68,68,0.2);" onclick="deleteUser(${u.id})">🗑 Delete</button>`}
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
         }
 
         async function loadReferrals() {
@@ -1167,18 +1209,40 @@
                     return;
                 }
                 container.innerHTML = `
-                <table style="font-size:.85rem; margin-top:10px;">
-                    <thead><tr><th>Rank</th><th>User (Promoter)</th><th>Referral Code</th><th>Successful Refs</th></tr></thead>
-                    <tbody>
-                        ${list.map((r, i) => `
+                <div class="table-wrap">
+                    <table style="font-size:.85rem; margin-top:10px;">
+                        <thead>
                             <tr>
-                                <td style="font-weight:800; color:var(--gold);">#${i + 1}</td>
-                                <td><div style="font-weight:700; color:#fff;">${r.name}</div><div style="font-size:.7rem; color:var(--muted);">ID: #${r.id}</div></td>
-                                <td style="font-family:monospace; color:var(--blue); font-weight:700; letter-spacing:1px;">${r.code}</td>
-                                <td style="font-size:1rem; font-weight:900; color:var(--green);">${r.count} <span style="font-size:.7rem; font-weight:400; color:var(--muted);">Users Joined</span></td>
-                            </tr>`).join('')}
-                    </tbody>
-                </table>`;
+                                <th style="width:60px; text-align:center;">Rank</th>
+                                <th>User (Promoter)</th>
+                                <th>Referral Code</th>
+                                <th style="text-align:center;">Total Referrals</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${list.map((r, i) => {
+                    const rankColor = i === 0 ? 'var(--gold)' : i === 1 ? '#cbd5e1' : i === 2 ? '#cd7f32' : 'var(--muted)';
+                    return `
+                                <tr>
+                                    <td style="text-align:center;">
+                                        <div style="width:28px; height:28px; border-radius:50%; background:${rankColor}22; border:1px solid ${rankColor}44; color:${rankColor}; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:.8rem;">${i + 1}</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:700; color:#fff;">${r.name}</div>
+                                        <div style="font-size:.7rem; color:var(--muted);">ID: #${r.id}</div>
+                                    </td>
+                                    <td>
+                                        <code style="background:rgba(14,165,233,0.1); color:var(--blue); padding:3px 8px; border-radius:6px; font-weight:700; letter-spacing:1px;">${r.code}</code>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <div style="font-size:1.1rem; font-weight:900; color:var(--green);">${r.count}</div>
+                                        <div style="font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Users Joined</div>
+                                    </td>
+                                </tr>`;
+                }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
             } catch (e) { console.error('Ref load failed', e); }
         }
 
@@ -1250,16 +1314,27 @@
         // ── BANNERS, NOTIFS & SETTINGS ──────────────────────────────────────────
         async function loadBanners() {
             const list = await api('/api/admin/banners');
-            document.getElementById('bannersList').innerHTML = list.map(b => `
-                <div class="glass-card" style="padding:16px; margin-bottom:10px; border-left:4px solid ${b.bg_color};">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:700; color:#fff;">${b.title}</div>
-                            <div style="font-size:.75rem; color:var(--muted);">${b.subtitle || ''}</div>
-                        </div>
-                        <button class="btn btn-danger" style="padding:4px 8px; font-size:.7rem;" onclick="deleteBanner(${b.id})">Delete</button>
-                    </div>
-                </div>`).join('') || '<p style="color:var(--muted);">No banners yet.</p>';
+            document.getElementById('bannersList').innerHTML = `
+                <h3 style="margin-bottom:14px;">Active Banners</h3>
+                <div class="grid-2" style="gap:14px;">
+                    ${list.map(b => `
+                        <div class="glass-card" style="padding:20px; border-radius:18px; border-left:5px solid ${b.bg_color}; background:linear-gradient(90deg, ${b.bg_color}11, transparent); position:relative; overflow:hidden;">
+                            <div style="position:absolute; top:-10px; right:-10px; font-size:4rem; opacity:0.05; pointer-events:none;">🖼️</div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="flex:1;">
+                                    <div style="font-weight:900; color:#fff; font-size:1.1rem; margin-bottom:4px;">${b.title}</div>
+                                    <div style="font-size:.8rem; color:var(--muted); margin-bottom:12px;">${b.subtitle || ''}</div>
+                                    <div style="display:flex; gap:10px; align-items:center; font-size:.7rem;">
+                                        <span style="color:var(--blue); font-weight:700;">Order: ${b.order}</span>
+                                        <span style="color:var(--muted);">URL: ${b.action_url}</span>
+                                    </div>
+                                </div>
+                                <button class="btn" style="padding:6px 12px; font-size:.7rem; background:rgba(239, 68, 68, 0.1); color:#f87171; border:1px solid rgba(239, 68, 68, 0.2); border-radius:8px;" onclick="deleteBanner(${b.id})">🗑 Delete</button>
+                            </div>
+                        </div>`).join('')}
+                </div>
+                ${list.length === 0 ? '<p style="color:var(--muted); text-align:center; padding:30px;">No banners configured.</p>' : ''}
+            `;
         }
 
         async function createBanner() {
@@ -1390,16 +1465,30 @@
             const rewards = await api('/api/admin/rewards');
             document.getElementById('rewardsList').innerHTML = `
                 <h3 style="margin-bottom:14px;">Recent Rewards</h3>
-                <table><thead><tr><th>User</th><th>Type</th><th>Detail</th><th>Date</th></tr></thead><tbody>
-                ${rewards.map(r => `
-                    <tr>
-                        <td>${r.mobile}</td>
-                        <td>${r.type}</td>
-                        <td style="color:var(--gold); font-weight:700;">${r.detail}</td>
-                        <td style="font-size:.72rem;">${new Date(r.assigned_at * 1000).toLocaleDateString()}</td>
-                    </tr>
-                `).join('')}
-                </tbody></table>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>User Info</th><th>Type</th><th>Reward Detail</th><th>Assigned Date</th></tr></thead>
+                        <tbody>
+                        ${rewards.map(r => `
+                            <tr>
+                                <td>
+                                    <div style="font-weight:700; color:#fff;">📞 ${r.mobile}</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-${r.type === 'Cash' ? 'green' : r.type === 'Gift' ? 'violet' : 'blue'}" style="font-size:.65rem;">${r.type.toUpperCase()}</span>
+                                </td>
+                                <td style="color:var(--gold); font-weight:800; font-size:.9rem;">
+                                    ${r.detail}
+                                </td>
+                                <td style="font-size:.72rem; color:var(--muted);">
+                                    ${new Date(r.assigned_at * 1000).toLocaleString()}
+                                </td>
+                            </tr>
+                        `).join('')}
+                        ${rewards.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">No rewards assigned yet.</td></tr>' : ''}
+                        </tbody>
+                    </table>
+                </div>
             `;
         }
 
@@ -1739,13 +1828,7 @@
         </div>
     </div>
 
-    <!-- SEED DEMO SESSIONS FLOATING BUTTON -->
-    <div id="seedBtnWrap" style="position:fixed;bottom:80px;right:20px;z-index:9999;">
-        <button id="seedBtn" onclick="seedDemoSessions()"
-            style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:14px;padding:12px 18px;font-size:.82rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.4);display:flex;align-items:center;gap:8px;">
-            🌱 Seed 50 Demo Sessions
-        </button>
-    </div>
+    <!-- SEED DEMO SESSIONS (Logic remains, but trigger moved to Dashboard) -->
 
     <script>
         async function seedDemoSessions() {
