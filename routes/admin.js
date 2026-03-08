@@ -71,8 +71,20 @@ router.get('/dashboard', authMiddleware, adminOnly, async (req, res) => {
 // ─── WITHDRAWALS — LIST ───────────────────────────────────────────────────────
 router.get('/withdrawals', authMiddleware, adminOnly, async (req, res) => {
   try {
-    const list = await Withdrawal.find({}).sort({ created_at: -1 }).limit(50).lean();
-    res.json(list);
+    const listRaw = await Withdrawal.find({}).sort({ created_at: -1 }).limit(100).lean();
+
+    // Enrich with user info
+    const enriched = [];
+    for (const wd of listRaw) {
+      const u = await User.findOne({ id: Number(wd.user_id) }).select('full_name phone username name').lean();
+      enriched.push({
+        ...wd,
+        user_name: u?.full_name || u?.name || u?.username || 'N/A',
+        user_phone: u?.phone || 'N/A'
+      });
+    }
+
+    res.json(enriched);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -134,6 +146,34 @@ router.post('/withdrawals/:id/reject', authMiddleware, adminOnly, async (req, re
     }
 
     res.json({ success: true, message: 'Withdrawal rejected and funds restored.' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── WITHDRAWALS — RESET/RETRY ───────────────────────────────────────────────
+router.post('/withdrawals/:id/reset', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const wdId = String(req.params.id).trim();
+    const wd = await Withdrawal.findOne({ id: wdId });
+    if (!wd) return res.status(404).json({ error: 'Withdrawal not found' });
+
+    // If it was already failed/rejected, we lock funds again to try retry
+    if (wd.status === 'failed' || wd.status === 'rejected') {
+      const { getWallet } = require('./wallet_utils');
+      const wallet = await getWallet(wd.user_id);
+      if (wallet.win_bal < wd.amount) {
+        return res.status(400).json({ error: 'User has insufficient winnings balance to re-lock for retry' });
+      }
+      wallet.win_bal -= wd.amount;
+      await wallet.save();
+    }
+
+    wd.status = 'pending';
+    wd.error = null;
+    await wd.save();
+
+    res.json({ message: 'Withdrawal reset to pending. You can approve it again now.' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

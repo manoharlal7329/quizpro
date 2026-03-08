@@ -163,7 +163,9 @@
                                 <tr style="border-bottom:1px solid var(--border);">
                                     <td style="padding:12px;">
                                         <div style="font-weight:bold;">${w.id}</div>
-                                        <div style="font-size:0.7rem; color:var(--muted);">User ID: ${w.user_id}</div>
+                                        <div style="font-size:0.85rem; color:var(--text); font-weight:500; margin-top:4px;">${w.user_name}</div>
+                                        <div style="font-size:0.75rem; color:var(--blue);">${w.user_phone}</div>
+                                        <div style="font-size:0.65rem; color:var(--muted);">UID: ${w.user_id}</div>
                                     </td>
                                     <td style="padding:12px; font-weight:bold;">₹${w.amount}</td>
                                     <td style="padding:12px; font-size:0.8rem;">
@@ -211,7 +213,10 @@
                 toast('✅ ' + res.message, 'success');
                 loadWithdrawals();
             } catch (e) {
-                toast('❌ Error: ' + e.message, 'error');
+                const detail = e.details || e.message || 'Unknown error';
+                console.error('Approval Error Details:', e);
+                toast('❌ Error: ' + (e.message || 'Operation failed') + (e.details ? ' (' + e.details + ')' : ''), 'error');
+                loadWithdrawals(); // Refresh to show current DB status (likely FAILED)
             }
         }
 
@@ -220,6 +225,18 @@
             try {
                 toast('Rejecting...', 'info');
                 const res = await api('/api/admin/withdrawals/' + id + '/reject', 'POST');
+                toast('✅ ' + res.message, 'success');
+                loadWithdrawals();
+            } catch (e) {
+                toast('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        async function resetWd(id) {
+            if (!confirm('This will move the withdrawal back to PENDING and lock user funds again (if already refunded). Proceed?')) return;
+            try {
+                toast('Resetting status...', 'info');
+                const res = await api('/api/admin/withdrawals/' + id + '/reset', 'POST');
                 toast('✅ ' + res.message, 'success');
                 loadWithdrawals();
             } catch (e) {
