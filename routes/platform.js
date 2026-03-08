@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Banner = require('../database/models/Banner');
 const Notification = require('../database/models/Notification');
-const { authMiddleware } = require('./auth');
+const authMiddleware = require('../middleware/auth');
 
 // ─── GET ACTIVE BANNERS ──────────────────────────────────────────────────────
 router.get('/banners', async (req, res) => {

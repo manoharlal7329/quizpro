@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
 const authMiddleware = require('../middleware/auth');
 const multer = require('multer');
 const XLSX = require('xlsx');
@@ -740,25 +741,24 @@ router.get('/system-status', authMiddleware, adminOnly, async (req, res) => {
         users: userCount,
         sessions: sessionCount,
         questions: quizCount,
-        books: bookCount
       }
     };
-
-    router.get('/logs', authMiddleware, adminOnly, async (req, res) => {
-      try {
-        const fs = require('fs');
-        const logPath = path.join(__dirname, '../sync.log'); // Using sync.log as a proxy for server activity
-        if (!fs.existsSync(logPath)) return res.json({ logs: ['No log file found.'] });
-
-        const content = fs.readFileSync(logPath, 'utf8');
-        const lines = content.split('\n').slice(-50).reverse();
-        res.json({ logs: lines });
-      } catch (e) {
-        res.status(500).json({ error: e.message });
-      }
-    });
-
     res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.get('/logs', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const logPath = path.join(__dirname, '../sync.log');
+    if (!fs.existsSync(logPath)) return res.json({ logs: ['No log file found.'] });
+
+    const content = fs.readFileSync(logPath, 'utf8');
+    const lines = content.split('\n').slice(-50).reverse();
+    res.json({ logs: lines });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
