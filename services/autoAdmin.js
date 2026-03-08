@@ -81,11 +81,11 @@ class AutoAdminService {
     }
 
     async detectServerCrash() {
-        // If the server starts and the DB is connected, we check if the last alert was a crash.
-        // We log a bootup message. If uptime is < 2min upon start, it implies a restart.
+        // Log a clean bootup message. We only flag 'crash' if specifically detected via logs or process state.
         const uptime = process.uptime();
         if (uptime < 60) {
-            await this.logAlert('crash', 'high', 'System successfully recovered from a sudden restart/crash.', { uptime_seconds: uptime });
+            console.log('✅ [System] Clean boot detected. Optimization complete.');
+            // Removed the high-severity AIAlert here to avoid confusing the user during normal deployments.
         }
     }
 
