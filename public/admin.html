@@ -1417,13 +1417,31 @@
             if (!wallets.length) { document.getElementById('walletsTable').innerHTML = '<p style="color:var(--muted);">No users yet</p>'; return; }
             document.getElementById('walletsTable').innerHTML = `
                 <table>
-                    <thead><tr><th>ID</th><th>Phone / Mobile</th><th>Name</th><th>💰 Deposit</th><th>🏆 Winnings</th><th>📊 Total</th><th>Action</th></tr></thead>
+                    <thead><tr>
+                        <th>ID / Joined</th>
+                        <th>User Details</th>
+                        <th>Referral Info</th>
+                        <th>💰 Deposit</th>
+                        <th>🏆 Winnings</th>
+                        <th>📊 Total</th>
+                        <th>Action</th>
+                    </tr></thead>
                     <tbody>
                     ${wallets.map(w => `
                         <tr>
-                            <td style="font-size: .8rem; color: var(--muted);">#${w.id}</td>
-                            <td style="font-weight:700; color: var(--blue);">${w.mobile}</td>
-                            <td>${w.name || '—'}</td>
+                            <td style="font-size: .75rem; color: var(--muted);">
+                                #${w.id}<br>
+                                ${new Date(w.created_at * 1000).toLocaleDateString()}
+                            </td>
+                            <td>
+                                <div style="font-weight:700; color: var(--blue);">${w.mobile}</div>
+                                <div style="font-size: .8rem; color: #fff;">${w.name}</div>
+                                <div style="font-size: .7rem; color: var(--muted);">${w.quizzes_solved} Quizzes Solved</div>
+                            </td>
+                            <td style="font-size: .8rem;">
+                                <div style="color:var(--gold); font-weight:700;">Code: ${w.referral_code}</div>
+                                <div style="color:var(--muted);">By: ${w.referred_by || 'Organic'}</div>
+                            </td>
                             <td style="color:var(--muted);font-weight:600;">₹${(w.dep_bal || 0).toLocaleString()}</td>
                             <td style="color:var(--green);font-weight:700;">₹${(w.win_bal || 0).toLocaleString()}</td>
                             <td style="color:var(--text);font-weight:800;">₹${((w.dep_bal || 0) + (w.win_bal || 0)).toLocaleString()}</td>

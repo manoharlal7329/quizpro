@@ -278,11 +278,15 @@ router.get('/admin/list', authMiddleware, async (req, res) => {
             const w = wallets.find(w => String(w.user_id) === String(u.id)) || { dep_bal: 0, win_bal: 0 };
             return {
                 id: u.id,
-                mobile: u.phone || u.mobile || 'N/A',
-                name: u.full_name || u.name,
+                mobile: u.phone || u.mobile || '—',
+                name: u.full_name || u.name || u.username,
                 real: (w.dep_bal || 0) + (w.win_bal || 0),
                 dep_bal: w.dep_bal || 0,
-                win_bal: w.win_bal || 0
+                win_bal: w.win_bal || 0,
+                referral_code: u.referral_code || '—',
+                referred_by: u.referred_by || 'Organic',
+                quizzes_solved: u.quizzes_solved || 0,
+                created_at: u.created_at || 0
             };
         });
 
