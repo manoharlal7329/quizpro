@@ -310,25 +310,34 @@ router.post('/admin/credit-prize', authMiddleware, async (req, res) => {
             const winnerWallet = await getWallet(p.user_id);
             const winnerUser = await User.findOne({ id: Number(p.user_id) });
 
-            let finalPrize = Number(p.amount);
-            let referralComm = 0;
+            let totalDeducted = 0;
+            const rates = [0.05, 0.02, 0.01, 0.01, 0.005, 0.005]; // L1 to L6
+            let currentWinner = winnerUser;
 
-            if (winnerUser && winnerUser.referred_by) {
-                const referrer = await User.findOne({ referral_code: winnerUser.referred_by });
-                if (referrer && String(referrer.id) !== String(p.user_id)) {
-                    referralComm = Math.floor(finalPrize * 0.05);
-                    finalPrize = finalPrize - referralComm;
+            for (let i = 0; i < rates.length; i++) {
+                if (!currentWinner || !currentWinner.referred_by) break;
 
+                const referrer = await User.findOne({ referral_code: currentWinner.referred_by });
+                if (!referrer || String(referrer.id) === String(p.user_id)) break;
+
+                const comm = Math.floor(Number(p.amount) * rates[i]);
+                if (comm > 0) {
                     const referrerWallet = await getWallet(referrer.id);
-                    referrerWallet.win_bal = (referrerWallet.win_bal || 0) + referralComm;
+                    referrerWallet.win_bal = (referrerWallet.win_bal || 0) + comm;
                     await referrerWallet.save();
-                    await addTxn(referrer.id, 'real', 'credit', referralComm, `📩 Referral Win Comm: ${winnerUser.username} — ${p.session_title}`);
+
+                    await addTxn(referrer.id, 'real', 'credit', comm, `📩 L${i + 1} Ref Comm: ${winnerUser.username || winnerUser.full_name} — ${p.session_title}`);
+                    totalDeducted += comm;
                 }
+
+                // Move up the chain
+                currentWinner = referrer;
             }
 
-            winnerWallet.win_bal = (winnerWallet.win_bal || 0) + finalPrize;
+            const netPrize = Number(p.amount) - totalDeducted;
+            winnerWallet.win_bal = (winnerWallet.win_bal || 0) + netPrize;
             await winnerWallet.save();
-            await addTxn(p.user_id, 'real', 'credit', finalPrize, `🏆 Prize #${p.rank} — ${p.session_title}${referralComm > 0 ? ' (Net after 5% Ref)' : ''}`);
+            await addTxn(p.user_id, 'real', 'credit', netPrize, `🏆 Prize #${p.rank} — ${p.session_title}${totalDeducted > 0 ? ' (Net after Multi-Ref)' : ''}`);
         }
 
         res.json({ success: true, credited: prizes.length });

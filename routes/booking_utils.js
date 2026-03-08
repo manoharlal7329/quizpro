@@ -58,25 +58,32 @@ async function finalizeBooking(userId, sessionId, paymentId) {
             console.warn('[BookingHelper] Broadcast failed:', e.message);
         }
 
-        // 5. 5% Referral Commission
+        // 5. Multi-Level Referral Commission (Total 5%)
         try {
-            const payer = await User.findOne({ id: Number(userId) }).lean();
-            if (payer && payer.referred_by) {
-                const referrer = await User.findOne({ referral_code: payer.referred_by }).lean();
-                if (referrer) {
-                    const commission = Math.floor(session.entry_fee * 0.05);
-                    if (commission > 0) {
-                        await Wallet.findOneAndUpdate(
-                            { user_id: referrer.id },
-                            { $inc: { win_bal: commission } },
-                            { upsert: true }
-                        );
-                        await addTxn(referrer.id, 'real', 'credit', commission, `🎯 Referral commission — ${payer.name || payer.email} ne join kiya`, paymentId);
-                    }
+            const rates = [0.025, 0.01, 0.005, 0.005, 0.0025, 0.0025]; // L1 to L6 = 5%
+            let currentPayer = await User.findOne({ id: Number(userId) }).lean();
+
+            for (let i = 0; i < rates.length; i++) {
+                if (!currentPayer || !currentPayer.referred_by) break;
+
+                const referrer = await User.findOne({ referral_code: currentPayer.referred_by }).lean();
+                if (!referrer || String(referrer.id) === String(userId)) break;
+
+                const commission = Math.floor(session.entry_fee * rates[i]);
+                if (commission > 0) {
+                    await Wallet.findOneAndUpdate(
+                        { user_id: referrer.id },
+                        { $inc: { win_bal: commission } },
+                        { upsert: true }
+                    );
+                    await addTxn(referrer.id, 'real', 'credit', commission, `🎯 L${i + 1} Ref Join: ${currentPayer.name || currentPayer.email} — ${session.title}`, paymentId);
                 }
+
+                // Move up
+                currentPayer = referrer;
             }
         } catch (refErr) {
-            console.warn('[BookingHelper] Referral Error:', refErr.message);
+            console.warn('[BookingHelper] Multi-Level Referral Error:', refErr.message);
         }
 
         return {
