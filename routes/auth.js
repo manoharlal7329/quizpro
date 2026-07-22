@@ -71,7 +71,7 @@ router.post('/register', async (req, res) => {
 
         const token = jwt.sign(
             { id: user.id, email: user.email, is_admin: user.is_admin },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
 

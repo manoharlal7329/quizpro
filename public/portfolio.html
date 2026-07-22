@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manohar Lal | Software Developer Portfolio</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --surface: #1f2833;
+            --surface-glass: rgba(31, 40, 51, 0.6);
+            --primary: #45f3ff;
+            --secondary: #c026d3;
+            --text-main: #ffffff;
+            --text-muted: #8b9bb4;
+            --border: rgba(69, 243, 255, 0.15);
+            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .text-gradient {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .ambient-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(69,243,255,0.08) 0%, rgba(11,12,16,0) 70%);
+            top: -200px;
+            left: -200px;
+            border-radius: 50%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .ambient-glow.right {
+            top: auto;
+            bottom: -200px;
+            left: auto;
+            right: -200px;
+            background: radial-gradient(circle, rgba(192,38,211,0.08) 0%, rgba(11,12,16,0) 70%);
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(11, 12, 16, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        section {
+            padding: 100px 10%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .section-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .section-header p {
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+
+        /* Developer Hero */
+        .dev-hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding-top: 100px;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+        .hero-content h1 {
+            font-size: 4.5rem;
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+        .hero-content h3 {
+            font-size: 2rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+        .hero-content p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .dev-image {
+            position: relative;
+            text-align: center;
+        }
+        .dev-image img {
+            width: 350px;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            box-shadow: 0 0 50px rgba(69,243,255,0.3);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 10px 30px rgba(69, 243, 255, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(192, 38, 211, 0.4);
+        }
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            background: transparent;
+            margin-left: 20px;
+        }
+        .btn-outline:hover {
+            background: rgba(69, 243, 255, 0.1);
+        }
+
+        .glass-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: rgba(69, 243, 255, 0.4);
+        }
+
+        /* Developer Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .skill-item {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .skill-item:hover {
+            border-color: var(--primary);
+            background: rgba(69,243,255,0.05);
+            transform: scale(1.05);
+        }
+        .skill-item i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* Contact Details */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .contact-item i {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+        .contact-item h4 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        .contact-item p {
+            color: var(--text-muted);
+        }
+
+        /* Project Showcase Divider */
+        .project-divider {
+            text-align: center;
+            padding: 80px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(11,12,16,0.4);
+            margin: 50px 0;
+        }
+
+        /* Simplified Grid for Project Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            background: -webkit-linear-gradient(var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 900px) {
+            .hero-grid, .contact-grid { grid-template-columns: 1fr; text-align: center; }
+            .hero-content h1 { font-size: 3rem; }
+            .nav-links { display: none; }
+            .contact-item { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow right"></div>
+
+    <nav>
+        <div class="logo">Mano<span>har</span></div>
+        <div class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#about">About Me</a>
+            <a href="#skills">Skills</a>
+            <a href="#quizpro">Flagship Project</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- DEVELOPER HERO SECTION -->
+    <section class="dev-hero" id="home">
+        <div class="hero-grid">
+            <div class="hero-content reveal">
+                <h3>Hello, I am</h3>
+                <h1 class="text-gradient">Manohar Lal</h1>
+                <p>A passionate Full-Stack Software Engineer specialized in building highly scalable, secure, and beautiful web applications. From complex backend architectures to fluid front-end experiences.</p>
+                <div>
+                    <a href="#quizpro" class="btn btn-primary"><i class="fa-solid fa-briefcase"></i> View My Work</a>
+                    <a href="#contact" class="btn btn-outline"><i class="fa-solid fa-envelope"></i> Hire Me</a>
+                </div>
+            </div>
+            <div class="dev-image reveal">
+                <!-- Using a placeholder avatar image -->
+                <img src="https://images.unsplash.com/photo-1555952517-2e8af104e84e?auto=format&fit=crop&w=800&q=80" alt="Manohar Lal">
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT & SKILLS -->
+    <section id="about">
+        <div class="section-header reveal">
+            <h2>About <span class="text-gradient">Me</span> & My Skills</h2>
+            <p>I architect end-to-end systems that handle real-time transactions, heavy data loads, and elegant user interfaces.</p>
+        </div>
+
+        <div class="skills-grid reveal">
+            <div class="skill-item">
+                <i class="fa-brands fa-node-js"></i>
+                <h4>Node.js</h4>
+            </div>
+            <div class="skill-item">
+                <i class="fa-brands fa-js"></i>
+                <h4>JavaScript</h4>
+            </div>
+            <div class="skill-item">
+                <i class="fa-solid fa-database"></i>
+                <h4>MongoDB</h4>
+            </div>
+            <div class="skill-item">
+                <i class="fa-brands fa-html5"></i>
+                <h4>HTML5 / CSS3</h4>
+            </div>
+            <div class="skill-item">
+                <i class="fa-solid fa-server"></i>
+                <h4>Express.js</h4>
+            </div>
+            <div class="skill-item">
+                <i class="fa-solid fa-credit-card"></i>
+                <h4>Payments API</h4>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROJECT SHOWCASE DIVIDER -->
+    <div class="project-divider" id="quizpro">
+        <h2 style="font-size: 3rem; margin-bottom: 10px;">My Flagship Masterpiece</h2>
+        <h1 class="text-gradient" style="font-size: 5rem; text-transform: uppercase;">QuizPro Arena</h1>
+        <p style="color: var(--text-muted); font-size: 1.2rem; max-width: 800px; margin: 20px auto 0;">
+            A state-of-the-art competitive live learning platform I built entirely from scratch. Includes real-time synced quizzes, closed-loop wallet ledgers, Razorpay webhooks, AI anti-fraud algorithms, and a native admin dashboard.
+        </p>
+    </div>
+
+    <!-- QUIZPRO PROJECT DETAILS -->
+    <section>
+        <div class="section-header reveal">
+            <h2>System <span class="text-gradient">Architecture & Features</span></h2>
+            <p>Here is an inside look at how I engineered the robust backend and dynamic frontend of QuizPro.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="glass-card reveal">
+                <i class="fa-solid fa-gamepad feature-icon"></i>
+                <h3>Advanced Quiz Engine</h3>
+                <p>Calculated dynamic scoreboards based on accuracy and pinpoint speed logic. Used algorithmic state-sync for real-time multiplayer consistency.</p>
+            </div>
+            <div class="glass-card reveal">
+                <i class="fa-solid fa-wallet feature-icon"></i>
+                <h3>Secure Wallet Ledger</h3>
+                <p>Designed a closed-loop transactional database ensuring atomicity. Integrated automated 30% TDS for legitimate withdrawals.</p>
+            </div>
+            <div class="glass-card reveal">
+                <i class="fa-solid fa-shield-halved feature-icon"></i>
+                <h3>Automated Webhooks</h3>
+                <p>Integrated Razorpay for seamless deposits and real-time payouts. Engineered retry loops to completely eliminate manual admin errors.</p>
+            </div>
+            <div class="glass-card reveal">
+                <i class="fa-solid fa-user-tie feature-icon"></i>
+                <h3>Admin Control Node</h3>
+                <p>Built a native dashboard allowing me to monitor active sessions, approve payouts, ban perpetrators, and view real-time system health.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT DETAILS -->
+    <section id="contact">
+        <div class="section-header reveal">
+            <h2>Let's <span class="text-gradient">Connect</span></h2>
+            <p>Are you looking to build the next big thing, or do you need a scalable architecture? Reach out to me.</p>
+        </div>
+
+        <div class="contact-grid">
+            <div class="contact-info reveal">
+                <div class="contact-item">
+                    <i class="fa-solid fa-envelope"></i>
+                    <div>
+                        <h4>Email Me At</h4>
+                        <p>manohar.developer@example.com (Placeholder)</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fa-solid fa-phone"></i>
+                    <div>
+                        <h4>Call Me</h4>
+                        <p>+91 XXXXX XXXXX (Placeholder)</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <div>
+                        <h4>Location</h4>
+                        <p>India</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card reveal" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h3 style="margin-bottom: 20px;">Scan to view this Portfolio</h3>
+                <div style="background: white; padding: 15px; border-radius: 12px; display: inline-block;">
+                    <img id="dynamic-qr" src="" alt="Portfolio QR Code" width="150" height="150">
+                </div>
+                <p style="margin-top: 15px; color: var(--text-muted);">Share my digital resume directly from your phone.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="background: #06070a; padding: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 50px;">
+        <p style="color: var(--text-muted);">&copy; 2026 Developed by Manohar Lal. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Generate QR Code dynamically
+            const currentUrl = encodeURIComponent(window.location.href);
+            document.getElementById('dynamic-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUrl}&color=000000&bgcolor=ffffff`;
+            
+            // Scroll Animation Observer
+            const reveals = document.querySelectorAll('.reveal');
+            const revealOnScroll = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            reveals.forEach(reveal => revealOnScroll.observe(reveal));
+            
+            // Initial trigger
+            setTimeout(() => {
+                document.querySelectorAll('.reveal').forEach((el) => {
+                    if(el.getBoundingClientRect().top < window.innerHeight) {
+                        el.classList.add('active');
+                    }
+                });
+            }, 100);
+        });
+    </script>
+
+</body>
+</html>

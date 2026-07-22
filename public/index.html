@@ -143,6 +143,11 @@
             }
         }
 
+        @keyframes spin-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* How it works */
         .steps {
             display: grid;
@@ -434,9 +439,12 @@
 
                 <!-- FOUNDER / OWNER SECTION -->
                 <div class="founder-card glass-card">
-                    <div class="founder-photo-wrap">
-                        <img src="/assets/owner.png" alt="Founder" class="founder-photo"
-                            onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=Manohar'">
+                    <div class="founder-photo-wrap" style="position:relative;">
+                        <div style="position:absolute; inset:-4px; border-radius:50%; background: conic-gradient(from 0deg, #f59e0b, #d97706, #fbbf24, #f59e0b); z-index:0; animation: spin-ring 4s linear infinite;"></div>
+                        <img src="/assets/owner.png" alt="Manohar Lal Prajapat - Founder & CEO QuizPro" class="founder-photo"
+                            style="position:relative; z-index:1; border-radius:50%; border: 4px solid #000; object-fit:cover; object-position: center top;"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div style="display:none; width:120px; height:120px; border-radius:50%; background:linear-gradient(135deg,#7c3aed,#3b82f6); align-items:center; justify-content:center; font-size:3rem; font-weight:900; color:#fff; position:relative; z-index:1;">ML</div>
                     </div>
                     <div class="founder-meta">
                         <span class="tag">Founder & CEO</span>

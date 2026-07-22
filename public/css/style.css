@@ -1095,26 +1095,17 @@ body {
   gap: 8px;
 }
 
-/* -- POCKET 3D STACK (Mobile) -- */
-@media (max-width: 480px) {
-
-  .grid-2,
-  .grid-3,
-  .card-grid {
-    perspective: 1200px;
+/* ── WATER RIPPLE EFFECT ── */
+@keyframes waterRipple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
   }
-
-  .glass-card {
-    transform-style: preserve-3d;
-    transition: transform 0.4s;
-  }
-}
-
-/* -- DESKTOP PRECISION PARALLAX -- */
-@media (min-width: 1025px) {
-  .glass-card:hover {
-    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(12px);
-    box-shadow: 0 45px 85px -20px rgba(0, 0, 0, 0.5);
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
   }
 }
 

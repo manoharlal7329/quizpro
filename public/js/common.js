@@ -11,11 +11,16 @@ if ('serviceWorker' in navigator) {
 async function api(url, method = 'GET', body = null) {
     const opts = {
         method,
-        headers: { 'Content-Type': 'application/json' }
+        headers: {}
     };
+    if (!(body instanceof FormData)) {
+        opts.headers['Content-Type'] = 'application/json';
+    }
     const token = getToken();
     if (token) opts.headers['Authorization'] = 'Bearer ' + token;
-    if (body) opts.body = JSON.stringify(body);
+    if (body) {
+        opts.body = (body instanceof FormData) ? body : JSON.stringify(body);
+    }
 
     let res;
     try {
@@ -24,6 +29,20 @@ async function api(url, method = 'GET', body = null) {
         throw new Error('Network error — server se connect nahi ho pa raha. Server chal raha hai?');
     }
     const data = await res.json().catch(() => ({}));
+
+    // Auto-redirect on 401 (stale/invalid token)
+    if (res.status === 401) {
+        const isAdminPage = window.location.pathname.includes('admin');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (isAdminPage) {
+            window.location.href = '/admin_login.html';
+        } else {
+            window.location.href = '/login.html';
+        }
+        return;
+    }
+
     if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), data);
     return data;
 }
@@ -207,9 +226,13 @@ class InteractionEngine {
         console.log(`🎨 Theme Shift: ${p.name}`);
     }
 
+
     init() {
         window.addEventListener('scroll', () => renderFooter());
         this.hookButtons();
+
+        // Ripple effect on every click
+        document.addEventListener('click', (e) => this.createRipple(e));
 
         // Unlock audio on first interaction
         const unlock = () => {
@@ -221,69 +244,39 @@ class InteractionEngine {
         document.addEventListener('mousedown', unlock);
         document.addEventListener('touchstart', unlock);
 
-        document.addEventListener('mousemove', (e) => this.handleGlobalParallax(e));
-        if (window.DeviceOrientationEvent && !this.isMobile) {
-            // Some mobile browsers require permission for orientation
-            // We use scroll-linked parallax as a robust mobile fallback
-        }
-        window.addEventListener('scroll', () => this.handleScrollParallax());
         this.initObserver();
     }
 
-    handleScrollParallax() {
-        if (!this.isMobile) return;
-        const scrolled = window.scrollY;
-        document.querySelectorAll('.glass-card').forEach((card, i) => {
-            const rect = card.getBoundingClientRect();
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                const shift = (rect.top - window.innerHeight / 2) * 0.05;
-                card.style.transform = `perspective(1000px) rotateX(${shift}deg) translateZ(5px)`;
-            }
-        });
+    createRipple(e) {
+        const ripple = document.createElement('span');
+        ripple.style.cssText = `
+            position: fixed;
+            left: ${e.clientX}px;
+            top: ${e.clientY}px;
+            width: 0; height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139,92,246,0.35) 0%, rgba(59,130,246,0.18) 50%, transparent 70%);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 99999;
+            animation: waterRipple 0.7s ease-out forwards;
+        `;
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 700);
     }
 
-    handleGlobalParallax(e) {
-        if (this.isMobile) return;
-        const x = (e.clientX / window.innerWidth) * 100;
-        const y = (e.clientY / window.innerHeight) * 100;
-        document.documentElement.style.setProperty('--mouse-x', `${x}%`);
-        document.documentElement.style.setProperty('--mouse-y', `${y}%`);
-
-        // Precision Tilt for hovered elements
-        const hovered = document.elementFromPoint(e.clientX, e.clientY);
-        const card = hovered?.closest('.glass-card');
-        if (card) this.applyTilt(e, card);
-    }
-
-    handleGyro(e) {
-        if (!this.isMobile || !e.beta) return;
-        // Map beta/gamma to small rotation values
-        const rx = (e.beta - 45) * 0.2; // subtle pitch
-        const ry = e.gamma * 0.2;      // subtle roll
-        document.querySelectorAll('.glass-card').forEach(card => {
-            card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-        });
-    }
-
-    applyTilt(e, el) {
-        const rect = el.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rx = ((y - centerY) / centerY) * -10; // max 10deg
-        const ry = ((x - centerX) / centerX) * 10;  // max 10deg
-        el.style.setProperty('--rx', `${rx}deg`);
-        el.style.setProperty('--ry', `${ry}deg`);
-    }
 
     initAudio() {
         if (this.ctx) return;
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) { /* Audio not supported */ }
     }
 
     playTone(freq, type = 'sine', duration = 0.2, vol = 0.1) {
+        if (!this.userActivated) return; // Wait for user gesture
         if (!this.ctx) this.initAudio();
+        if (!this.ctx) return;
         if (this.ctx.state === 'suspended') this.ctx.resume();
 
         const osc = this.ctx.createOscillator();
@@ -299,10 +292,10 @@ class InteractionEngine {
     }
 
     // Diverse Sound Profiles
-    soundCrystal() { this.initAudio(); this.playTone(1200, 'sine', 0.15, 0.03); } // High chime
-    soundGold() { this.initAudio(); this.playTone(600, 'triangle', 0.2, 0.04); } // Metallic ring
-    soundGlass() { this.initAudio(); this.playTone(900, 'sine', 0.1, 0.02); }   // Soft click
-    soundSuccess() { this.initAudio(); this.playTone(880, 'sine', 0.3, 0.05); setTimeout(() => this.playTone(1100, 'sine', 0.3, 0.05), 100); } // Two-tone chime
+    soundCrystal() { this.playTone(1200, 'sine', 0.15, 0.03); }
+    soundGold()    { this.playTone(600, 'triangle', 0.2, 0.04); }
+    soundGlass()   { this.playTone(900, 'sine', 0.1, 0.02); }
+    soundSuccess() { this.playTone(880, 'sine', 0.3, 0.05); setTimeout(() => this.playTone(1100, 'sine', 0.3, 0.05), 100); }
 
     hover() { this.soundGlass(); }
     click() {
@@ -338,6 +331,12 @@ class InteractionEngine {
         });
     }
 
+    activateAudio() {
+        if (this.userActivated) return;
+        this.userActivated = true;
+        this.initAudio();
+    }
+
     initObserver() {
         const observer = new MutationObserver((mutations) => {
             mutations.forEach(m => {
@@ -356,11 +355,15 @@ const engine = new InteractionEngine();
 window.addEventListener('DOMContentLoaded', () => {
     renderAppNav();
     renderFooter();
+    // Activate audio only after first real user interaction
+    const activateOnce = () => { engine.activateAudio(); };
+    document.addEventListener('click', activateOnce, { once: true });
+    document.addEventListener('keydown', activateOnce, { once: true });
     // Force versioned assets
     document.querySelectorAll('link[rel=stylesheet], script[src]').forEach(el => {
         const attr = el.tagName === 'LINK' ? 'href' : 'src';
         const val = el.getAttribute(attr);
-        if (val && !val.includes('?v=')) el.setAttribute(attr, val + '?v=1.3');
+        if (val && !val.includes('?v=')) el.setAttribute(attr, val + '?v=1.4');
     });
 });
 // ─── PASSWORD TOGGLE HELPER ──────────────────────────────────

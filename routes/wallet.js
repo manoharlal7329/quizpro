@@ -3,6 +3,23 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const crypto = require('crypto');
 const axios = require('axios');
+const path = require('path');
+const multer = require('multer');
+
+// Configure multer storage for screenshots
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 
 // Razorpay config
 const RZP_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
@@ -46,7 +63,8 @@ router.get('/me', authMiddleware, async (req, res) => {
             real: (w.dep_bal || 0) + (w.win_bal || 0),
             withdrawable: w.win_bal || 0,
             has_pin: !!w.pin,
-            is_admin: user && user.is_admin === 1
+            is_admin: user && user.is_admin === 1,
+            referral_code: user ? user.referral_code : null
         });
     } catch (e) {
         console.error(`[Wallet] error in /me for User ${req.user?.id}:`, e.message);
@@ -240,6 +258,69 @@ router.post('/confirm-deposit', authMiddleware, async (req, res) => {
 });
 
 
+// ── POST /api/wallet/upi-deposit ──────────────────────────────────────────────
+// Submit direct UPI payment deposit request with UTR and Screenshot
+router.post('/upi-deposit', authMiddleware, upload.single('screenshot'), async (req, res) => {
+    try {
+        const UpiDeposit = require('../database/models/UpiDeposit');
+        const { amount, utr } = req.body;
+        const numAmount = Number(amount);
+
+        if (!numAmount || numAmount < 10) {
+            return res.status(400).json({ error: 'Minimum deposit is ₹10' });
+        }
+
+        const cleanUtr = String(utr || '').trim();
+        if (!cleanUtr || cleanUtr.length < 6) {
+            return res.status(400).json({ error: 'Please enter a valid 12-digit UTR/Reference ID.' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: 'Payment screenshot is required.' });
+        }
+
+        // Prevent duplicate UTR submission
+        const existing = await UpiDeposit.findOne({ utr: cleanUtr });
+        if (existing) {
+            return res.status(400).json({ error: `UTR ${cleanUtr} has already been submitted (Status: ${existing.status}).` });
+        }
+
+        const dep = new UpiDeposit({
+            id: Date.now(),
+            user_id: Number(req.user.id),
+            amount: numAmount,
+            utr: cleanUtr,
+            screenshot_url: '/uploads/' + req.file.filename,
+            status: 'PENDING',
+            created_at: Math.floor(Date.now() / 1000)
+        });
+        await dep.save();
+
+        res.json({
+            success: true,
+            message: 'Deposit request submitted! Admin will verify your UTR/Screenshot and credit your account shortly.',
+            deposit: dep
+        });
+    } catch (e) {
+        console.error('[Wallet] upi-deposit error:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ── GET /api/wallet/my-upi-deposits ───────────────────────────────────────────
+router.get('/my-upi-deposits', authMiddleware, async (req, res) => {
+    try {
+        const UpiDeposit = require('../database/models/UpiDeposit');
+        const list = await UpiDeposit.find({ user_id: Number(req.user.id) })
+            .sort({ created_at: -1 })
+            .limit(20)
+            .lean();
+        res.json(list);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ── POST /api/wallet/admin/topup ─────────────────────────────────────────────
 // Admin credits demo or real balance to any user
 router.post('/admin/topup', authMiddleware, async (req, res) => {
@@ -254,12 +335,23 @@ router.post('/admin/topup', authMiddleware, async (req, res) => {
         if (!targetUser) return res.status(404).json({ error: 'User not found' });
 
         const wallet = await getWallet(user_id);
-        wallet.win_bal = (wallet.win_bal || 0) + Number(amount);
+        const amt = Number(amount);
+        if (wallet_type === 'win' || wallet_type === 'winnings') {
+            wallet.win_bal = (wallet.win_bal || 0) + amt;
+        } else {
+            wallet.dep_bal = (wallet.dep_bal || 0) + amt;
+        }
         await wallet.save();
 
-        await addTxn(user_id, 'real', 'credit', Number(amount), note || `Admin topup by ${liveUser.name}`);
+        await addTxn(user_id, 'real', 'credit', amt, note || `Admin Deposit Topup by ${liveUser.name || 'Admin'}`);
 
-        res.json({ success: true, user: targetUser.phone || targetUser.email, new_balance: (wallet.dep_bal || 0) + (wallet.win_bal || 0) });
+        res.json({ 
+            success: true, 
+            user: targetUser.phone || targetUser.email, 
+            dep_bal: wallet.dep_bal,
+            win_bal: wallet.win_bal,
+            new_balance: (wallet.dep_bal || 0) + (wallet.win_bal || 0) 
+        });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
@@ -311,7 +403,7 @@ router.post('/admin/credit-prize', authMiddleware, async (req, res) => {
             const winnerUser = await User.findOne({ id: Number(p.user_id) });
 
             let totalDeducted = 0;
-            const rates = [0.05, 0.02, 0.01, 0.01, 0.005, 0.005]; // L1 to L6
+            const rates = [0.05, 0.02, 0.015, 0.01, 0.003, 0.002]; // L1 to L6 revised rates
             let currentWinner = winnerUser;
 
             for (let i = 0; i < rates.length; i++) {

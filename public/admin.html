@@ -369,6 +369,7 @@
                     <a href="#" onclick="showPanel('banners',this)" data-tilt>🖼️ Banners</a>
                     <a href="#" onclick="showPanel('notifs',this)" data-tilt>🔔 Notifications</a>
                     <a href="#" onclick="showPanel('settings',this)" data-tilt>⚙️ Settings</a>
+                    <a href="#" onclick="showPanel('upi',this)" data-tilt style="color:var(--blue); border:1px solid rgba(14, 165, 233, 0.3);">💳 UPI & QR Scanner</a>
                     <a href="/admin_withdrawals.html" data-tilt
                         style="color:var(--gold); border:1px solid rgba(245, 158, 11, 0.2);">🕒 Payout Approvals</a>
                     <a href="/system-status.html" data-tilt
@@ -768,6 +769,46 @@
                         </div>
                     </div>
 
+                    <!-- ══ UPI & QR SCANNER MANAGER ═════════════════════════════════════ -->
+                    <div class="panel" id="panel-upi">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1 class="text-3d-float">💳 UPI & QR Scanner Settings</h1>
+                            <p style="color:var(--muted);">Manage Admin UPI ID, QR Code & Approve user deposit requests</p>
+                        </div>
+
+                        <!-- UPI Config Form -->
+                        <div class="glass-card" style="padding:24px; margin-bottom: 28px; border-color: var(--blue);">
+                            <h3 style="margin-bottom:16px; color: var(--blue);">⚙️ Configure Admin UPI & QR</h3>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Admin UPI ID</label>
+                                    <input type="text" id="adminUpiId" placeholder="e.g. manoharlala02911-1@okaxis">
+                                </div>
+                                <div class="form-group">
+                                    <label>Merchant / Display Name</label>
+                                    <input type="text" id="adminUpiName" placeholder="e.g. Manohar Lal Prajapat">
+                                </div>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label>Admin Phone Number (for PhonePe / GPay)</label>
+                                    <input type="text" id="adminUpiPhone" placeholder="e.g. 7976595645">
+                                </div>
+                                <div class="form-group">
+                                    <label>Custom QR Image URL (Optional)</label>
+                                    <input type="text" id="adminUpiQrUrl" placeholder="https://example.com/qr.png (Optional)">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveAdminUpiConfig()">Save UPI Settings 💾</button>
+                        </div>
+
+                        <!-- Pending UPI Deposit Approvals Table -->
+                        <h3 style="margin-bottom:14px;">📥 UPI Deposit Requests</h3>
+                        <div id="upiDepositsList" class="glass-card" style="padding: 14px;">
+                            <div style="padding: 20px; text-align: center; color: var(--muted);">Loading deposit requests...</div>
+                        </div>
+                    </div>
+
                     <!-- ══ WALLET MANAGER ═════════════════════════════════════════ -->
                     <div class="panel" id="panel-wallets">
                         <div class="page-hero" style="padding-top:0;">
@@ -822,7 +863,7 @@
     </div>
 
     <div id="toast"></div>
-    <script src="/js/common.js?v=1.2"></script>
+    <script src="/js/common.js?v=1.4"></script>
 
     <script>
         requireAdmin();
@@ -840,6 +881,202 @@
             if (name === 'banners') loadBanners();
             if (name === 'notifs') loadNotifs();
             if (name === 'settings') loadSettings();
+            if (name === 'upi') { loadAdminUpiConfig(); loadAdminUpiDeposits(); }
+        }
+
+        async function loadAdminUpiConfig() {
+            try {
+                const conf = await api('/api/admin/upi-config');
+                document.getElementById('adminUpiId').value = conf.upi_id || '';
+                document.getElementById('adminUpiName').value = conf.upi_name || '';
+                document.getElementById('adminUpiPhone').value = conf.upi_phone || '';
+                document.getElementById('adminUpiQrUrl').value = conf.qr_url || '';
+            } catch (e) {
+                console.error('Error loading admin UPI config:', e);
+            }
+        }
+
+        async function saveAdminUpiConfig() {
+            const upi_id = document.getElementById('adminUpiId').value.trim();
+            const upi_name = document.getElementById('adminUpiName').value.trim();
+            const upi_phone = document.getElementById('adminUpiPhone').value.trim();
+            const qr_url = document.getElementById('adminUpiQrUrl').value.trim();
+
+            if (!upi_id) return toast('Please enter a valid Admin UPI ID', 'error');
+
+            try {
+                toast('Saving UPI Settings...', 'info');
+                const res = await api('/api/admin/upi-config', 'POST', { upi_id, upi_name, upi_phone, qr_url });
+                if (res.success) {
+                    toast('✅ ' + res.message, 'success');
+                }
+            } catch (e) {
+                toast('❌ Save error: ' + e.message, 'error');
+            }
+        }
+
+        async function loadAdminUpiDeposits() {
+            const box = document.getElementById('upiDepositsList');
+            if (!box) return;
+            try {
+                const list = await api('/api/admin/upi-deposits');
+                if (!list || list.length === 0) {
+                    box.innerHTML = '<div style="padding: 30px; text-align: center; color: var(--muted);">No UPI deposit requests submitted yet.</div>';
+                    return;
+                }
+
+                let html = `
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Mobile</th>
+                                    <th>Date & Time</th>
+                                    <th>Amount</th>
+                                    <th>UTR No.</th>
+                                    <th>Screenshot</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                list.forEach(d => {
+                    let statusBadge = '<span style="color: #f59e0b; font-weight: bold;">⏳ PENDING</span>';
+                    if (d.status === 'APPROVED') {
+                        statusBadge = '<span style="color: #10b981; font-weight: bold;">✅ APPROVED</span>';
+                    } else if (d.status === 'REJECTED') {
+                        statusBadge = `<span style="color: #ef4444; font-weight: bold;" title="${d.admin_note || ''}">❌ REJECTED</span>`;
+                    }
+
+                    const screenshotBtn = d.screenshot_url 
+                        ? `<button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;" onclick="viewScreenshot('${d.screenshot_url}')">👁 View Screenshot</button>`
+                        : '<span style="color: var(--muted); font-size: 0.75rem;">No file</span>';
+
+                    let actionBtns = '—';
+                    if (d.status === 'PENDING') {
+                        actionBtns = `
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="display: flex; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 6px; padding: 2px 4px;">
+                                    <span style="font-size: 0.75rem; color: var(--muted); margin-right: 2px;">₹</span>
+                                    <input type="number" id="credit_amt_${d.id}" value="${d.amount}" style="width: 60px; background: transparent; border: none; color: #fff; font-weight: bold; outline: none; text-align: center; font-size: 0.85rem;" min="0">
+                                </div>
+                                <button class="btn btn-success" style="padding: 4px 8px; font-size: 0.72rem;" onclick="approveUpiDeposit(${d.id})">Approve ✅</button>
+                                <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.72rem;" onclick="rejectUpiDeposit(${d.id})">Reject ❌</button>
+                            </div>
+                        `;
+                    } else if (d.status === 'APPROVED') {
+                        actionBtns = `<small style="color: var(--green);">Credited: <b>₹${d.approved_amount !== null && d.approved_amount !== undefined ? d.approved_amount : d.amount}</b></small>`;
+                    } else if (d.status === 'REJECTED') {
+                        actionBtns = `<small style="color: var(--muted); display: block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.admin_note || ''}">Reason: ${d.admin_note || 'N/A'}</small>`;
+                    }
+
+                    html += `
+                        <tr>
+                            <td>
+                                <b>${d.user_name}</b><br>
+                                <small style="color: var(--muted); font-size: 0.7rem;">ID: ${d.user_id}</small>
+                            </td>
+                            <td><span style="font-size: 0.85rem;">${d.user_phone}</span></td>
+                            <td><span style="font-size: 0.75rem; color: var(--muted);">${new Date(d.created_at * 1000).toLocaleString()}</span></td>
+                            <td><b style="color: #fff; font-size: 0.9rem;">₹${d.amount}</b></td>
+                            <td><code style="font-family: monospace; background: rgba(0,0,0,0.4); padding: 4px 6px; border-radius: 6px; color: var(--gold); font-weight: bold; font-size: 0.78rem;">${d.utr}</code></td>
+                            <td>${screenshotBtn}</td>
+                            <td>${statusBadge}</td>
+                            <td>${actionBtns}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table></div>';
+                box.innerHTML = html;
+            } catch (e) {
+                console.error('Load deposits error:', e);
+                box.innerHTML = '<div style="color: var(--red); padding: 20px; text-align: center;">Error loading deposit requests.</div>';
+            }
+        }
+
+        function viewScreenshot(url) {
+            if (!url) return toast('No screenshot uploaded', 'error');
+            
+            const existing = document.getElementById('screenshotModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'screenshotModal';
+            modal.style = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                backdrop-filter: blur(10px);
+                z-index: 10000;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            
+            modal.innerHTML = `
+                <div style="position: relative; max-width: 90%; max-height: 80%; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                    <img src="${url}" style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;" alt="Payment Screenshot">
+                    <button style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;" onclick="document.getElementById('screenshotModal').remove()">✕</button>
+                </div>
+                <div style="color: #fff; margin-top: 15px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem;">
+                    Click outside or press ✕ to close
+                </div>
+            `;
+            
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+            
+            document.body.appendChild(modal);
+            setTimeout(() => { modal.style.opacity = '1'; }, 50);
+        }
+
+        async function approveUpiDeposit(id) {
+            const input = document.getElementById(`credit_amt_${id}`);
+            const credit_amount = input ? parseFloat(input.value) : null;
+
+            if (credit_amount === null || isNaN(credit_amount) || credit_amount < 0) {
+                return toast('Please enter a valid credit amount', 'error');
+            }
+
+            if (!confirm(`Approve deposit request #${id} and credit wallet with ₹${credit_amount}?`)) return;
+            try {
+                toast('Approving deposit...', 'info');
+                const res = await api(`/api/admin/upi-deposits/${id}/approve`, 'POST', { credit_amount });
+                if (res.success) {
+                    toast('✅ ' + res.message, 'success');
+                    loadAdminUpiDeposits();
+                }
+            } catch (e) {
+                toast('❌ Approval failed: ' + e.message, 'error');
+            }
+        }
+
+        async function rejectUpiDeposit(id) {
+            const note = prompt('Enter rejection reason (e.g. UTR not received in bank):');
+            if (note === null) return;
+            try {
+                toast('Rejecting deposit...', 'info');
+                const res = await api(`/api/admin/upi-deposits/${id}/reject`, 'POST', { note });
+                if (res.success) {
+                    toast('✅ ' + res.message, 'success');
+                    loadAdminUpiDeposits();
+                }
+            } catch (e) {
+                toast('❌ Rejection failed: ' + e.message, 'error');
+            }
         }
 
         async function loadDashboard() {
@@ -1118,12 +1355,12 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>ID / Joined</th>
-                                    <th>User Details</th>
-                                    <th>Referral Info</th>
-                                    <th style="text-align:center;">Quizzes</th>
-                                    <th>Wallet Status</th>
-                                    <th>Actions</th>
+                                    <th style="width:100px;">ID / Joined</th>
+                                    <th style="min-width:180px;">User Details</th>
+                                    <th style="width:130px;">Referral Info</th>
+                                    <th style="width:80px; text-align:center;">Quizzes</th>
+                                    <th style="width:130px;">Wallet</th>
+                                    <th style="width:110px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="usersListBody">
@@ -1148,57 +1385,247 @@
         }
 
         function renderUsersBody(users) {
+            if (!users.length) return `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:40px;">No users found.</td></tr>`;
             return users.map(u => {
-                const dep = u.wallet_real - (u.withdrawable || 0);
-                const win = (u.withdrawable || 0);
+                const dep = u.wallet_dep !== undefined ? u.wallet_dep : ((u.wallet_real || 0) - (u.withdrawable || 0));
+                const win = u.wallet_win !== undefined ? u.wallet_win : (u.withdrawable || 0);
+                const total = dep + win;
+                const joinDate = u.created_at ? new Date(u.created_at * 1000).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : 'N/A';
                 return `
-                    <tr>
-                        <td style="font-size:.72rem; color:var(--muted); line-height:1.4;">
-                            <div style="font-weight:700; color:rgba(255,255,255,0.4);">#${u.id}</div>
-                            <div>${new Date(u.created_at * 1000).toLocaleDateString()}</div>
+                    <tr style="vertical-align:middle;">
+                        <td style="width:100px; white-space:nowrap; cursor:pointer;" onclick="openUserBioModal(${u.id})">
+                            <div style="font-size:.75rem; font-weight:800; color:var(--violet);">#${u.id}</div>
+                            <div style="font-size:.68rem; color:var(--muted); margin-top:2px;">${joinDate}</div>
                         </td>
-                        <td>
-                            <div style="font-weight:800; color:#fff; font-size:.9rem;">${u.full_name || u.name || 'User'}</div>
-                            <div style="font-size:.7rem; color:var(--blue); margin-bottom:4px;">@${u.username || u.name || 'unknown'}</div>
-                            <div style="font-size:.72rem; color:var(--muted); display:flex; align-items:center; gap:5px;">
-                                <span>📞 ${u.phone || 'N/A'}</span>
+                        <td style="min-width:180px; cursor:pointer;" onclick="openUserBioModal(${u.id})" title="Click to view full Bio Data & Transactions">
+                            <div style="font-weight:800; color:#fff; font-size:.92rem; margin-bottom:2px; display:flex; align-items:center; gap:6px;">
+                                <span>${u.full_name || u.name || 'User'}</span>
+                                <span style="font-size:.7rem; opacity:0.6;">🔍</span>
                             </div>
-                            <div style="font-size:.72rem; color:var(--muted);">📧 ${u.email}</div>
+                            <div style="font-size:.72rem; color:var(--blue); margin-bottom:4px;">@${u.username || u.name || 'unknown'}</div>
+                            <div style="font-size:.7rem; color:var(--muted); display:flex; flex-direction:column; gap:2px;">
+                                <span>📞 ${u.phone || 'N/A'}</span>
+                                <span>📧 ${u.email || 'N/A'}</span>
+                            </div>
                         </td>
-                        <td>
-                            <div style="font-size:.75rem; color:var(--gold); font-weight:700;">Code: ${u.referral_code}</div>
-                            <div style="font-size:.7rem; color:var(--muted);">By: <span style="color:var(--violet); font-weight:600;">${u.referred_by || 'Organic'}</span></div>
-                            ${u.is_admin ? '<span class="badge badge-gold" style="font-size:.6rem; padding:1px 6px; margin-top:4px;">ADMIN</span>' : ''}
+                        <td style="width:130px;">
+                            <div style="font-size:.75rem; font-weight:700; color:var(--gold); margin-bottom:3px;">🔗 ${u.referral_code || 'N/A'}</div>
+                            <div style="font-size:.68rem; color:var(--muted);">By: <span style="color:var(--violet); font-weight:600;">${u.referred_by || 'Organic'}</span></div>
+                            ${u.is_admin ? '<span style="display:inline-block; margin-top:4px; background:rgba(245,158,11,0.15); color:var(--gold); border:1px solid rgba(245,158,11,0.3); font-size:.6rem; font-weight:800; padding:2px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px;">ADMIN</span>' : ''}
                         </td>
-                        <td style="text-align:center;">
-                            <div style="font-size:1.1rem; font-weight:900; color:var(--green);">${u.quizzes_solved}</div>
-                            <div style="font-size:.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Solved</div>
+                        <td style="width:80px; text-align:center;">
+                            <div style="font-size:1.4rem; font-weight:900; color:var(--green); line-height:1;">${u.quizzes_solved || 0}</div>
+                            <div style="font-size:.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;">Solved</div>
                         </td>
-                        <td>
-                            <div style="font-size:.72rem; line-height:1.6;">
-                                <div style="display:flex; justify-content:space-between; gap:10px;">
+                        <td style="width:150px;">
+                            <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:8px 10px; font-size:.72rem; line-height:1.8;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <span style="color:var(--muted);">Dep:</span>
                                     <span style="color:#fff; font-weight:700;">₹${dep.toLocaleString()}</span>
                                 </div>
-                                <div style="display:flex; justify-content:space-between; gap:10px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <span style="color:var(--muted);">Win:</span>
                                     <span style="color:var(--green); font-weight:700;">₹${win.toLocaleString()}</span>
                                 </div>
-                                <div style="display:flex; justify-content:space-between; gap:10px; margin-top:2px; padding-top:2px; border-top:1px solid rgba(255,255,255,0.05);">
-                                    <span style="color:var(--blue); font-weight:600;">Sum:</span>
-                                    <span style="color:var(--gold); font-weight:900;">₹${u.wallet_real.toLocaleString()}</span>
+                                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.07); padding-top:3px; margin-top:3px;">
+                                    <span style="color:var(--blue); font-weight:600;">Total:</span>
+                                    <span style="color:var(--gold); font-weight:900;">₹${(u.wallet_real || 0).toLocaleString()}</span>
                                 </div>
+                                <button onclick="quickDepositPrompt(${u.id}, '${u.full_name || u.name}', ${dep})" style="width:100%; margin-top:6px; background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3); padding:3px 6px; border-radius:6px; font-size:.65rem; font-weight:800; cursor:pointer;">✏️ Edit Deposit</button>
                             </div>
                         </td>
-                        <td>
+                        <td style="width:130px;">
                             <div style="display:flex; flex-direction:column; gap:6px;">
-                                <button class="btn btn-gold" style="padding:5px 12px; font-size:.72rem; border-radius:8px; font-weight:700;" onclick="showPanel('wallets'); quickTopup('${u.id}', '${u.phone || u.email}')">💰 Topup</button>
-                                ${u.id == 1 ? '' : `<button class="btn" style="padding:5px 12px; font-size:.72rem; border-radius:8px; background:rgba(239,68,68,0.1); color:#fca5a5; border:1px solid rgba(239,68,68,0.2);" onclick="deleteUser(${u.id})">🗑 Delete</button>`}
+                                <button class="btn btn-violet" style="padding:6px 12px; font-size:.72rem; border-radius:8px; font-weight:700; white-space:nowrap; width:100%;" onclick="openUserBioModal(${u.id})">👤 Bio Data</button>
+                                <button class="btn btn-gold" style="padding:6px 12px; font-size:.72rem; border-radius:8px; font-weight:700; white-space:nowrap; width:100%;" onclick="showPanel('wallets'); quickTopup('${u.id}', '${u.phone || u.email}')">💰 Topup</button>
+                                ${u.id == 1 ? '' : `<button style="padding:6px 12px; font-size:.72rem; border-radius:8px; background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.25); cursor:pointer; font-weight:700; white-space:nowrap; width:100%;" onclick="deleteUser(${u.id})">🗑 Delete</button>`}
                             </div>
                         </td>
                     </tr>`;
             }).join('');
         }
+
+        // ─── USER BIO DATA & TRANSACTIONS MODAL ──────────────────────────────────────
+        async function openUserBioModal(userId) {
+            const modal = document.getElementById('userBioModal');
+            const content = document.getElementById('userBioContent');
+            const nameEl = document.getElementById('modalUserName');
+            const subEl = document.getElementById('modalUserSub');
+
+            modal.style.display = 'flex';
+            content.innerHTML = `<div style="text-align:center; padding:50px; color:var(--muted); font-size:.9rem;">⏳ Fetching user bio data & transactions...</div>`;
+
+            try {
+                const data = await api(`/api/admin/users/${userId}/details`);
+                const u = data.user;
+                const w = data.wallet;
+                const deposits = data.upi_deposits || [];
+                const txns = data.transactions || [];
+
+                nameEl.textContent = `👤 ${u.full_name} (@${u.username})`;
+                subEl.textContent = `User ID: #${u.id} | Mobile: ${u.phone} | Email: ${u.email}`;
+
+                const joinDate = u.created_at ? new Date(u.created_at * 1000).toLocaleString('en-IN', { dateStyle:'medium', timeStyle:'short' }) : 'N/A';
+
+                content.innerHTML = `
+                    <!-- 1. BIO DATA SUMMARY CARD -->
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px;">
+                            <h4 style="font-size:.85rem; color:var(--violet); margin:0 0 12px 0; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">📋 Bio Information</h4>
+                            <div style="display:flex; flex-direction:column; gap:8px; font-size:.82rem;">
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Full Name:</span><strong style="color:#fff;">${u.full_name}</strong></div>
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Username:</span><span style="color:var(--blue);">@${u.username}</span></div>
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Mobile:</span><strong style="color:#fff;">${u.phone}</strong></div>
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Email:</span><span>${u.email}</span></div>
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Referral Code:</span><strong style="color:var(--gold);">${u.referral_code}</strong></div>
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Referred By:</span><span style="color:var(--violet);">${u.referred_by}</span></div>
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Quizzes Solved:</span><strong style="color:var(--green);">${u.quizzes_solved}</strong></div>
+                                <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Joined Date:</span><span style="color:var(--muted);">${joinDate}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 2. WALLET BALANCES & DIRECT DEPOSIT EDIT -->
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:16px; display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <h4 style="font-size:.85rem; color:var(--gold); margin:0 0 12px 0; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">💰 Wallet Balances</h4>
+                                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; text-align:center; margin-bottom:14px;">
+                                    <div style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2); padding:10px; border-radius:10px;">
+                                        <div style="font-size:.68rem; color:var(--muted); text-transform:uppercase;">Deposit Bal</div>
+                                        <div style="font-size:1.1rem; font-weight:900; color:#fff; margin-top:2px;">₹${w.dep_bal.toLocaleString()}</div>
+                                    </div>
+                                    <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); padding:10px; border-radius:10px;">
+                                        <div style="font-size:.68rem; color:var(--muted); text-transform:uppercase;">Winnings Bal</div>
+                                        <div style="font-size:1.1rem; font-weight:900; color:var(--green); margin-top:2px;">₹${w.win_bal.toLocaleString()}</div>
+                                    </div>
+                                    <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); padding:10px; border-radius:10px;">
+                                        <div style="font-size:.68rem; color:var(--muted); text-transform:uppercase;">Total Bal</div>
+                                        <div style="font-size:1.1rem; font-weight:900; color:var(--gold); margin-top:2px;">₹${w.total.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- DIRECT DEPOSIT TOPUP FORM -->
+                            <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:12px;">
+                                <div style="font-size:.78rem; font-weight:800; color:var(--green); margin-bottom:8px;">⚡ Add Amount directly to User Deposit Account</div>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="number" id="bioDepAmount" placeholder="Enter Amount (₹)" style="flex:1; padding:8px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:#fff; font-size:.85rem; font-weight:700;" min="1" />
+                                    <button onclick="creditDepositAccount(${u.id})" style="background:var(--green); color:#000; font-weight:900; padding:8px 16px; border:none; border-radius:8px; cursor:pointer; font-size:.8rem; white-space:nowrap;">+ Credit Deposit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. SINGLE-LINE TRANSACTIONS & DEPOSITS HISTORY TABLE -->
+                    <div style="margin-top:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <h4 style="font-size:.9rem; color:#fff; margin:0; font-weight:800; display:flex; align-items:center; gap:8px;">
+                                <span>💳 All Deposit Requests & Admin Credited Amounts</span>
+                                <span style="font-size:.72rem; color:var(--muted); font-weight:normal;">(${deposits.length} entries)</span>
+                            </h4>
+                        </div>
+
+                        ${!deposits.length ? `
+                            <div style="text-align:center; padding:30px; background:rgba(255,255,255,0.02); border-radius:12px; color:var(--muted); font-size:.85rem;">
+                                No UPI deposit requests submitted by this user yet.
+                            </div>
+                        ` : `
+                            <div class="table-wrap" style="border:1px solid rgba(255,255,255,0.1); border-radius:12px; overflow-x:auto;">
+                                <table style="width:100%; border-collapse:collapse; font-size:.8rem; white-space:nowrap;">
+                                    <thead>
+                                        <tr style="background:rgba(255,255,255,0.04); text-align:left; border-bottom:1px solid rgba(255,255,255,0.1);">
+                                            <th style="padding:10px 14px;">User</th>
+                                            <th style="padding:10px 14px;">Mobile</th>
+                                            <th style="padding:10px 14px;">Date & Time</th>
+                                            <th style="padding:10px 14px;">User Submitted Amt</th>
+                                            <th style="padding:10px 14px;">UTR Number</th>
+                                            <th style="padding:10px 14px;">Screenshot</th>
+                                            <th style="padding:10px 14px;">Admin Credited Amt</th>
+                                            <th style="padding:10px 14px;">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${deposits.map(d => {
+                                            const dt = d.created_at ? new Date(d.created_at * 1000).toLocaleString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) : 'N/A';
+                                            const statusBadge = d.status === 'APPROVED' 
+                                                ? '<span style="background:rgba(16,185,129,0.15); color:var(--green); border:1px solid rgba(16,185,129,0.3); padding:3px 8px; border-radius:6px; font-weight:800; font-size:.7rem;">APPROVED</span>'
+                                                : d.status === 'REJECTED'
+                                                ? '<span style="background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3); padding:3px 8px; border-radius:6px; font-weight:800; font-size:.7rem;">REJECTED</span>'
+                                                : '<span style="background:rgba(245,158,11,0.15); color:var(--gold); border:1px solid rgba(245,158,11,0.3); padding:3px 8px; border-radius:6px; font-weight:800; font-size:.7rem;">PENDING</span>';
+
+                                            return `
+                                                <tr style="border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle;">
+                                                    <td style="padding:10px 14px; font-weight:800; color:#fff;">${u.full_name}</td>
+                                                    <td style="padding:10px 14px; color:var(--muted);">${u.phone}</td>
+                                                    <td style="padding:10px 14px; color:var(--muted); font-size:.75rem;">${dt}</td>
+                                                    <td style="padding:10px 14px; font-weight:800; color:var(--blue);">₹${d.amount.toLocaleString()}</td>
+                                                    <td style="padding:10px 14px; font-family:monospace; color:var(--gold); font-weight:700; letter-spacing:0.5px;">${d.utr}</td>
+                                                    <td style="padding:10px 14px;">
+                                                        ${d.screenshot_url ? `<button onclick="viewScreenshot('${d.screenshot_url}')" style="background:rgba(59,130,246,0.15); color:var(--blue); border:1px solid rgba(59,130,246,0.3); padding:4px 10px; border-radius:6px; font-size:.72rem; cursor:pointer; font-weight:700;">🖼 View Screenshot</button>` : '<span style="color:var(--muted); font-size:.72rem;">No Image</span>'}
+                                                    </td>
+                                                    <td style="padding:10px 14px; font-weight:900; color:var(--green);">
+                                                        ${d.status === 'APPROVED' ? `₹${(d.approved_amount || d.amount).toLocaleString()}` : '<span style="color:var(--muted);">-</span>'}
+                                                    </td>
+                                                    <td style="padding:10px 14px;">${statusBadge}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `}
+                    </div>
+                `;
+            } catch (e) {
+                content.innerHTML = `<div style="color:var(--red); padding:30px; text-align:center;">Failed to load details: ${e.message}</div>`;
+            }
+        }
+
+        function closeUserBioModal() {
+            document.getElementById('userBioModal').style.display = 'none';
+        }
+
+        async function creditDepositAccount(userId) {
+            const amtInput = document.getElementById('bioDepAmount');
+            const amount = Number(amtInput.value);
+            if (!amount || amount <= 0) return toast('Please enter a valid deposit amount', 'error');
+
+            try {
+                const res = await api('/api/wallet/admin/topup', 'POST', {
+                    user_id: userId,
+                    wallet_type: 'deposit',
+                    amount: amount,
+                    note: `Admin Deposit Credit ₹${amount}`
+                });
+                toast(`✅ Credited ₹${amount} directly to User Deposit Account!`, 'success');
+                amtInput.value = '';
+                openUserBioModal(userId);
+                loadUsers();
+            } catch (e) {
+                toast(e.message || 'Topup failed', 'error');
+            }
+        }
+
+        async function quickDepositPrompt(userId, userName, currentDep) {
+            const amountStr = prompt(`Enter Amount to Add directly to ${userName}'s Deposit Account:`, '500');
+            if (!amountStr) return;
+            const amount = Number(amountStr);
+            if (isNaN(amount) || amount <= 0) return alert('Invalid amount');
+
+            try {
+                await api('/api/wallet/admin/topup', 'POST', {
+                    user_id: userId,
+                    wallet_type: 'deposit',
+                    amount: amount,
+                    note: `Admin Deposit Credit ₹${amount}`
+                });
+                toast(`✅ Credited ₹${amount} to ${userName}'s Deposit Account!`, 'success');
+                loadUsers();
+            } catch (e) {
+                toast(e.message || 'Topup failed', 'error');
+            }
+        }
+
+
 
         async function loadReferrals() {
             try {
@@ -1590,7 +2017,7 @@
         loadOwnerEarnings();
 
     </script>
-    <script src="/js/common.js?v=1.3"></script>
+
 
     <!-- Mobile Bottom Navigation -->
     <div class="mob-bottom-nav" id="mobBottomNav">
@@ -1796,6 +2223,28 @@
             } catch (e) { toast('❌ ' + e.message, 'error'); }
         }
     </script>
+
+    <!-- USER BIO & TRANSACTIONS MODAL -->
+    <div id="userBioModal" style="display:none; position:fixed; inset:0; background:rgba(2,6,23,0.85); backdrop-filter:blur(10px); z-index:99999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#0f172a; border:1px solid rgba(255,255,255,0.15); width:100%; max-width:1050px; max-height:92vh; border-radius:20px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 60px -15px rgba(0,0,0,0.8);">
+            <!-- Modal Header -->
+            <div style="padding:18px 24px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02);">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:42px; height:42px; border-radius:50%; background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); display:flex; align-items:center; justify-content:center; font-size:1.3rem;">👤</div>
+                    <div>
+                        <h3 id="modalUserName" style="font-size:1.15rem; font-weight:800; margin:0; color:#fff;">User Bio Data & History</h3>
+                        <div id="modalUserSub" style="font-size:.78rem; color:var(--muted); margin-top:2px;">User profile, deposit history & transactions</div>
+                    </div>
+                </div>
+                <button onclick="closeUserBioModal()" style="background:rgba(255,255,255,0.08); border:none; color:#fff; font-size:1.3rem; cursor:pointer; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:0.2s;">✕</button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div id="userBioContent" style="padding:22px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:20px;">
+                <div style="text-align:center; padding:40px; color:var(--muted);">Loading user details...</div>
+            </div>
+        </div>
+    </div>
 
     <!-- EDIT BOOK MODAL -->
     <div id="editBookModal"

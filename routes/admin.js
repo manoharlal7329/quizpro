@@ -464,6 +464,8 @@ router.get('/users', authMiddleware, adminOnly, async (req, res) => {
         referral_code: u.referral_code || 'N/A',
         referred_by: u.referred_by || 'Organic',
         wallet_demo: w?.demo || 0,
+        wallet_dep: w?.dep_bal || 0,
+        wallet_win: w?.win_bal || 0,
         wallet_real: (w?.dep_bal || 0) + (w?.win_bal || 0),
         withdrawable: w?.win_bal || 0,
         quizzes_solved: u.quizzes_solved || 0,
@@ -471,6 +473,58 @@ router.get('/users', authMiddleware, adminOnly, async (req, res) => {
       });
     }
     res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── USER DETAILS — FULL BIO & TRANSACTIONS ────────────────────────────────────
+router.get('/users/:id/details', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const user = await User.findOne({ id: userId }).lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const wallet = await getWallet(userId);
+    const UpiDeposit = require('../database/models/UpiDeposit');
+    const upiDeposits = await UpiDeposit.find({ user_id: userId }).sort({ created_at: -1 }).lean();
+    const txns = await WalletTxn.find({ user_id: userId }).sort({ at: -1 }).lean();
+
+    const formattedDeposits = upiDeposits.map(d => ({
+      id: d.id,
+      user_id: d.user_id,
+      amount: d.amount,
+      approved_amount: d.approved_amount !== undefined && d.approved_amount !== null ? d.approved_amount : (d.status === 'APPROVED' ? d.amount : 0),
+      utr: d.utr,
+      screenshot_url: d.screenshot_url || '',
+      status: d.status,
+      admin_note: d.admin_note || '',
+      created_at: d.created_at,
+      processed_at: d.processed_at
+    }));
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name || user.name || 'User',
+        username: user.username || user.name || 'User',
+        phone: user.phone || user.mobile || 'N/A',
+        is_admin: user.is_admin || 0,
+        referral_code: user.referral_code || 'N/A',
+        referred_by: user.referred_by || 'Organic',
+        quizzes_solved: user.quizzes_solved || 0,
+        created_at: user.created_at || Math.floor(Date.now() / 1000)
+      },
+      wallet: {
+        dep_bal: wallet?.dep_bal || 0,
+        win_bal: wallet?.win_bal || 0,
+        demo: wallet?.demo || 0,
+        total: (wallet?.dep_bal || 0) + (wallet?.win_bal || 0)
+      },
+      upi_deposits: formattedDeposits,
+      transactions: txns
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -918,5 +972,171 @@ router.post('/settings', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
+// ─── ADMIN UPI CONFIG & SCANNER ───────────────────────────────────────────────
+router.get('/upi-config', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const upiIdConfig = await PlatformConfig.findOne({ key: 'UPI_ID' }).lean();
+    const upiNameConfig = await PlatformConfig.findOne({ key: 'UPI_NAME' }).lean();
+    const upiPhoneConfig = await PlatformConfig.findOne({ key: 'UPI_PHONE' }).lean();
+    const upiQrConfig = await PlatformConfig.findOne({ key: 'UPI_QR_URL' }).lean();
+
+    res.json({
+      upi_id: upiIdConfig?.value || 'manoharlala02911-1@okaxis',
+      upi_name: upiNameConfig?.value || 'Manohar Lal Prajapat',
+      upi_phone: upiPhoneConfig?.value || '7976595645',
+      qr_url: upiQrConfig?.value || ''
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/upi-config', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { upi_id, upi_name, upi_phone, qr_url } = req.body;
+
+    if (upi_id !== undefined) {
+      await PlatformConfig.findOneAndUpdate(
+        { key: 'UPI_ID' },
+        { value: String(upi_id).trim(), description: 'Admin UPI ID for deposits', updated_at: Math.floor(Date.now() / 1000) },
+        { upsert: true }
+      );
+    }
+    if (upi_name !== undefined) {
+      await PlatformConfig.findOneAndUpdate(
+        { key: 'UPI_NAME' },
+        { value: String(upi_name).trim(), description: 'Platform Merchant Name for UPI', updated_at: Math.floor(Date.now() / 1000) },
+        { upsert: true }
+      );
+    }
+    if (upi_phone !== undefined) {
+      await PlatformConfig.findOneAndUpdate(
+        { key: 'UPI_PHONE' },
+        { value: String(upi_phone).trim(), description: 'Admin Phone Number for Payments', updated_at: Math.floor(Date.now() / 1000) },
+        { upsert: true }
+      );
+    }
+    if (qr_url !== undefined) {
+      await PlatformConfig.findOneAndUpdate(
+        { key: 'UPI_QR_URL' },
+        { value: String(qr_url).trim(), description: 'Custom QR Code Image URL', updated_at: Math.floor(Date.now() / 1000) },
+        { upsert: true }
+      );
+    }
+
+    res.json({ success: true, message: 'UPI settings saved successfully.' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── ADMIN UPI DEPOSITS — LIST ────────────────────────────────────────────────
+router.get('/upi-deposits', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const UpiDeposit = require('../database/models/UpiDeposit');
+    const deposits = await UpiDeposit.find({}).sort({ created_at: -1 }).limit(150).lean();
+
+    const enriched = [];
+    for (const d of deposits) {
+      const u = await User.findOne({ id: Number(d.user_id) }).select('full_name phone username name email').lean();
+      enriched.push({
+        ...d,
+        user_name: u?.full_name || u?.name || u?.username || 'User #' + d.user_id,
+        user_phone: u?.phone || 'N/A',
+        user_email: u?.email || ''
+      });
+    }
+
+    res.json(enriched);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── ADMIN UPI DEPOSITS — APPROVE ─────────────────────────────────────────────
+router.post('/upi-deposits/:id/approve', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const UpiDeposit = require('../database/models/UpiDeposit');
+    const depId = Number(req.params.id);
+    const { credit_amount } = req.body;
+    const dep = await UpiDeposit.findOne({ id: depId });
+
+    if (!dep) return res.status(404).json({ error: 'Deposit record not found' });
+    if (dep.status !== 'PENDING') {
+      return res.status(400).json({ error: `Deposit is already ${dep.status}` });
+    }
+
+    // Use custom credit_amount if provided, otherwise fallback to original deposit amount
+    const finalCredit = credit_amount !== undefined && credit_amount !== null && !isNaN(Number(credit_amount)) 
+      ? Number(credit_amount) 
+      : dep.amount;
+
+    dep.status = 'APPROVED';
+    dep.approved_amount = finalCredit;
+    dep.processed_at = Math.floor(Date.now() / 1000);
+    await dep.save();
+
+    // Credit User Wallet with finalCredit amount
+    const wallet = await getWallet(dep.user_id);
+    wallet.dep_bal = (wallet.dep_bal || 0) + finalCredit;
+    await wallet.save();
+
+    await addTxn(dep.user_id, 'real', 'credit', finalCredit, `💳 UPI Deposit Approved (UTR: ${dep.utr}, Original Paid: ₹${dep.amount})`);
+
+    // Notify User
+    const notifCount = await Notification.countDocuments({});
+    const notif = new Notification({
+      id: notifCount + 1,
+      user_id: dep.user_id,
+      title: '✅ UPI Deposit Approved!',
+      message: `Your deposit request of ₹${dep.amount} (UTR: ${dep.utr}) has been approved. Wallet credited with ₹${finalCredit}.`,
+      type: 'success',
+      created_at: Math.floor(Date.now() / 1000)
+    });
+    await notif.save();
+
+    res.json({ success: true, message: `Deposit #${depId} approved. ₹${finalCredit} credited to wallet.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── ADMIN UPI DEPOSITS — REJECT ──────────────────────────────────────────────
+router.post('/upi-deposits/:id/reject', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const UpiDeposit = require('../database/models/UpiDeposit');
+    const depId = Number(req.params.id);
+    const { note } = req.body;
+    const dep = await UpiDeposit.findOne({ id: depId });
+
+    if (!dep) return res.status(404).json({ error: 'Deposit record not found' });
+    if (dep.status !== 'PENDING') {
+      return res.status(400).json({ error: `Deposit is already ${dep.status}` });
+    }
+
+    dep.status = 'REJECTED';
+    dep.admin_note = note || 'Invalid UTR or transaction not received';
+    dep.processed_at = Math.floor(Date.now() / 1000);
+    await dep.save();
+
+    // Notify User
+    const notifCount = await Notification.countDocuments({});
+    const notif = new Notification({
+      id: notifCount + 1,
+      user_id: dep.user_id,
+      title: '❌ UPI Deposit Rejected',
+      message: `Your deposit request of ₹${dep.amount} (UTR: ${dep.utr}) was rejected. Reason: ${dep.admin_note}`,
+      type: 'warning',
+      created_at: Math.floor(Date.now() / 1000)
+    });
+    await notif.save();
+
+    res.json({ success: true, message: `Deposit #${depId} rejected.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;
+
 

@@ -194,6 +194,11 @@
         <a href="/" class="logo">⚡ QuizPro Arena</a>
 
         <div class="nav-links">
+            <a href="/wallet.html" id="quickWallet" class="glass-card"
+                style="padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; text-decoration: none; border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05);">
+                <span style="font-size: 1rem;">💰</span>
+                <span id="navBal" style="font-size: .9rem; font-weight: 800; color: var(--green);">₹0</span>
+            </a>
             <a href="/dashboard.html" class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;">Dashboard</a>
             <button class="btn btn-outline" style="padding:6px 16px; font-size:.85rem;"
                 onclick="logout()">Logout</button>
@@ -207,7 +212,7 @@
                 <p>Add points to join quizzes and track your achievements.</p>
             </div>
 
-            <div class="wallet-card">
+            <div class="wallet-card" style="margin-bottom: 24px;">
                 <div class="balance-group">
                     <div class="balance-item">
                         <div class="label">💳 Deposit Account</div>
@@ -230,21 +235,74 @@
                 </div>
             </div>
 
+            <!-- Refer & Earn Panel -->
+            <div class="card p-5 mb-8" style="border-left: 4px solid var(--accent); background: linear-gradient(to right, rgba(0,0,0,0.4), rgba(30,41,59,0.3));">
+                <div class="flex items-center gap-3 mb-4">
+                    <h2 class="text-xl font-bold" style="color: var(--accent);"><i class="fas fa-network-wired"></i> Refer & Earn (Passive Income)</h2>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px;">Earn commissions every time a player you refer wins a quiz. The more they win, the more you earn—up to 6 levels deep!</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Level 1 <br/>(Direct)</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--green);">5.0%</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Level 2 <br/>&nbsp;</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--green);">2.0%</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Level 3 <br/>&nbsp;</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--green);">1.5%</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Level 4 <br/>&nbsp;</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--green);">1.0%</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Level 5 <br/>&nbsp;</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--green);">0.3%</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+                        <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Level 6 <br/>&nbsp;</div>
+                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--green);">0.2%</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <input type="text" id="myReferralCode" readonly value="Loading..." style="flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 8px; color: var(--blue); font-weight: bold; text-align: center; font-size: 1.1rem;">
+                    <button class="btn btn-primary" onclick="copyMyReferral()" style="padding: 12px 24px;">
+                        Copy Link <i class="fas fa-copy" style="margin-left: 4px;"></i>
+                    </button>
+                </div>
+                <script>
+                    function copyMyReferral() {
+                        const code = document.getElementById('myReferralCode').value;
+                        if(code === 'Loading...' || !code) return toast('Referral code not loaded yet', 'error');
+                        const link = window.location.origin + '/login.html?ref=' + code;
+                        navigator.clipboard.writeText(link).then(() => {
+                            toast('✅ Referral Link Copied! Share it on WhatsApp/Socials.', 'success');
+                        }).catch(err => {
+                            toast('Copy failed. Manual copy: ' + link, 'error');
+                        });
+                    }
+                </script>
+            </div>
+
             <div class="card-grid"
                 style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px;">
-                <!-- DEPOSIT BOX -->
-                <div class="deposit-section">
-                    <h3 style="margin-bottom: 8px;">💳 Add Points</h3>
-                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Safe payment via
-                        UPI/Razorpay</p>
+                <!-- DEPOSIT BOX (DIRECT UPI & QR SCANNER) -->
+                <div class="deposit-section" style="border-color: var(--blue);">
+                    <h3 style="margin-bottom: 8px;">💳 Add Points via UPI Scanner</h3>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 16px;">Scan QR Code or pay to UPI ID directly</p>
 
                     <div class="amt-input-wrap">
                         <span>₹</span>
-                        <input type="number" id="depositAmt" placeholder="Enter amount" min="10" value="100">
+                        <input type="number" id="depositAmt" placeholder="Enter amount" min="10" value="100" oninput="updateUpiQr()">
                     </div>
 
-                    <div style="font-size: 0.8rem; color: var(--green); margin-bottom: 20px; font-weight: 600;">
-                        ✨ 100% Amount will be credited. No GST for users.
+                    <div style="font-size: 0.8rem; color: var(--green); margin-bottom: 14px; font-weight: 600;">
+                        ✨ 100% Amount credited directly to your account.
                     </div>
 
                     <div class="quick-amts">
@@ -253,10 +311,65 @@
                         <button class="quick-btn" onclick="setAmt(1000)">+1000</button>
                     </div>
 
-                    <button class="btn btn-primary" id="depositBtn"
-                        style="width: 100%; margin-top: 24px; padding: 14px;" onclick="startDeposit()">
-                        Add Money →
-                    </button>
+                    <!-- QR Scanner Display Box -->
+                    <div style="background: rgba(0,0,0,0.3); border: 1px dashed var(--blue); border-radius: 16px; padding: 20px; text-align: center; margin-top: 20px;">
+                        <div style="background: #fff; padding: 12px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                            <img id="upiQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi%3A%2F%2Fpay%3Fpa%3Dmanoharlala02911-1%40okaxis%26pn%3DManohar%2520Lal%2520Prajapat%26am%3D100%26cu%3DINR" alt="UPI QR Code" style="width: 180px; height: 180px; display: block; margin: 0 auto; min-height:180px;">
+                        </div>
+                        
+                        <p style="font-size: 0.75rem; color: var(--muted); margin-top: 10px;">
+                            📲 Scan using <b>PhonePe, Google Pay, Paytm, or BHIM</b>
+                        </p>
+
+                        <div style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; margin-top: 14px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size: 0.75rem; color: var(--muted);">UPI ID:</span>
+                                <span id="displayUpiId" style="font-weight: bold; color: var(--gold); font-size: 0.85rem;">manoharlala02911-1@okaxis</span>
+                                <button class="btn btn-outline" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUpiId()">Copy 📋</button>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                                <span style="font-size: 0.75rem; color: var(--muted);">Phone Pay / GPay:</span>
+                                <span id="displayUpiPhone" style="font-weight: bold; color: var(--green); font-size: 0.85rem;">7976595645</span>
+                                <button class="btn btn-outline" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUpiPhone()">Copy 📋</button>
+                            </div>
+                        </div>
+
+                        <a id="payUpiBtn" href="#" class="btn btn-primary" style="display: block; margin-top: 12px; padding: 10px; text-decoration: none; font-size: 0.85rem;">
+                            ⚡ Open Mobile UPI App
+                        </a>
+                    </div>
+
+                    <!-- UTR & Screenshot Entry Form -->
+                    <div style="margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px;">
+                        <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 6px;">
+                            📝 Enter 12-Digit UTR / Ref Number:
+                        </label>
+                        <input type="text" id="utrInput" placeholder="e.g. 420198273615" maxlength="18"
+                            style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; font-size: 1rem; font-weight: bold; outline: none; margin-bottom: 14px;">
+                        
+                        <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 6px;">
+                            📸 Upload Payment Screenshot:
+                        </label>
+                        <div style="position: relative; margin-bottom: 16px;">
+                            <input type="file" id="screenshotInput" accept="image/*" style="display: none;" onchange="handleScreenshotSelect()">
+                            <button type="button" class="btn btn-outline" style="width: 100%; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="document.getElementById('screenshotInput').click()">
+                                <span>📤</span> Choose Screenshot File
+                            </button>
+                            <div id="fileSelectedLabel" style="font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 6px;">No file selected</div>
+                        </div>
+
+                        <button class="btn btn-primary" id="submitDepositBtn" style="width: 100%; padding: 14px; background: var(--green); border: none;" onclick="submitUpiDeposit()">
+                            Submit Deposit Verification ✅
+                        </button>
+                    </div>
+
+                    <!-- My Submitted Deposits -->
+                    <div style="margin-top: 24px;">
+                        <h4 style="font-size: 0.85rem; margin-bottom: 10px; color: var(--muted);">📋 My Recent UPI Submissions</h4>
+                        <div id="myUpiList" style="font-size: 0.8rem;">
+                            <div style="color: var(--muted); text-align: center; padding: 10px;">Loading history...</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- WITHDRAWAL SECTION -->
@@ -473,16 +586,29 @@
             try {
                 // Load balances
                 const w = await api('/api/wallet/me');
-                document.getElementById('realBal').textContent = '₹' + (w.real || 0);
-                document.getElementById('depBal').textContent = '₹' + (w.deposit || 0);
-                document.getElementById('winBal').textContent = '₹' + (w.winnings || 0);
-                document.getElementById('totalWithdrawn').textContent = '₹' + (w.withdrawn || 0);
+                if (document.getElementById('navBal')) document.getElementById('navBal').textContent = '₹' + (w.real || 0);
+                if (document.getElementById('realBal')) document.getElementById('realBal').textContent = '₹' + (w.real || 0);
+                if (document.getElementById('depBal')) document.getElementById('depBal').textContent = '₹' + (w.deposit || 0);
+                if (document.getElementById('winBal')) document.getElementById('winBal').textContent = '₹' + (w.winnings || 0);
+                if (document.getElementById('totalWithdrawn')) document.getElementById('totalWithdrawn').textContent = '₹' + (w.withdrawn || 0);
+
+                const refInput = document.getElementById('myReferralCode');
+                if (refInput) {
+                    refInput.value = w.referral_code || getUser()?.referral_code || 'Not Found';
+                }
 
                 // Update context
                 window.withdrawableAmt = w.withdrawable || 0;
                 window.isAdmin = w.is_admin || false;
 
-                document.getElementById('pinStatus').textContent = w.has_pin ? '✅ PIN is active' : '⚠️ PIN not set yet';
+                const pinEl = document.getElementById('pinStatus');
+                if (pinEl) {
+                    pinEl.textContent = w.has_pin ? '✅ PIN is active' : '⚠️ PIN not set yet';
+                }
+
+                // Load UPI Config & My UPI Submissions
+                await loadUpiConfig();
+                await loadMyUpiSubmissions();
 
                 // If admin, update limits text
                 if (window.isAdmin) {
@@ -492,33 +618,208 @@
                     if (input) input.min = 1;
                 }
 
-                // Load txns
-                const txns = await api('/api/wallet/txns');
+                // Load txns if list container exists
                 const list = document.getElementById('txnList');
-                if (!txns || txns.length === 0) {
-                    list.innerHTML = '<div style="padding: 40px; text-align:center; color: var(--muted);">No transactions yet.</div>';
-                    return;
+                if (list) {
+                    const txns = await api('/api/wallet/txns');
+                    if (!txns || txns.length === 0) {
+                        list.innerHTML = '<div style="padding: 40px; text-align:center; color: var(--muted);">No transactions yet.</div>';
+                    } else {
+                        list.innerHTML = txns.map(t => `
+                            <div class="txn-item">
+                                <div class="txn-info">
+                                    <h4>${t.note}</h4>
+                                    <p>${new Date(t.at * 1000).toLocaleString()} • ${t.wallet.toUpperCase()}</p>
+                                </div>
+                                <div class="txn-amt ${t.type === 'credit' ? 'cr' : 'dr'}">
+                                    ${t.type === 'credit' ? '+' : '-'}₹${t.amount}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
                 }
-
-                list.innerHTML = txns.map(t => `
-                    <div class="txn-item">
-                        <div class="txn-info">
-                            <h4>${t.note}</h4>
-                            <p>${new Date(t.at * 1000).toLocaleString()} • ${t.wallet.toUpperCase()}</p>
-                        </div>
-                        <div class="txn-amt ${t.type === 'credit' ? 'cr' : 'dr'}">
-                            ${t.type === 'credit' ? '+' : '-'}₹${t.amount}
-                        </div>
-                    </div>
-                `).join('');
             } catch (e) {
                 console.error('Wallet Load Error:', e);
                 toast('Error loading wallet data: ' + (e.message || 'Check connection'), 'error');
             }
         }
 
+        async function loadUpiConfig() {
+            try {
+                const conf = await api('/api/platform/upi-config');
+                window.platformUpi = conf;
+                document.getElementById('displayUpiId').textContent = conf.upi_id || 'manoharlala02911-1@okaxis';
+                if (document.getElementById('displayUpiPhone')) {
+                    document.getElementById('displayUpiPhone').textContent = conf.upi_phone || '7976595645';
+                }
+                updateUpiQr();
+            } catch (e) {
+                console.error('UPI Config Load Error:', e);
+                // Set hardcoded defaults even if API fails
+                window.platformUpi = {
+                    upi_id: 'manoharlala02911-1@okaxis',
+                    upi_name: 'Manohar Lal Prajapat',
+                    upi_phone: '7976595645'
+                };
+                document.getElementById('displayUpiId').textContent = 'manoharlala02911-1@okaxis';
+                if (document.getElementById('displayUpiPhone')) {
+                    document.getElementById('displayUpiPhone').textContent = '7976595645';
+                }
+                updateUpiQr();
+            }
+        }
+
+        function updateUpiQr() {
+            const amt = parseInt(document.getElementById('depositAmt').value) || 100;
+            const upiId = window.platformUpi?.upi_id || 'manoharlala02911-1@okaxis';
+            const upiName = encodeURIComponent(window.platformUpi?.upi_name || 'Manohar Lal Prajapat');
+            
+            // Build UPI URI
+            const upiUri = `upi://pay?pa=${upiId}&pn=${upiName}&am=${amt}&cu=INR`;
+            
+            // QR Code Image
+            const qrImg = document.getElementById('upiQrImg');
+            if (window.platformUpi?.qr_url) {
+                qrImg.src = window.platformUpi.qr_url;
+            } else {
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+            }
+
+            // Mobile App Link
+            document.getElementById('payUpiBtn').href = upiUri;
+        }
+
         function setAmt(val) {
             document.getElementById('depositAmt').value = val;
+            updateUpiQr();
+        }
+
+        function copyUpiId() {
+            const id = window.platformUpi?.upi_id || 'manoharlala02911-1@okaxis';
+            navigator.clipboard.writeText(id).then(() => {
+                toast('✅ UPI ID copied to clipboard: ' + id, 'success');
+            }).catch(() => {
+                toast('Manual copy: ' + id, 'info');
+            });
+        }
+
+        function copyUpiPhone() {
+            const phone = window.platformUpi?.upi_phone || '7976595645';
+            navigator.clipboard.writeText(phone).then(() => {
+                toast('✅ Phone Number copied: ' + phone, 'success');
+            }).catch(() => {
+                toast('Manual copy: ' + phone, 'info');
+            });
+        }
+
+        function handleScreenshotSelect() {
+            const fileInput = document.getElementById('screenshotInput');
+            const label = document.getElementById('fileSelectedLabel');
+            if (fileInput.files && fileInput.files[0]) {
+                label.textContent = `Selected: ${fileInput.files[0].name} (${(fileInput.files[0].size / 1024).toFixed(1)} KB)`;
+                label.style.color = 'var(--green)';
+            } else {
+                label.textContent = 'No file selected';
+                label.style.color = 'var(--muted)';
+            }
+        }
+
+        async function submitUpiDeposit() {
+            const amt = parseInt(document.getElementById('depositAmt').value);
+            const utr = document.getElementById('utrInput').value.trim();
+            const fileInput = document.getElementById('screenshotInput');
+            const file = fileInput ? fileInput.files[0] : null;
+
+            if (!amt || amt < 10) return toast('Min deposit amount is ₹10', 'error');
+            if (!utr || utr.length < 6) return toast('Please enter a valid 12-digit UTR/Ref ID', 'error');
+            if (!file) return toast('Please upload your payment screenshot image', 'error');
+
+            const btn = document.getElementById('submitDepositBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Uploading & Submitting...';
+
+            const formData = new FormData();
+            formData.append('amount', amt);
+            formData.append('utr', utr);
+            formData.append('screenshot', file);
+
+            try {
+                const res = await api('/api/wallet/upi-deposit', 'POST', formData);
+                if (res.success) {
+                    toast('✅ ' + res.message, 'success');
+                    document.getElementById('utrInput').value = '';
+                    if (fileInput) fileInput.value = '';
+                    document.getElementById('fileSelectedLabel').textContent = 'No file selected';
+                    document.getElementById('fileSelectedLabel').style.color = 'var(--muted)';
+                    loadMyUpiSubmissions();
+                }
+            } catch (e) {
+                toast('❌ Submission error: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Deposit Verification ✅';
+            }
+        }
+
+        async function loadMyUpiSubmissions() {
+            const box = document.getElementById('myUpiList');
+            if (!box) return;
+            try {
+                const list = await api('/api/wallet/my-upi-deposits');
+                if (!list || list.length === 0) {
+                    box.innerHTML = '<div style="color: var(--muted); text-align:center; padding:10px;">No recent submissions.</div>';
+                    return;
+                }
+
+                box.innerHTML = list.map(d => {
+                    let statusLabel = '';
+                    let statusColor = '';
+                    let statusBg = '';
+                    
+                    if (d.status === 'PENDING') {
+                        statusLabel = 'Pending Verification';
+                        statusColor = '#f59e0b';
+                        statusBg = 'rgba(245, 158, 11, 0.12)';
+                    } else if (d.status === 'APPROVED') {
+                        statusLabel = `Wallet Credited ₹${d.approved_amount !== null && d.approved_amount !== undefined ? d.approved_amount : d.amount}`;
+                        statusColor = '#10b981';
+                        statusBg = 'rgba(16, 185, 129, 0.12)';
+                    } else if (d.status === 'REJECTED') {
+                        statusLabel = 'Rejected';
+                        statusColor = '#ef4444';
+                        statusBg = 'rgba(239, 68, 68, 0.12)';
+                    }
+
+                    const adminNoteHtml = d.status === 'REJECTED' && d.admin_note 
+                        ? `<div style="font-size: 0.72rem; color: #ef4444; margin-top: 4px; padding-left: 8px; border-left: 2px solid #ef4444;">Reason: <b>${d.admin_note}</b></div>`
+                        : '';
+                    const approvedAmtHtml = d.status === 'APPROVED' 
+                        ? `<span style="color: var(--green); font-weight: bold; margin-left: 6px;">(Credited: ₹${d.approved_amount !== null && d.approved_amount !== undefined ? d.approved_amount : d.amount})</span>`
+                        : '';
+
+                    return `
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <div>
+                                    <span style="font-size: 0.9rem; font-weight: bold; color: #fff;">₹${d.amount}</span>
+                                    ${approvedAmtHtml}
+                                </div>
+                                <span style="font-size: 0.72rem; font-weight: bold; color: ${statusColor}; background: ${statusBg}; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase;">
+                                    ${d.status === 'PENDING' ? '⏳ PENDING' : d.status === 'APPROVED' ? '✅ APPROVED' : '❌ REJECTED'}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--muted); display: grid; gap: 2px;">
+                                <div><b>Status:</b> ${statusLabel}</div>
+                                <div><b>UTR:</b> <code style="font-family: monospace; color: var(--blue); font-size: 0.8rem; font-weight: bold;">${d.utr}</code></div>
+                                <div><b>Date:</b> ${new Date(d.created_at * 1000).toLocaleString()}</div>
+                            </div>
+                            ${adminNoteHtml}
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                box.innerHTML = '<div style="color: var(--red); font-size: 0.75rem;">Failed to load submissions.</div>';
+            }
         }
 
         async function updateWalletPin() {
@@ -536,22 +837,13 @@
             }
         }
 
-        async function startDeposit() {
-            const amt = parseInt(document.getElementById('depositAmt').value);
-            if (!amt || amt < 10) return toast('Min deposit is ₹10', 'error');
-
-            const btn = document.getElementById('depositBtn');
+        async function depositRazorpay() {
+            const amt = parseInt(document.getElementById('depositAmt')?.value) || 100;
+            const btn = document.querySelector('#depositBtn') || { disabled: false, textContent: '' };
             btn.disabled = true;
-            btn.textContent = '⏳ Initializing...';
-
+            btn.textContent = '⌛ Processing...';
             try {
-                const order = await api('/api/wallet/deposit', 'POST', { amount: amt });
-
-                if (order.simulation) {
-                    toast('❌ Payment gateway not configured. Please use Razorpay or contact Admin.', 'error');
-                    return;
-                }
-
+                const order = await api('/api/wallet/create-order', 'POST', { amount: amt });
                 const options = {
                     key: order.key,
                     amount: order.amount,
@@ -586,7 +878,6 @@
                     },
                     theme: { color: '#6366f1' }
                 };
-
                 const rzp = new Razorpay(options);
                 rzp.open();
             } catch (e) {
@@ -755,6 +1046,7 @@
 
         updateWithdrawPreview();
         loadData();
+        loadUpiConfig();
         renderFooter();
     </script>
 </body>

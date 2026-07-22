@@ -38,4 +38,31 @@ router.post('/notifications/read', authMiddleware, async (req, res) => {
     }
 });
 
+// ─── GET PUBLIC UPI CONFIG ───────────────────────────────────────────────────
+router.get('/upi-config', async (req, res) => {
+    try {
+        const PlatformConfig = require('../database/models/PlatformConfig');
+        const upiIdConfig = await PlatformConfig.findOne({ key: 'UPI_ID' }).lean();
+        const upiNameConfig = await PlatformConfig.findOne({ key: 'UPI_NAME' }).lean();
+        const upiQrConfig = await PlatformConfig.findOne({ key: 'UPI_QR_URL' }).lean();
+
+        const upiPhoneConfig = await PlatformConfig.findOne({ key: 'UPI_PHONE' }).lean();
+
+        const upi_id = upiIdConfig?.value || process.env.PLATFORM_UPI_ID || 'manoharlala02911-1@okaxis';
+        const upi_name = upiNameConfig?.value || process.env.PLATFORM_UPI_NAME || 'Manohar Lal Prajapat';
+        const upi_phone = upiPhoneConfig?.value || process.env.PLATFORM_UPI_PHONE || '7976595645';
+        const custom_qr = upiQrConfig?.value || '';
+
+        res.json({
+            upi_id,
+            upi_name,
+            upi_phone,
+            qr_url: custom_qr
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 module.exports = router;
+
