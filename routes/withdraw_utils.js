@@ -57,10 +57,10 @@ async function requestWithdrawal(params) {
         wallet.last_withdraw_at = new Date();
         await wallet.save();
 
-        // TDS CALCULATION (30% as per Indian Law for Online Gaming)
-        const tdsRate = 0.30;
-        const tdsAmount = Math.round(amount * tdsRate);
-        const netAmount = amount - tdsAmount;
+        // TDS CALCULATION (0% - No TDS)
+        const tdsRate = 0;
+        const tdsAmount = 0;
+        const netAmount = amount;
 
         const withdrawId = "WD_" + Date.now();
         const wdData = {
