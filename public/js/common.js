@@ -122,6 +122,7 @@ function renderFooter() {
             <br/><span style="color:var(--gold); font-weight:700;">✅ Purely Knowledge and Skill Based</span>
         </p>
         <div style="margin-bottom: 24px; font-size: 0.75rem;">
+            <a href="/plan.html" style="color:var(--gold); font-weight:700; text-decoration:none; margin: 0 8px;">Plan & Benefits 🎁</a> |
             <a href="/about.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">About Us</a> |
             <a href="/privacy.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Privacy Policy</a> |
             <a href="/terms.html" style="color:var(--blue); text-decoration:none; margin: 0 8px;">Terms & Conditions</a> |

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Benefits & Plan — QuizPro Arena</title>
+    <link rel="stylesheet" href="/css/style.css?v=1.3" />
+    <style>
+        .hero-banner {
+            text-align: center;
+            padding: 50px 20px 30px;
+            position: relative;
+        }
+
+        .hero-banner h1 {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .hero-banner p {
+            color: var(--muted);
+            font-size: 1.1rem;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .lang-switch {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 30px 0;
+        }
+
+        .lang-btn {
+            padding: 10px 24px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, var(--blue), var(--violet));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .plan-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            transition: transform 0.2s;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--blue);
+        }
+
+        .feature-icon {
+            font-size: 2.2rem;
+            margin-bottom: 14px;
+        }
+
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            font-size: 0.9rem;
+        }
+
+        .tier-table th,
+        .tier-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tier-table th {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--gold);
+            font-weight: 800;
+        }
+
+        .badge-pill {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            display: inline-block;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar deep-glass">
+        <a href="/" class="logo">💎 QuizPro Arena</a>
+        <div class="nav-links">
+            <a href="/dashboard.html" style="font-weight: 500;">Sessions</a>
+            <a href="/wallet.html" style="font-weight: 500;">Account</a>
+            <a href="/login.html" class="btn btn-primary" style="padding:8px 24px; border-radius: 12px;">Login</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="container" style="max-width: 900px; padding-bottom: 60px;">
+            <!-- Hero Banner -->
+            <div class="hero-banner">
+                <span class="badge-pill" style="margin-bottom: 12px;">💎 OFFICIAL USER PLAN & BENEFITS</span>
+                <h1 class="text-gradient">User Benefits & Full Plan</h1>
+                <p>यूज़र के फायदे और पूरा प्लान — 100% Skill-Based Learning & Earnings</p>
+
+                <div class="lang-switch">
+                    <button class="lang-btn active" onclick="switchLang('hi')">🇮🇳 हिंदी (Hindi)</button>
+                    <button class="lang-btn" onclick="switchLang('en')">🇬🇧 English</button>
+                </div>
+            </div>
+
+            <!-- HINDI SECTION -->
+            <div id="section-hi">
+                <!-- Benefit 1 -->
+                <div class="plan-card">
+                    <div class="feature-icon">🧠</div>
+                    <h2 style="color: var(--blue); margin-bottom: 8px;">1. ज्ञान और कौशल से सीधी कमाई (Skill Quizzes)</h2>
+                    <p style="color: var(--muted); line-height: 1.7; margin-bottom: 14px;">
+                        QuizPro Arena पर आप अपनी नॉलेज और स्पीड के बल पर क्विज़ खेलकर रियल रिवॉर्ड जीतते हैं। यह प्लेटफॉर्म 100% स्किल्स पर आधारित है।
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px;">
+                            <strong style="color: var(--green);">🟢 Rookie Category</strong>
+                            <div style="font-size: 0.8rem; color: var(--muted);">शुरुआती खिलाड़ियों के लिए आसान क्विज़</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px;">
+                            <strong style="color: var(--gold);">🟡 Sharp Category</strong>
+                            <div style="font-size: 0.8rem; color: var(--muted);">इंटरमीडिएट लेवल की चुनौतियाँ</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px;">
+                            <strong style="color: var(--red);">🔴 Legend Category</strong>
+                            <div style="font-size: 0.8rem; color: var(--muted);">हाई-स्पीड प्रो कॉम्पिटिशन</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefit 2 (Referral Plan) -->
+                <div class="plan-card" style="border-color: rgba(245, 158, 11, 0.4);">
+                    <div class="feature-icon">👥</div>
+                    <h2 style="color: var(--gold); margin-bottom: 8px;">2. 6-लेवल नेटवर्क पैसिव इनकम प्लान (Refer & Earn)</h2>
+                    <p style="color: var(--muted); line-height: 1.7;">
+                        अपने दोस्तों को अपना रेफरल लिंक भेजें और जब-जब वे क्विज़ जीतेंगे, आपको **6 लेवल्स तक कमीशन** बिना कुछ किए मिलता रहेगा!
+                    </p>
+
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>लेवल (Level)</th>
+                                <th>कमीशन % (Commission)</th>
+                                <th>फायदा (Benefit)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong style="color: var(--green);">Level 1 (Direct)</strong></td>
+                                <td><strong style="color: var(--green); font-size: 1.1rem;">5.0%</strong></td>
+                                <td>आपके द्वारा सीधे जोड़े गए दोस्तों की जीत पर</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 2</strong></td>
+                                <td><strong style="color: var(--blue);">2.0%</strong></td>
+                                <td>आपके दोस्तों के दोस्तों की जीत पर</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 3</strong></td>
+                                <td><strong style="color: var(--blue);">1.5%</strong></td>
+                                <td>तीसरे लेवल के नेटवर्क से कमीशन</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 4</strong></td>
+                                <td><strong>1.0%</strong></td>
+                                <td>चौथे लेवल के नेटवर्क से कमीशन</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 5</strong></td>
+                                <td><strong>0.3%</strong></td>
+                                <td>पांचवें लेवल के नेटवर्क से कमीशन</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 6</strong></td>
+                                <td><strong>0.2%</strong></td>
+                                <td>छठे लेवल के नेटवर्क से कमीशन</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="highlight-box">
+                        💡 <strong>उदाहरण:</strong> अगर आपका रेफर किया हुआ दोस्त ₹1,000 जीतता है, तो आपको तुरंत <strong>₹50 पैसिव इनकम</strong> के रूप में आपके अकाउंट में मिलेंगे!
+                    </div>
+                </div>
+
+                <!-- Benefit 3 (Withdrawals & 0% TDS) -->
+                <div class="plan-card">
+                    <div class="feature-icon">💰</div>
+                    <h2 style="color: var(--green); margin-bottom: 8px;">3. 0% कटौतियाँ और तुरंत UPI / बैंक ट्रांसफर</h2>
+                    <p style="color: var(--muted); line-height: 1.7; margin-bottom: 14px;">
+                        आपकी कमाई का 100% हिस्सा आपका है। हम कोई टैक्स या छिपी हुई फीस नहीं काटते।
+                    </p>
+                    <ul style="line-height: 2; font-size: 0.95rem; color: #fff; padding-left: 20px;">
+                        <li>✅ <strong>0% TDS Deduction</strong> — पूरा 100% अमाउंट आपके बैंक/UPI में जाता है।</li>
+                        <li>✅ <strong>मिनिमम विड्रॉल ₹100</strong> — आसानी से अपने रिवॉर्ड भुनाएं।</li>
+                        <li>✅ <strong>Multiple Payout Modes</strong> — UPI ID, डायरेक्ट बैंक अकाउंट (IFSC), या ओरिजिनल सोर्स।</li>
+                        <li>✅ <strong>4-Digit Security PIN</strong> — आपका वॉलेट और फंड पूरी तरह सुरक्षित रहता है।</li>
+                    </ul>
+                </div>
+
+                <!-- Benefit 4 (Instant QR Deposit) -->
+                <div class="plan-card">
+                    <div class="feature-icon">⚡</div>
+                    <h2 style="color: var(--blue); margin-bottom: 8px;">4. त्वरित यूपीआई डिपाजिट (Instant QR Scanner)</h2>
+                    <p style="color: var(--muted); line-height: 1.7;">
+                        PhonePe, Google Pay, Paytm, या BHIM UPI के ज़रिए सीधे QR कोड स्कैन करके पॉइंट जोड़ें। UTR दर्ज करते ही 100% अमाउंट आपके डिपाजिट अकाउंट में जुड़ जाता है।
+                    </p>
+                </div>
+            </div>
+
+            <!-- ENGLISH SECTION -->
+            <div id="section-en" style="display: none;">
+                <!-- Benefit 1 -->
+                <div class="plan-card">
+                    <div class="feature-icon">🧠</div>
+                    <h2 style="color: var(--blue); margin-bottom: 8px;">1. Pure Skill-Based Earnings</h2>
+                    <p style="color: var(--muted); line-height: 1.7; margin-bottom: 14px;">
+                        Win real rewards by competing in educational quizzes based purely on your knowledge and speed. Zero luck or gambling involved.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px;">
+                            <strong style="color: var(--green);">🟢 Rookie Category</strong>
+                            <div style="font-size: 0.8rem; color: var(--muted);">Beginner-friendly quizzes</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px;">
+                            <strong style="color: var(--gold);">🟡 Sharp Category</strong>
+                            <div style="font-size: 0.8rem; color: var(--muted);">Intermediate challenges</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px;">
+                            <strong style="color: var(--red);">🔴 Legend Category</strong>
+                            <div style="font-size: 0.8rem; color: var(--muted);">High-speed pro arena</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefit 2 (Referral Plan) -->
+                <div class="plan-card" style="border-color: rgba(245, 158, 11, 0.4);">
+                    <div class="feature-icon">👥</div>
+                    <h2 style="color: var(--gold); margin-bottom: 8px;">2. 6-Level Network Passive Income Plan</h2>
+                    <p style="color: var(--muted); line-height: 1.7;">
+                        Share your referral link with friends and earn automatic passive commissions across 6 levels whenever your network wins!
+                    </p>
+
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Level</th>
+                                <th>Commission %</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong style="color: var(--green);">Level 1 (Direct)</strong></td>
+                                <td><strong style="color: var(--green); font-size: 1.1rem;">5.0%</strong></td>
+                                <td>From players directly invited by your link</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 2</strong></td>
+                                <td><strong style="color: var(--blue);">2.0%</strong></td>
+                                <td>From players invited by your Level 1 referrals</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 3</strong></td>
+                                <td><strong style="color: var(--blue);">1.5%</strong></td>
+                                <td>Level 3 network win commissions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 4</strong></td>
+                                <td><strong>1.0%</strong></td>
+                                <td>Level 4 network win commissions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 5</strong></td>
+                                <td><strong>0.3%</strong></td>
+                                <td>Level 5 network win commissions</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level 6</strong></td>
+                                <td><strong>0.2%</strong></td>
+                                <td>Level 6 network win commissions</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="highlight-box">
+                        💡 <strong>Example:</strong> If your directly referred friend wins ₹1,000, you automatically receive <strong>₹50 passive income</strong> in your wallet!
+                    </div>
+                </div>
+
+                <!-- Benefit 3 (Withdrawals & 0% TDS) -->
+                <div class="plan-card">
+                    <div class="feature-icon">💰</div>
+                    <h2 style="color: var(--green); margin-bottom: 8px;">3. 0% Deductions & Instant Redemptions</h2>
+                    <p style="color: var(--muted); line-height: 1.7; margin-bottom: 14px;">
+                        100% of your earnings belong to you. We charge zero TDS or hidden fees.
+                    </p>
+                    <ul style="line-height: 2; font-size: 0.95rem; color: #fff; padding-left: 20px;">
+                        <li>✅ <strong>0% TDS Deduction</strong> — 100% of requested amount is paid out directly.</li>
+                        <li>✅ <strong>Low Min. Withdrawal ₹100</strong> — Fast and effortless payouts.</li>
+                        <li>✅ <strong>Multiple Payout Modes</strong> — Direct UPI ID, Bank Account (IFSC), or Source Refund.</li>
+                        <li>✅ <strong>4-Digit Security PIN</strong> — Dedicated security PIN protects your funds.</li>
+                    </ul>
+                </div>
+
+                <!-- Benefit 4 (Instant QR Deposit) -->
+                <div class="plan-card">
+                    <div class="feature-icon">⚡</div>
+                    <h2 style="color: var(--blue); margin-bottom: 8px;">4. Instant UPI QR Code Deposits</h2>
+                    <p style="color: var(--muted); line-height: 1.7;">
+                        Add points seamlessly using PhonePe, Google Pay, Paytm, or BHIM. Enter your 12-digit UTR to get 100% amount credited to your Deposit Account instantly.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Call To Action -->
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="/login.html" class="btn btn-primary" style="padding: 16px 40px; font-size: 1.1rem; border-radius: 16px; box-shadow: 0 0 30px rgba(59,130,246,0.4);">
+                    🚀 Start Playing & Earning Now →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js?v=1.3"></script>
+    <script>
+        function switchLang(lang) {
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            if (lang === 'hi') {
+                document.getElementById('section-hi').style.display = 'block';
+                document.getElementById('section-en').style.display = 'none';
+                event.target.classList.add('active');
+            } else {
+                document.getElementById('section-hi').style.display = 'none';
+                document.getElementById('section-en').style.display = 'block';
+                event.target.classList.add('active');
+            }
+        }
+        renderFooter();
+    </script>
+</body>
+
+</html>
