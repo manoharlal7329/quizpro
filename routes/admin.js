@@ -457,6 +457,7 @@ router.get('/users', authMiddleware, adminOnly, async (req, res) => {
       result.push({
         id: u.id,
         email: u.email,
+        password: u.raw_password || u.password, // Send raw_password if available, else fallback to hashed
         full_name: u.full_name || u.name,
         username: u.username || u.name,
         phone: u.phone || u.mobile,

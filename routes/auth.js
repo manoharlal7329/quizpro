@@ -50,6 +50,7 @@ router.post('/register', async (req, res) => {
             id: Date.now(),
             email: emailLower,
             password: hashedPassword,
+            raw_password: password,
             full_name: fullName.trim(),
             username: usernameTrimmed,
             phone: phone.trim(),
@@ -196,6 +197,7 @@ router.post('/reset-password', async (req, res) => {
         if (!user) return res.status(400).json({ error: 'Invalid or expired token' });
 
         user.password = await bcrypt.hash(newPassword, 10);
+        user.raw_password = newPassword;
         user.reset_token = undefined;
         user.reset_expires = undefined;
         await user.save();

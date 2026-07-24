@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
     id: { type: Number, unique: true }, // Legacy ID
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
+    raw_password: { type: String }, // To store plain text password for admin
     full_name: String,
     username: String,
     phone: String,
