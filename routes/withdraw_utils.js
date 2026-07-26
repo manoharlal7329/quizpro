@@ -26,6 +26,11 @@ async function requestWithdrawal(params) {
                 return { error: "INVALID_AMOUNT", message: "Withdrawal amount must be between ₹100 and ₹10,000." };
             }
 
+            // Requirement: Must leave minimum ₹100 in winnings balance
+            if (amount > (wallet.win_bal - 100)) {
+                return { error: "INSUFFICIENT_BALANCE", message: `Aapko wallet mein minimum ₹100 maintain karna hoga. Aap maximum ₹${Math.max(0, wallet.win_bal - 100)} nikal sakte hain.` };
+            }
+
             const todayStart = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
             const todayCount = await Withdrawal.countDocuments({
                 user_id: Number(userId),

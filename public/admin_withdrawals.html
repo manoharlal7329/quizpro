@@ -186,8 +186,11 @@
                                     </td>
                                     <td style="padding:12px; text-align:right;">
                                         ${w.status === 'pending' ? `
-                                            <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="approveWd('${w.id}')">Approve</button>
-                                            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem; border-color:var(--red); color:var(--red);" onclick="rejectWd('${w.id}')">Reject</button>
+                                            <div style="display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap;">
+                                                ${w.payment_mode === 'UPI' && (w.upi || w.upi_id) ? `<a href="upi://pay?pa=${w.upi || w.upi_id}&pn=QuizPro&am=${w.net_amount || w.amount}&cu=INR" class="btn" style="padding:4px 8px; font-size:0.75rem; background: var(--green); color: #fff; text-decoration: none;">Pay via GPay</a>` : ''}
+                                                <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="approveWd('${w.id}')">Mark as Paid ✅</button>
+                                                <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem; border-color:var(--red); color:var(--red);" onclick="rejectWd('${w.id}')">Reject</button>
+                                            </div>
                                         ` : `
                                             <span style="font-size:0.7rem; color:var(--muted);">Processed</span>
                                         `}
@@ -210,9 +213,9 @@
         }
 
         async function approveWd(id) {
-            if (!confirm('Are you sure you want to APPROVE this withdrawal and trigger Payout?')) return;
+            if (!confirm('Did you complete the payment via GPay/PhonePe? This will mark the withdrawal as PAID.')) return;
             try {
-                toast('Approving...', 'info');
+                toast('Marking as paid...', 'info');
                 const res = await api('/api/admin/withdrawals/' + id + '/approve', 'POST');
                 toast('✅ ' + res.message, 'success');
                 loadWithdrawals();

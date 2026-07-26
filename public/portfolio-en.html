@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete User Guide & Plan — QuizPro Arena</title>
+    <title>Complete Guide & Portfolio — QuizPro Arena</title>
     <meta name="description" content="QuizPro Arena complete guide — Registration, Login, Wallet, Quiz Levels, Prizes, and Referral Plan. Step by step explained.">
     <link rel="stylesheet" href="/css/style.css?v=1.3" />
     <style>
@@ -330,25 +330,28 @@
             margin-top: 20px;
         }
 
-        .lang-btn {
+        .lang-link {
             padding: 8px 20px;
             border-radius: 99px;
             font-size: 0.85rem;
             font-weight: 700;
-            background: rgba(255, 255, 255, 0.05);
-            color: #94a3b8;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
+            text-decoration: none;
             transition: all 0.2s;
         }
 
-        .lang-btn.active {
+        .lang-link.active {
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: #fff;
             border: 1px solid transparent;
         }
 
-        .lang-btn:not(.active):hover {
+        .lang-link.inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lang-link.inactive:hover {
             border-color: #3b82f6;
             color: #fff;
         }
@@ -368,315 +371,19 @@
 
             <!-- ══════════ HERO ══════════ -->
             <div class="port-hero">
-                <span class="pill pill-green">💎 OFFICIAL USER PLAN & BENEFITS</span>
-                <h1><span class="text-grad">QuizPro Arena</span><br><span id="hero-title">पूरा गाइड — शुरुआत से अंत तक</span></h1>
-                <p id="hero-desc">Registration से लेकर Prize जीतने और Withdraw करने तक — हर एक step पूरी details के साथ</p>
+                <span class="pill pill-green">🌟 COMPLETE PORTFOLIO & USER GUIDE</span>
+                <h1><span class="text-grad">QuizPro Arena</span><br>Complete Guide — Start to Finish</h1>
+                <p>From Registration to Winning Prizes and Withdrawing — every step explained in full detail.</p>
 
                 <div class="lang-switch">
-                    <button class="lang-btn active" onclick="switchLang('hi')">🇮🇳 हिंदी (Hindi)</button>
-                    <button class="lang-btn" onclick="switchLang('en')">🇬🇧 English</button>
+                    <a href="/portfolio.html" class="lang-link inactive">🇮🇳 हिंदी</a>
+                    <a href="/portfolio-en.html" class="lang-link active">🇬🇧 English</a>
                 </div>
             </div>
 
-            <!-- HINDI CONTENT -->
-            <div id="section-hi" class="steps-wrap">
+            <div class="steps-wrap">
 
-                <!-- INTRO CARD -->
-                <div class="scard gold">
-                    <div class="scard-head">
-                        <div class="scard-num num-gold">💎</div>
-                        <div>
-                            <h2 class="scard-title text-grad">QuizPro Arena क्या है?</h2>
-                            <div class="scard-sub" style="color: #fbbf24;">Platform Introduction</div>
-                        </div>
-                    </div>
-                    <div class="scard-body">
-                        <p>QuizPro Arena एक <strong style="color:#fff;">100% Skill-Based Educational Quiz Platform</strong> है जहाँ आप अपनी knowledge और speed के दम पर quiz खेलते हैं और reward points जीतते हैं। यह कोई gambling या lottery नहीं है — यहाँ सिर्फ आपका <strong style="color:#fbbf24;">ज्ञान और कौशल</strong> ही मायने रखता है।</p>
-
-                        <div class="flow-steps">
-                            <div class="flow-step">
-                                <div class="fnum">1</div>
-                                <div class="ftitle">Register</div>
-                                <div class="fdesc">Account बनाएं</div>
-                            </div>
-                            <div class="flow-step">
-                                <div class="fnum">2</div>
-                                <div class="ftitle">Deposit</div>
-                                <div class="fdesc">UPI से points जोड़ें</div>
-                            </div>
-                            <div class="flow-step">
-                                <div class="fnum">3</div>
-                                <div class="ftitle">Quiz Join</div>
-                                <div class="fdesc">Level choose करें</div>
-                            </div>
-                            <div class="flow-step">
-                                <div class="fnum">4</div>
-                                <div class="ftitle">Play</div>
-                                <div class="fdesc">Fast & Accurate खेलें</div>
-                            </div>
-                            <div class="flow-step">
-                                <div class="fnum">5</div>
-                                <div class="ftitle">Win</div>
-                                <div class="fdesc">Prize Pool जीतें</div>
-                            </div>
-                            <div class="flow-step">
-                                <div class="fnum">6</div>
-                                <div class="ftitle">Withdraw</div>
-                                <div class="fdesc">UPI/Bank में पाएं</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 1 — REGISTER -->
-                <div class="scard blue">
-                    <div class="scard-head">
-                        <div class="scard-num num-blue">1</div>
-                        <div>
-                            <h2 class="scard-title">Registration & Login</h2>
-                            <div class="scard-sub" style="color: #3b82f6;">Account कैसे बनाएं</div>
-                        </div>
-                    </div>
-                    <div class="scard-body">
-                        <p>QuizPro में जुड़ना बिल्कुल आसान और secure है। कोई OTP झंझट नहीं — सिर्फ Mobile Number और Password से काम होता है।</p>
-                        <ul class="clist">
-                            <li>
-                                <span class="icon">📱</span>
-                                <span><strong style="color:#fff;">Login Page खोलें</strong> — अपना <strong>10-digit Mobile Number</strong> डालें जो पहले registered नहीं होना चाहिए।</span>
-                            </li>
-                            <li>
-                                <span class="icon">🔒</span>
-                                <span><strong style="color:#fff;">Password बनाएं</strong> — एक मजबूत password set करें। यह आपके account की security है।</span>
-                            </li>
-                            <li>
-                                <span class="icon">✅</span>
-                                <span><strong style="color:#fff;">Login हो जाएं</strong> — अगर account पहले से है तो same number और password डालें।</span>
-                            </li>
-                            <li>
-                                <span class="icon">🎯</span>
-                                <span><strong style="color:#fff;">Dashboard पर पहुंचें</strong> — तुरंत आपका personal dashboard खुल जाएगा जिसमें आपका wallet, sessions और referral link होगा।</span>
-                            </li>
-                            <li>
-                                <span class="icon">👤</span>
-                                <span><strong style="color:#fff;">Referral Link मिलेगा</strong> — Register होते ही आपको एक unique referral link मिलता है जिसे दोस्तों में share करके passive income कमाएं।</span>
-                            </li>
-                        </ul>
-                        <div class="hbox" style="background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.25);">
-                            💡 <strong>Tip:</strong> अगर किसी ने आपको Refer किया है तो उनके referral link से ही register करें ताकि वे commission पाएं।
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 2 — WALLET -->
-                <div class="scard green">
-                    <div class="scard-head">
-                        <div class="scard-num num-green">2</div>
-                        <div>
-                            <h2 class="scard-title">Wallet & Deposit</h2>
-                            <div class="scard-sub" style="color: #10b981;">Points कैसे जोड़ें</div>
-                        </div>
-                    </div>
-                    <div class="scard-body">
-                        <p>Quiz में participate करने के लिए आपके <strong style="color:#fff;">Deposit Wallet</strong> में Points होने चाहिए। <strong style="color:#10b981;">1 Point = ₹1</strong>। Deposit process बिल्कुल instant है।</p>
-                        <ul class="clist">
-                            <li>
-                                <span class="icon">💳</span>
-                                <span><strong style="color:#fff;">Wallet Section खोलें</strong> — Menu में "Account" या "Wallet" पर click करें।</span>
-                            </li>
-                            <li>
-                                <span class="icon">📷</span>
-                                <span><strong style="color:#fff;">QR Code Scan करें</strong> — PhonePe, Google Pay, Paytm, या BHIM UPI से हमारा QR scan करके payment करें।</span>
-                            </li>
-                            <li>
-                                <span class="icon">🔢</span>
-                                <span><strong style="color:#fff;">UTR Number डालें</strong> — Payment के बाद मिला <strong>12-digit UTR/Transaction ID</strong> wallet में enter करें।</span>
-                            </li>
-                            <li>
-                                <span class="icon">⚡</span>
-                                <span><strong style="color:#fff;">Instant Credit</strong> — UTR enter करते ही points आपके Deposit Wallet में automatically आ जाते हैं।</span>
-                            </li>
-                        </ul>
-                        <div class="hbox" style="background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25);">
-                            ⚠️ <strong>जरूरी बात:</strong> यहाँ 2 Wallets होते हैं — <strong>Deposit Wallet</strong> (quiz fees के लिए) और <strong>Winnings Wallet</strong> (जीती हुई राशि के लिए)। Deposit Wallet से quiz join होती है, Winnings Wallet से withdrawal होता है।
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 3 — LEVELS -->
-                <div class="scard blue">
-                    <div class="scard-head">
-                        <div class="scard-num num-blue">3</div>
-                        <div>
-                            <h2 class="scard-title">Quiz Levels (Categories)</h2>
-                            <div class="scard-sub" style="color: #3b82f6;">अपना Level Choose करें</div>
-                        </div>
-                    </div>
-                    <div class="scard-body">
-                        <p>हम हर level के players के लिए अलग-अलग quiz categories रखते हैं। Dashboard पर available sessions देखें और अपनी choice की category join करें।</p>
-                        <div class="lvl-grid">
-                            <div class="lvl-card rookie">
-                                <div class="lvl-icon">🟢</div>
-                                <div class="lvl-name" style="color: #10b981;">Rookie</div>
-                                <div class="lvl-desc">नए players के लिए। Easy questions, slow pace, कम entry fee, confidence build करने के लिए perfect।</div>
-                                <div style="margin-top: 10px; font-size: 0.78rem; color: #10b981; font-weight: 700;">BEGINNER LEVEL</div>
-                            </div>
-                            <div class="lvl-card sharp">
-                                <div class="lvl-icon">🟡</div>
-                                <div class="lvl-name" style="color: #fbbf24;">Sharp</div>
-                                <div class="lvl-desc">Intermediate players के लिए। Mixed difficulty, moderate speed। इसमें थोड़ा experience जरूरी है।</div>
-                                <div style="margin-top: 10px; font-size: 0.78rem; color: #fbbf24; font-weight: 700;">INTERMEDIATE LEVEL</div>
-                            </div>
-                            <div class="lvl-card legend">
-                                <div class="lvl-icon">🔴</div>
-                                <div class="lvl-name" style="color: #ef4444;">Legend</div>
-                                <div class="lvl-desc">Pro players के लिए। Tough questions, ultra-fast speed, high stakes। Top performers ही यहाँ टिकते हैं।</div>
-                                <div style="margin-top: 10px; font-size: 0.78rem; color: #ef4444; font-weight: 700;">PRO LEVEL</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 4 — PLAY -->
-                <div class="scard violet">
-                    <div class="scard-head">
-                        <div class="scard-num num-violet">4</div>
-                        <div>
-                            <h2 class="scard-title">Quiz कैसे खेलें (The Arena)</h2>
-                            <div class="scard-sub" style="color: #8b5cf6;">Live Quiz Process</div>
-                        </div>
-                    </div>
-                    <div class="scard-body">
-                        <p>जब quiz start होती है तो यह एक real-time battle होती है। तेज़ी और accuracy दोनों जरूरी हैं। यहाँ luck का कोई role नहीं।</p>
-                        <ul class="clist">
-                            <li>
-                                <span class="icon">📋</span>
-                                <span><strong style="color:#fff;">Session Join करें</strong> — Dashboard पर उपलब्ध upcoming sessions देखें। Join button press करके entry fee pay होती है।</span>
-                            </li>
-                            <li>
-                                <span class="icon">⏰</span>
-                                <span><strong style="color:#fff;">Quiz Start समय पर होती है</strong> — Scheduled time पर ही quiz automatically शुरू होती है। देर से आने पर questions miss हो सकते हैं।</span>
-                            </li>
-                            <li>
-                                <span class="icon">⏱️</span>
-                                <span><strong style="color:#fff;">15-Second Timer</strong> — हर question के लिए सिर्फ 15 seconds मिलते हैं। Time खत्म होने पर auto-submit हो जाता है।</span>
-                            </li>
-                            <li>
-                                <span class="icon">🎯</span>
-                                <span><strong style="color:#fff;">Speed Bonus</strong> — जितना जल्दी सही answer दें, उतने ज़्यादा score points मिलते हैं। Accuracy + Speed दोनों जरूरी।</span>
-                            </li>
-                            <li>
-                                <span class="icon">❌</span>
-                                <span><strong style="color:#fff;">गलत Answer = 0 Points</strong> — गलत answer पर कोई negative marking नहीं, पर score भी नहीं मिलेगा।</span>
-                            </li>
-                            <li>
-                                <span class="icon">🏆</span>
-                                <span><strong style="color:#fff;">Real-Time Leaderboard</strong> — Quiz खत्म होते ही final ranking दिखती है और prizes automatically distribute हो जाते हैं।</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- STEP 5 — PRIZES -->
-                <div class="scard gold">
-                    <div class="scard-head">
-                        <div class="scard-num num-gold">5</div>
-                        <div>
-                            <h2 class="scard-title">Prize Pool & Winning Distribution</h2>
-                            <div class="scard-sub" style="color: #fbbf24;">Top 15 को मिलता है पूरा Prize</div>
-                        </div>
-                    </div>
-                    <div class="scard-body">
-                        <p>सभी participants की entry fees से एक <strong style="color:#fff;">Prize Pool</strong> बनता है जो top 15 players में नीचे दी गई percentage के अनुसार बंटता है। 100% पारदर्शिता।</p>
-                        <table class="prize-table">
-                            <thead>
-                                <tr>
-                                    <th>🏅 Rank</th>
-                                    <th>% of Prize Pool</th>
-                                    <th>Example (₹1000 Pool पर)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td><strong style="color:#fbbf24;">🥇 1st</strong></td><td><strong style="color:#fbbf24;">25%</strong></td><td>₹250</td></tr>
-                                <tr><td>🥈 2nd</td><td>15%</td><td>₹150</td></tr>
-                                <tr><td>🥉 3rd</td><td>11%</td><td>₹110</td></tr>
-                                <tr><td>4th</td><td>9%</td><td>₹90</td></tr>
-                                <tr><td>5th</td><td>8%</td><td>₹80</td></tr>
-                                <tr><td>6th</td><td>7%</td><td>₹70</td></tr>
-                                <tr><td>7th</td><td>5%</td><td>₹50</td></tr>
-                                <tr><td>8th</td><td>4.5%</td><td>₹45</td></tr>
-                                <tr><td>9th</td><td>4%</td><td>₹40</td></tr>
-                                <tr><td>10th</td><td>3.5%</td><td>₹35</td></tr>
-                                <tr><td>11th</td><td>2.5%</td><td>₹25</td></tr>
-                                <tr><td>12th</td><td>2%</td><td>₹20</td></tr>
-                                <tr><td>13th</td><td>1.5%</td><td>₹15</td></tr>
-                                <tr><td>14th</td><td>1%</td><td>₹10</td></tr>
-                                <tr><td>15th</td><td>1%</td><td>₹10</td></tr>
-                            </tbody>
-                        </table>
-                        <div class="hbox">
-                            💰 <strong>Withdrawal Process:</strong> जीती हुई राशि Winnings Wallet में आती है। वहाँ से UPI ID या Direct Bank Account (IFSC) में withdraw करें। <strong style="color:#10b981;">0% TDS — पूरा 100% amount आपका!</strong> Minimum withdrawal सिर्फ ₹100।
-                        </div>
-                        <div class="hbox" style="background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.25); margin-top: 12px;">
-                            🔐 <strong>Security PIN:</strong> Withdrawal के लिए 4-digit Security PIN set होती है। Wallet → Settings में जाकर PIN बनाएं।
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 6 — REFERRAL -->
-                <div class="scard green">
-                    <div class="scard-head">
-                        <div class="scard-num num-green">6</div>
-                        <div>
-                            <h2 class="scard-title">6-Level Referral Passive Income</h2>
-                            <div class="scard-sub" style="color: #10b981;">Refer करें और हमेशा कमाएं</div>
-                        </div>
-                    </div>
-                    <div class="scard-body">
-                        <p>QuizPro का सबसे powerful feature! अपना referral link friends को भेजें और जब भी वे quiz जीतें — आपको <strong style="color:#fff;">6 levels तक automatically commission</strong> मिलता है, बिना कुछ किए!</p>
-                        <div class="ref-grid">
-                            <div class="ref-item">
-                                <div class="ref-lvl">Level 1</div>
-                                <div class="ref-pct" style="color: #10b981;">5.0%</div>
-                                <div class="ref-desc">Direct Referral</div>
-                            </div>
-                            <div class="ref-item">
-                                <div class="ref-lvl">Level 2</div>
-                                <div class="ref-pct" style="color: #3b82f6;">2.0%</div>
-                                <div class="ref-desc">L1 के Referral</div>
-                            </div>
-                            <div class="ref-item">
-                                <div class="ref-lvl">Level 3</div>
-                                <div class="ref-pct" style="color: #3b82f6;">1.5%</div>
-                                <div class="ref-desc">L2 के Referral</div>
-                            </div>
-                            <div class="ref-item">
-                                <div class="ref-lvl">Level 4</div>
-                                <div class="ref-pct" style="color: #94a3b8;">1.0%</div>
-                                <div class="ref-desc">L3 के Referral</div>
-                            </div>
-                            <div class="ref-item">
-                                <div class="ref-lvl">Level 5</div>
-                                <div class="ref-pct" style="color: #94a3b8;">0.3%</div>
-                                <div class="ref-desc">L4 के Referral</div>
-                            </div>
-                            <div class="ref-item">
-                                <div class="ref-lvl">Level 6</div>
-                                <div class="ref-pct" style="color: #64748b;">0.2%</div>
-                                <div class="ref-desc">L5 के Referral</div>
-                            </div>
-                        </div>
-                        <div class="hbox">
-                            🌟 <strong>Example:</strong> आपने 10 friends को refer किया। हर दोस्त ₹500 जीता — तो आपको सिर्फ Level 1 से ही <strong style="color:#10b981;">₹250 passive income</strong> मिल गई! अगर उन दोस्तों ने भी दोस्त जोड़े, तो Level 2 से और कमाई शुरू।
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- ENGLISH CONTENT -->
-            <div id="section-en" class="steps-wrap" style="display: none;">
-
-                <!-- INTRO CARD -->
+                <!-- ══════════ INTRO CARD ══════════ -->
                 <div class="scard gold">
                     <div class="scard-head">
                         <div class="scard-num num-gold">💎</div>
@@ -723,7 +430,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 1 — REGISTER -->
+                <!-- ══════════ STEP 1 — REGISTER ══════════ -->
                 <div class="scard blue">
                     <div class="scard-head">
                         <div class="scard-num num-blue">1</div>
@@ -762,7 +469,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 2 — WALLET -->
+                <!-- ══════════ STEP 2 — WALLET ══════════ -->
                 <div class="scard green">
                     <div class="scard-head">
                         <div class="scard-num num-green">2</div>
@@ -797,7 +504,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 3 — LEVELS -->
+                <!-- ══════════ STEP 3 — LEVELS ══════════ -->
                 <div class="scard blue">
                     <div class="scard-head">
                         <div class="scard-num num-blue">3</div>
@@ -831,7 +538,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 4 — PLAY -->
+                <!-- ══════════ STEP 4 — PLAY ══════════ -->
                 <div class="scard violet">
                     <div class="scard-head">
                         <div class="scard-num num-violet">4</div>
@@ -871,7 +578,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 5 — PRIZES -->
+                <!-- ══════════ STEP 5 — PRIZES ══════════ -->
                 <div class="scard gold">
                     <div class="scard-head">
                         <div class="scard-num num-gold">5</div>
@@ -917,7 +624,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 6 — REFERRAL -->
+                <!-- ══════════ STEP 6 — REFERRAL ══════════ -->
                 <div class="scard green">
                     <div class="scard-head">
                         <div class="scard-num num-green">6</div>
@@ -968,13 +675,16 @@
 
             </div>
 
-            <!-- FINAL CTA -->
+            <!-- ══════════ FINAL CTA ══════════ -->
             <div class="cta-box">
                 <h2 class="text-grad">Ready to Enter the Quiz Arena?</h2>
                 <p>Register, add points, and win with your skills. This is your platform.</p>
                 <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
                     <a href="/login.html" class="btn btn-primary" style="padding: 16px 40px; font-size: 1.1rem; border-radius: 14px; box-shadow: 0 0 30px rgba(59,130,246,0.4);">
                         🚀 Start Playing Now →
+                    </a>
+                    <a href="/plan.html" class="btn btn-outline" style="padding: 16px 30px; font-size: 1rem; border-radius: 14px;">
+                        🎁 Plan & Benefits
                     </a>
                 </div>
             </div>
@@ -984,24 +694,6 @@
 
     <div id="toast"></div>
     <script src="/js/common.js?v=1.3"></script>
-    <script>
-        function switchLang(lang) {
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-            if (lang === 'hi') {
-                document.getElementById('section-hi').style.display = 'flex';
-                document.getElementById('section-en').style.display = 'none';
-                document.getElementById('hero-title').innerText = 'पूरा गाइड — शुरुआत से अंत तक';
-                document.getElementById('hero-desc').innerText = 'Registration से लेकर Prize जीतने और Withdraw करने तक — हर एक step पूरी details के साथ';
-                event.target.classList.add('active');
-            } else {
-                document.getElementById('section-hi').style.display = 'none';
-                document.getElementById('section-en').style.display = 'flex';
-                document.getElementById('hero-title').innerText = 'Complete Guide — Start to Finish';
-                document.getElementById('hero-desc').innerText = 'From Registration to Winning Prizes and Withdrawing — every step explained in full detail.';
-                event.target.classList.add('active');
-            }
-        }
-    </script>
 </body>
 
 </html>

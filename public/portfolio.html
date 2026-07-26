@@ -1,515 +1,713 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manohar Lal | Software Developer Portfolio</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>Complete Guide & Portfolio — QuizPro Arena</title>
+    <meta name="description" content="QuizPro Arena ka pura guide — Registration, Login, Wallet, Quiz Levels, Prizes, aur Referral Plan. Step by step samjho.">
+    <link rel="stylesheet" href="/css/style.css?v=1.3" />
     <style>
+        /* ── PAGE VARS ── */
         :root {
-            --bg-color: #0b0c10;
-            --surface: #1f2833;
-            --surface-glass: rgba(31, 40, 51, 0.6);
-            --primary: #45f3ff;
-            --secondary: #c026d3;
-            --text-main: #ffffff;
-            --text-muted: #8b9bb4;
-            --border: rgba(69, 243, 255, 0.15);
-            --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
-            --radius: 16px;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-border-hover: rgba(59, 130, 246, 0.5);
+            --radius-card: 20px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            scroll-behavior: smooth;
+        /* ── HERO ── */
+        .port-hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+            position: relative;
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
-            line-height: 1.6;
+        .port-hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 16px;
         }
 
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Outfit', sans-serif;
+        .port-hero p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            max-width: 620px;
+            margin: 0 auto;
+            line-height: 1.7;
         }
 
-        .text-gradient {
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* ── BADGE PILL ── */
+        .pill {
             display: inline-block;
-        }
-
-        .ambient-glow {
-            position: fixed;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(69,243,255,0.08) 0%, rgba(11,12,16,0) 70%);
-            top: -200px;
-            left: -200px;
-            border-radius: 50%;
-            z-index: -1;
-            pointer-events: none;
-        }
-        .ambient-glow.right {
-            top: auto;
-            bottom: -200px;
-            left: auto;
-            right: -200px;
-            background: radial-gradient(circle, rgba(192,38,211,0.08) 0%, rgba(11,12,16,0) 70%);
-        }
-
-        nav {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 20px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(11, 12, 16, 0.8);
-            backdrop-filter: blur(12px);
-            z-index: 1000;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.5rem;
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 0.75rem;
             font-weight: 800;
             letter-spacing: 1px;
-        }
-        .logo span {
-            color: var(--primary);
+            margin-bottom: 20px;
         }
 
-        .nav-links a {
-            color: var(--text-muted);
-            text-decoration: none;
-            margin-left: 30px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: var(--primary);
+        .pill-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
         }
 
-        section {
-            padding: 100px 10%;
-            max-width: 1400px;
-            margin: 0 auto;
+        /* ── GRADIENT TEXT ── */
+        .text-grad {
+            background: linear-gradient(135deg, #e2e8f0 0%, #3b82f6 50%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .section-header {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-        .section-header h2 {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        .section-header p {
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-            font-size: 1.1rem;
+        /* ── STEP CARDS ── */
+        .steps-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            margin-top: 40px;
         }
 
-        /* Developer Hero */
-        .dev-hero {
+        .scard {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-card);
+            padding: 30px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .scard:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.1);
+        }
+
+        .scard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .scard.blue::before  { background: linear-gradient(to bottom, #3b82f6, #8b5cf6); }
+        .scard.gold::before  { background: linear-gradient(to bottom, #fbbf24, #d97706); }
+        .scard.green::before { background: linear-gradient(to bottom, #10b981, #059669); }
+        .scard.red::before   { background: linear-gradient(to bottom, #ef4444, #dc2626); }
+        .scard.violet::before{ background: linear-gradient(to bottom, #8b5cf6, #6d28d9); }
+
+        .scard-head {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .scard-num {
+            min-width: 52px;
+            height: 52px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding-top: 100px;
-        }
-        .hero-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 50px;
-            align-items: center;
-        }
-        .hero-content h1 {
-            font-size: 4.5rem;
-            line-height: 1.1;
-            margin-bottom: 10px;
-        }
-        .hero-content h3 {
-            font-size: 2rem;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            font-weight: 400;
-        }
-        .hero-content p {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 40px;
+            font-size: 1.4rem;
+            font-weight: 900;
         }
 
-        .dev-image {
-            position: relative;
-            text-align: center;
-        }
-        .dev-image img {
-            width: 350px;
-            height: 350px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 4px solid var(--primary);
-            box-shadow: 0 0 50px rgba(69,243,255,0.3);
-            animation: float 6s ease-in-out infinite;
+        .num-blue   { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; }
+        .num-gold   { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.3); color: #fbbf24; }
+        .num-green  { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; }
+        .num-red    { background: rgba(239, 68, 68, 0.15);  border: 1px solid rgba(239, 68, 68, 0.3);  color: #ef4444; }
+        .num-violet { background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #8b5cf6; }
+
+        .scard-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.2;
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .btn {
-            padding: 15px 35px;
-            border-radius: 30px;
-            text-decoration: none;
+        .scard-sub {
+            font-size: 0.82rem;
             font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        .scard-body p {
+            color: #94a3b8;
+            line-height: 1.8;
+            margin-bottom: 14px;
+            font-size: 0.97rem;
+        }
+
+        /* ── CHECK LIST ── */
+        .clist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .clist li {
+            display: flex;
+            align-items: flex-start;
             gap: 10px;
-            cursor: pointer;
-            border: none;
-        }
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-            box-shadow: 0 10px 30px rgba(69, 243, 255, 0.3);
-        }
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(192, 38, 211, 0.4);
-        }
-        .btn-outline {
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            background: transparent;
-            margin-left: 20px;
-        }
-        .btn-outline:hover {
-            background: rgba(69, 243, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
 
-        .glass-card {
-            background: var(--surface-glass);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 40px;
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
-        }
-        .glass-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border-color: rgba(69, 243, 255, 0.4);
+        .clist li:last-child { border-bottom: none; }
+
+        .clist li .icon {
+            font-size: 1rem;
+            margin-top: 2px;
+            flex-shrink: 0;
         }
 
-        /* Developer Skills */
-        .skills-grid {
+        /* ── LEVELS GRID ── */
+        .lvl-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
         }
-        .skill-item {
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 12px;
+
+        .lvl-card {
+            border-radius: 16px;
+            padding: 22px 18px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-        }
-        .skill-item:hover {
-            border-color: var(--primary);
-            background: rgba(69,243,255,0.05);
-            transform: scale(1.05);
-        }
-        .skill-item i {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            display: block;
+            border: 1px solid transparent;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        /* Contact Details */
-        .contact-grid {
+        .lvl-card:hover { transform: translateY(-4px); }
+
+        .lvl-card.rookie {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .lvl-card.sharp {
+            background: rgba(251, 191, 36, 0.08);
+            border-color: rgba(251, 191, 36, 0.2);
+        }
+
+        .lvl-card.legend {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .lvl-icon { font-size: 2.2rem; margin-bottom: 10px; }
+
+        .lvl-name {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .lvl-desc {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* ── PRIZE TABLE ── */
+        .prize-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+            font-size: 0.93rem;
+        }
+
+        .prize-table thead th {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fbbf24;
+            font-weight: 800;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .prize-table tbody td {
+            padding: 11px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+        }
+
+        .prize-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* ── HIGHLIGHT BOX ── */
+        .hbox {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(16, 185, 129, 0.06));
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-top: 20px;
+            font-size: 0.92rem;
+            color: #e2e8f0;
+            line-height: 1.7;
+        }
+
+        /* ── REFERRAL TIERS ── */
+        .ref-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
         }
-        .contact-info {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+
+        .ref-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
         }
-        .contact-item {
+
+        .ref-lvl { font-size: 0.78rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+        .ref-pct { font-size: 1.5rem; font-weight: 900; line-height: 1; }
+        .ref-desc { font-size: 0.75rem; color: #64748b; margin-top: 5px; }
+
+        /* ── CTA SECTION ── */
+        .cta-box {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 28px;
+            margin-top: 50px;
+        }
+
+        .cta-box h2 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .cta-box p {
+            color: #94a3b8;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        /* ── HOW FLOW ── */
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .flow-step {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+        }
+
+        .flow-step .fnum {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             display: flex;
             align-items: center;
-            gap: 20px;
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .contact-item i {
-            font-size: 2rem;
-            color: var(--primary);
-        }
-        .contact-item h4 {
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-        }
-        .contact-item p {
-            color: var(--text-muted);
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.9rem;
+            margin: 0 auto 10px;
         }
 
-        /* Project Showcase Divider */
-        .project-divider {
-            text-align: center;
-            padding: 80px 0;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            background: rgba(11,12,16,0.4);
-            margin: 50px 0;
+        .flow-step .ftitle { font-size: 0.88rem; font-weight: 700; margin-bottom: 5px; }
+        .flow-step .fdesc  { font-size: 0.75rem; color: #64748b; line-height: 1.4; }
+
+        .lang-switch {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 20px;
         }
 
-        /* Simplified Grid for Project Features */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-        .feature-icon {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-            background: -webkit-linear-gradient(var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
+        .lang-link {
+            padding: 8px 20px;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
         }
 
-        .reveal {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: all 0.8s ease;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
+        .lang-link.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #fff;
+            border: 1px solid transparent;
         }
 
-        @media (max-width: 900px) {
-            .hero-grid, .contact-grid { grid-template-columns: 1fr; text-align: center; }
-            .hero-content h1 { font-size: 3rem; }
-            .nav-links { display: none; }
-            .contact-item { flex-direction: column; text-align: center; }
+        .lang-link.inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lang-link.inactive:hover {
+            border-color: #3b82f6;
+            color: #fff;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .scard { padding: 22px 18px; }
+            .scard-title { font-size: 1.15rem; }
+            .ref-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
+
 <body>
+    <!-- Navbar injected by common.js -->
 
-    <div class="ambient-glow"></div>
-    <div class="ambient-glow right"></div>
+    <div class="main">
+        <div class="container" style="max-width: 900px; padding-bottom: 80px;">
 
-    <nav>
-        <div class="logo">Mano<span>har</span></div>
-        <div class="nav-links">
-            <a href="#home">Home</a>
-            <a href="#about">About Me</a>
-            <a href="#skills">Skills</a>
-            <a href="#quizpro">Flagship Project</a>
-            <a href="#contact">Contact</a>
-        </div>
-    </nav>
+            <!-- ══════════ HERO ══════════ -->
+            <div class="port-hero">
+                <span class="pill pill-green">🌟 COMPLETE PORTFOLIO & USER GUIDE</span>
+                <h1><span class="text-grad">QuizPro Arena</span><br>पूरा गाइड — शुरुआत से अंत तक</h1>
+                <p>Registration से लेकर Prize जीतने और Withdraw करने तक — हर एक step पूरी details के साथ</p>
 
-    <!-- DEVELOPER HERO SECTION -->
-    <section class="dev-hero" id="home">
-        <div class="hero-grid">
-            <div class="hero-content reveal">
-                <h3>Hello, I am</h3>
-                <h1 class="text-gradient">Manohar Lal</h1>
-                <p>A passionate Full-Stack Software Engineer specialized in building highly scalable, secure, and beautiful web applications. From complex backend architectures to fluid front-end experiences.</p>
-                <div>
-                    <a href="#quizpro" class="btn btn-primary"><i class="fa-solid fa-briefcase"></i> View My Work</a>
-                    <a href="#contact" class="btn btn-outline"><i class="fa-solid fa-envelope"></i> Hire Me</a>
+                <div class="lang-switch">
+                    <a href="/portfolio.html" class="lang-link active">🇮🇳 हिंदी</a>
+                    <a href="/portfolio-en.html" class="lang-link inactive">🇬🇧 English</a>
                 </div>
             </div>
-            <div class="dev-image reveal">
-                <!-- Using a placeholder avatar image -->
-                <img src="https://images.unsplash.com/photo-1555952517-2e8af104e84e?auto=format&fit=crop&w=800&q=80" alt="Manohar Lal">
-            </div>
-        </div>
-    </section>
 
-    <!-- ABOUT & SKILLS -->
-    <section id="about">
-        <div class="section-header reveal">
-            <h2>About <span class="text-gradient">Me</span> & My Skills</h2>
-            <p>I architect end-to-end systems that handle real-time transactions, heavy data loads, and elegant user interfaces.</p>
-        </div>
+            <div class="steps-wrap">
 
-        <div class="skills-grid reveal">
-            <div class="skill-item">
-                <i class="fa-brands fa-node-js"></i>
-                <h4>Node.js</h4>
-            </div>
-            <div class="skill-item">
-                <i class="fa-brands fa-js"></i>
-                <h4>JavaScript</h4>
-            </div>
-            <div class="skill-item">
-                <i class="fa-solid fa-database"></i>
-                <h4>MongoDB</h4>
-            </div>
-            <div class="skill-item">
-                <i class="fa-brands fa-html5"></i>
-                <h4>HTML5 / CSS3</h4>
-            </div>
-            <div class="skill-item">
-                <i class="fa-solid fa-server"></i>
-                <h4>Express.js</h4>
-            </div>
-            <div class="skill-item">
-                <i class="fa-solid fa-credit-card"></i>
-                <h4>Payments API</h4>
-            </div>
-        </div>
-    </section>
+                <!-- ══════════ INTRO CARD ══════════ -->
+                <div class="scard gold">
+                    <div class="scard-head">
+                        <div class="scard-num num-gold">💎</div>
+                        <div>
+                            <h2 class="scard-title text-grad">QuizPro Arena क्या है?</h2>
+                            <div class="scard-sub" style="color: #fbbf24;">Platform Introduction</div>
+                        </div>
+                    </div>
+                    <div class="scard-body">
+                        <p>QuizPro Arena एक <strong style="color:#fff;">100% Skill-Based Educational Quiz Platform</strong> है जहाँ आप अपनी knowledge और speed के दम पर quiz खेलते हैं और reward points जीतते हैं। यह कोई gambling या lottery नहीं है — यहाँ सिर्फ आपका <strong style="color:#fbbf24;">ज्ञान और कौशल</strong> ही मायने रखता है।</p>
 
-    <!-- PROJECT SHOWCASE DIVIDER -->
-    <div class="project-divider" id="quizpro">
-        <h2 style="font-size: 3rem; margin-bottom: 10px;">My Flagship Masterpiece</h2>
-        <h1 class="text-gradient" style="font-size: 5rem; text-transform: uppercase;">QuizPro Arena</h1>
-        <p style="color: var(--text-muted); font-size: 1.2rem; max-width: 800px; margin: 20px auto 0;">
-            A state-of-the-art competitive live learning platform I built entirely from scratch. Includes real-time synced quizzes, closed-loop wallet ledgers, Razorpay webhooks, AI anti-fraud algorithms, and a native admin dashboard.
-        </p>
+                        <div class="flow-steps">
+                            <div class="flow-step">
+                                <div class="fnum">1</div>
+                                <div class="ftitle">Register</div>
+                                <div class="fdesc">Account बनाएं</div>
+                            </div>
+                            <div class="flow-step">
+                                <div class="fnum">2</div>
+                                <div class="ftitle">Deposit</div>
+                                <div class="fdesc">UPI से points जोड़ें</div>
+                            </div>
+                            <div class="flow-step">
+                                <div class="fnum">3</div>
+                                <div class="ftitle">Quiz Join</div>
+                                <div class="fdesc">Level choose करें</div>
+                            </div>
+                            <div class="flow-step">
+                                <div class="fnum">4</div>
+                                <div class="ftitle">Play</div>
+                                <div class="fdesc">Fast & Accurate खेलें</div>
+                            </div>
+                            <div class="flow-step">
+                                <div class="fnum">5</div>
+                                <div class="ftitle">Win</div>
+                                <div class="fdesc">Prize Pool जीतें</div>
+                            </div>
+                            <div class="flow-step">
+                                <div class="fnum">6</div>
+                                <div class="ftitle">Withdraw</div>
+                                <div class="fdesc">UPI/Bank में पाएं</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ STEP 1 — REGISTER ══════════ -->
+                <div class="scard blue">
+                    <div class="scard-head">
+                        <div class="scard-num num-blue">1</div>
+                        <div>
+                            <h2 class="scard-title">Registration & Login</h2>
+                            <div class="scard-sub" style="color: #3b82f6;">Account कैसे बनाएं</div>
+                        </div>
+                    </div>
+                    <div class="scard-body">
+                        <p>QuizPro में जुड़ना बिल्कुल आसान और secure है। कोई OTP झंझट नहीं — सिर्फ Mobile Number और Password से काम होता है।</p>
+                        <ul class="clist">
+                            <li>
+                                <span class="icon">📱</span>
+                                <span><strong style="color:#fff;">Login Page खोलें</strong> — अपना <strong>10-digit Mobile Number</strong> डालें जो पहले registered नहीं होना चाहिए।</span>
+                            </li>
+                            <li>
+                                <span class="icon">🔒</span>
+                                <span><strong style="color:#fff;">Password बनाएं</strong> — एक मजबूत password set करें। यह आपके account की security है।</span>
+                            </li>
+                            <li>
+                                <span class="icon">✅</span>
+                                <span><strong style="color:#fff;">Login हो जाएं</strong> — अगर account पहले से है तो same number और password डालें।</span>
+                            </li>
+                            <li>
+                                <span class="icon">🎯</span>
+                                <span><strong style="color:#fff;">Dashboard पर पहुंचें</strong> — तुरंत आपका personal dashboard खुल जाएगा जिसमें आपका wallet, sessions और referral link होगा।</span>
+                            </li>
+                            <li>
+                                <span class="icon">👤</span>
+                                <span><strong style="color:#fff;">Referral Link मिलेगा</strong> — Register होते ही आपको एक unique referral link मिलता है जिसे दोस्तों में share करके passive income कमाएं।</span>
+                            </li>
+                        </ul>
+                        <div class="hbox" style="background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.25);">
+                            💡 <strong>Tip:</strong> अगर किसी ने आपको Refer किया है तो उनके referral link से ही register करें ताकि वे commission पाएं।
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ STEP 2 — WALLET ══════════ -->
+                <div class="scard green">
+                    <div class="scard-head">
+                        <div class="scard-num num-green">2</div>
+                        <div>
+                            <h2 class="scard-title">Wallet & Deposit</h2>
+                            <div class="scard-sub" style="color: #10b981;">Points कैसे जोड़ें</div>
+                        </div>
+                    </div>
+                    <div class="scard-body">
+                        <p>Quiz में participate करने के लिए आपके <strong style="color:#fff;">Deposit Wallet</strong> में Points होने चाहिए। <strong style="color:#10b981;">1 Point = ₹1</strong>। Deposit process बिल्कुल instant है।</p>
+                        <ul class="clist">
+                            <li>
+                                <span class="icon">💳</span>
+                                <span><strong style="color:#fff;">Wallet Section खोलें</strong> — Menu में "Account" या "Wallet" पर click करें।</span>
+                            </li>
+                            <li>
+                                <span class="icon">📷</span>
+                                <span><strong style="color:#fff;">QR Code Scan करें</strong> — PhonePe, Google Pay, Paytm, या BHIM UPI से हमारा QR scan करके payment करें।</span>
+                            </li>
+                            <li>
+                                <span class="icon">🔢</span>
+                                <span><strong style="color:#fff;">UTR Number डालें</strong> — Payment के बाद मिला <strong>12-digit UTR/Transaction ID</strong> wallet में enter करें।</span>
+                            </li>
+                            <li>
+                                <span class="icon">⚡</span>
+                                <span><strong style="color:#fff;">Instant Credit</strong> — UTR enter करते ही points आपके Deposit Wallet में automatically आ जाते हैं।</span>
+                            </li>
+                        </ul>
+                        <div class="hbox" style="background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.25);">
+                            ⚠️ <strong>जरूरी बात:</strong> यहाँ 2 Wallets होते हैं — <strong>Deposit Wallet</strong> (quiz fees के लिए) और <strong>Winnings Wallet</strong> (जीती हुई राशि के लिए)। Deposit Wallet से quiz join होती है, Winnings Wallet से withdrawal होता है।
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ STEP 3 — LEVELS ══════════ -->
+                <div class="scard blue">
+                    <div class="scard-head">
+                        <div class="scard-num num-blue">3</div>
+                        <div>
+                            <h2 class="scard-title">Quiz Levels (Categories)</h2>
+                            <div class="scard-sub" style="color: #3b82f6;">अपना Level Choose करें</div>
+                        </div>
+                    </div>
+                    <div class="scard-body">
+                        <p>हम हर level के players के लिए अलग-अलग quiz categories रखते हैं। Dashboard पर available sessions देखें और अपनी choice की category join करें।</p>
+                        <div class="lvl-grid">
+                            <div class="lvl-card rookie">
+                                <div class="lvl-icon">🟢</div>
+                                <div class="lvl-name" style="color: #10b981;">Rookie</div>
+                                <div class="lvl-desc">नए players के लिए। Easy questions, slow pace, कम entry fee, confidence build करने के लिए perfect।</div>
+                                <div style="margin-top: 10px; font-size: 0.78rem; color: #10b981; font-weight: 700;">BEGINNER LEVEL</div>
+                            </div>
+                            <div class="lvl-card sharp">
+                                <div class="lvl-icon">🟡</div>
+                                <div class="lvl-name" style="color: #fbbf24;">Sharp</div>
+                                <div class="lvl-desc">Intermediate players के लिए। Mixed difficulty, moderate speed। इसमें थोड़ा experience जरूरी है।</div>
+                                <div style="margin-top: 10px; font-size: 0.78rem; color: #fbbf24; font-weight: 700;">INTERMEDIATE LEVEL</div>
+                            </div>
+                            <div class="lvl-card legend">
+                                <div class="lvl-icon">🔴</div>
+                                <div class="lvl-name" style="color: #ef4444;">Legend</div>
+                                <div class="lvl-desc">Pro players के लिए। Tough questions, ultra-fast speed, high stakes। Top performers ही यहाँ टिकते हैं।</div>
+                                <div style="margin-top: 10px; font-size: 0.78rem; color: #ef4444; font-weight: 700;">PRO LEVEL</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ STEP 4 — PLAY ══════════ -->
+                <div class="scard violet">
+                    <div class="scard-head">
+                        <div class="scard-num num-violet">4</div>
+                        <div>
+                            <h2 class="scard-title">Quiz कैसे खेलें (The Arena)</h2>
+                            <div class="scard-sub" style="color: #8b5cf6;">Live Quiz Process</div>
+                        </div>
+                    </div>
+                    <div class="scard-body">
+                        <p>जब quiz start होती है तो यह एक real-time battle होती है। तेज़ी और accuracy दोनों जरूरी हैं। यहाँ luck का कोई role नहीं।</p>
+                        <ul class="clist">
+                            <li>
+                                <span class="icon">📋</span>
+                                <span><strong style="color:#fff;">Session Join करें</strong> — Dashboard पर उपलब्ध upcoming sessions देखें। Join button press करके entry fee pay होती है।</span>
+                            </li>
+                            <li>
+                                <span class="icon">⏰</span>
+                                <span><strong style="color:#fff;">Quiz Start समय पर होती है</strong> — Scheduled time पर ही quiz automatically शुरू होती है। देर से आने पर questions miss हो सकते हैं।</span>
+                            </li>
+                            <li>
+                                <span class="icon">⏱️</span>
+                                <span><strong style="color:#fff;">15-Second Timer</strong> — हर question के लिए सिर्फ 15 seconds मिलते हैं। Time खत्म होने पर auto-submit हो जाता है।</span>
+                            </li>
+                            <li>
+                                <span class="icon">🎯</span>
+                                <span><strong style="color:#fff;">Speed Bonus</strong> — जितना जल्दी सही answer दें, उतने ज़्यादा score points मिलते हैं। Accuracy + Speed दोनों जरूरी।</span>
+                            </li>
+                            <li>
+                                <span class="icon">❌</span>
+                                <span><strong style="color:#fff;">गलत Answer = 0 Points</strong> — गलत answer पर कोई negative marking नहीं, पर score भी नहीं मिलेगा।</span>
+                            </li>
+                            <li>
+                                <span class="icon">🏆</span>
+                                <span><strong style="color:#fff;">Real-Time Leaderboard</strong> — Quiz खत्म होते ही final ranking दिखती है और prizes automatically distribute हो जाते हैं।</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- ══════════ STEP 5 — PRIZES ══════════ -->
+                <div class="scard gold">
+                    <div class="scard-head">
+                        <div class="scard-num num-gold">5</div>
+                        <div>
+                            <h2 class="scard-title">Prize Pool & Winning Distribution</h2>
+                            <div class="scard-sub" style="color: #fbbf24;">Top 15 को मिलता है पूरा Prize</div>
+                        </div>
+                    </div>
+                    <div class="scard-body">
+                        <p>सभी participants की entry fees से एक <strong style="color:#fff;">Prize Pool</strong> बनता है जो top 15 players में नीचे दी गई percentage के अनुसार बंटता है। 100% पारदर्शिता।</p>
+                        <table class="prize-table">
+                            <thead>
+                                <tr>
+                                    <th>🏅 Rank</th>
+                                    <th>% of Prize Pool</th>
+                                    <th>Example (₹1000 Pool पर)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong style="color:#fbbf24;">🥇 1st</strong></td><td><strong style="color:#fbbf24;">25%</strong></td><td>₹250</td></tr>
+                                <tr><td>🥈 2nd</td><td>15%</td><td>₹150</td></tr>
+                                <tr><td>🥉 3rd</td><td>11%</td><td>₹110</td></tr>
+                                <tr><td>4th</td><td>9%</td><td>₹90</td></tr>
+                                <tr><td>5th</td><td>8%</td><td>₹80</td></tr>
+                                <tr><td>6th</td><td>7%</td><td>₹70</td></tr>
+                                <tr><td>7th</td><td>5%</td><td>₹50</td></tr>
+                                <tr><td>8th</td><td>4.5%</td><td>₹45</td></tr>
+                                <tr><td>9th</td><td>4%</td><td>₹40</td></tr>
+                                <tr><td>10th</td><td>3.5%</td><td>₹35</td></tr>
+                                <tr><td>11th</td><td>2.5%</td><td>₹25</td></tr>
+                                <tr><td>12th</td><td>2%</td><td>₹20</td></tr>
+                                <tr><td>13th</td><td>1.5%</td><td>₹15</td></tr>
+                                <tr><td>14th</td><td>1%</td><td>₹10</td></tr>
+                                <tr><td>15th</td><td>1%</td><td>₹10</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="hbox">
+                            💰 <strong>Withdrawal Process:</strong> जीती हुई राशि Winnings Wallet में आती है। वहाँ से UPI ID या Direct Bank Account (IFSC) में withdraw करें। <strong style="color:#10b981;">0% TDS — पूरा 100% amount आपका!</strong> Minimum withdrawal सिर्फ ₹100।
+                        </div>
+                        <div class="hbox" style="background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.25); margin-top: 12px;">
+                            🔐 <strong>Security PIN:</strong> Withdrawal के लिए 4-digit Security PIN set होती है। Wallet → Settings में जाकर PIN बनाएं।
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════ STEP 6 — REFERRAL ══════════ -->
+                <div class="scard green">
+                    <div class="scard-head">
+                        <div class="scard-num num-green">6</div>
+                        <div>
+                            <h2 class="scard-title">6-Level Referral Passive Income</h2>
+                            <div class="scard-sub" style="color: #10b981;">Refer करें और हमेशा कमाएं</div>
+                        </div>
+                    </div>
+                    <div class="scard-body">
+                        <p>QuizPro का सबसे powerful feature! अपना referral link friends को भेजें और जब भी वे quiz जीतें — आपको <strong style="color:#fff;">6 levels तक automatically commission</strong> मिलता है, बिना कुछ किए!</p>
+                        <div class="ref-grid">
+                            <div class="ref-item">
+                                <div class="ref-lvl">Level 1</div>
+                                <div class="ref-pct" style="color: #10b981;">5.0%</div>
+                                <div class="ref-desc">Direct Referral</div>
+                            </div>
+                            <div class="ref-item">
+                                <div class="ref-lvl">Level 2</div>
+                                <div class="ref-pct" style="color: #3b82f6;">2.0%</div>
+                                <div class="ref-desc">L1 के Referral</div>
+                            </div>
+                            <div class="ref-item">
+                                <div class="ref-lvl">Level 3</div>
+                                <div class="ref-pct" style="color: #3b82f6;">1.5%</div>
+                                <div class="ref-desc">L2 के Referral</div>
+                            </div>
+                            <div class="ref-item">
+                                <div class="ref-lvl">Level 4</div>
+                                <div class="ref-pct" style="color: #94a3b8;">1.0%</div>
+                                <div class="ref-desc">L3 के Referral</div>
+                            </div>
+                            <div class="ref-item">
+                                <div class="ref-lvl">Level 5</div>
+                                <div class="ref-pct" style="color: #94a3b8;">0.3%</div>
+                                <div class="ref-desc">L4 के Referral</div>
+                            </div>
+                            <div class="ref-item">
+                                <div class="ref-lvl">Level 6</div>
+                                <div class="ref-pct" style="color: #64748b;">0.2%</div>
+                                <div class="ref-desc">L5 के Referral</div>
+                            </div>
+                        </div>
+                        <div class="hbox">
+                            🌟 <strong>Example:</strong> आपने 10 friends को refer किया। हर दोस्त ₹500 जीता — तो आपको सिर्फ Level 1 से ही <strong style="color:#10b981;">₹250 passive income</strong> मिल गई! अगर उन दोस्तों ने भी दोस्त जोड़े, तो Level 2 से और कमाई शुरू।
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end steps-wrap -->
+
+            <!-- ══════════ FINAL CTA ══════════ -->
+            <div class="cta-box">
+                <h2 class="text-grad">तैयार हैं Quiz Arena में उतरने के लिए?</h2>
+                <p>Register करें, Points जोड़ें, और अपने Skills से जीतें। यह आपका platform है।</p>
+                <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+                    <a href="/login.html" class="btn btn-primary" style="padding: 16px 40px; font-size: 1.1rem; border-radius: 14px; box-shadow: 0 0 30px rgba(59,130,246,0.4);">
+                        🚀 अभी Start करें →
+                    </a>
+                    <a href="/plan.html" class="btn btn-outline" style="padding: 16px 30px; font-size: 1rem; border-radius: 14px;">
+                        🎁 Plan & Benefits
+                    </a>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <!-- QUIZPRO PROJECT DETAILS -->
-    <section>
-        <div class="section-header reveal">
-            <h2>System <span class="text-gradient">Architecture & Features</span></h2>
-            <p>Here is an inside look at how I engineered the robust backend and dynamic frontend of QuizPro.</p>
-        </div>
-
-        <div class="features-grid">
-            <div class="glass-card reveal">
-                <i class="fa-solid fa-gamepad feature-icon"></i>
-                <h3>Advanced Quiz Engine</h3>
-                <p>Calculated dynamic scoreboards based on accuracy and pinpoint speed logic. Used algorithmic state-sync for real-time multiplayer consistency.</p>
-            </div>
-            <div class="glass-card reveal">
-                <i class="fa-solid fa-wallet feature-icon"></i>
-                <h3>Secure Wallet Ledger</h3>
-                <p>Designed a closed-loop transactional database ensuring atomicity. Integrated automated 30% TDS for legitimate withdrawals.</p>
-            </div>
-            <div class="glass-card reveal">
-                <i class="fa-solid fa-shield-halved feature-icon"></i>
-                <h3>Automated Webhooks</h3>
-                <p>Integrated Razorpay for seamless deposits and real-time payouts. Engineered retry loops to completely eliminate manual admin errors.</p>
-            </div>
-            <div class="glass-card reveal">
-                <i class="fa-solid fa-user-tie feature-icon"></i>
-                <h3>Admin Control Node</h3>
-                <p>Built a native dashboard allowing me to monitor active sessions, approve payouts, ban perpetrators, and view real-time system health.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- CONTACT DETAILS -->
-    <section id="contact">
-        <div class="section-header reveal">
-            <h2>Let's <span class="text-gradient">Connect</span></h2>
-            <p>Are you looking to build the next big thing, or do you need a scalable architecture? Reach out to me.</p>
-        </div>
-
-        <div class="contact-grid">
-            <div class="contact-info reveal">
-                <div class="contact-item">
-                    <i class="fa-solid fa-envelope"></i>
-                    <div>
-                        <h4>Email Me At</h4>
-                        <p>manohar.developer@example.com (Placeholder)</p>
-                    </div>
-                </div>
-                <div class="contact-item">
-                    <i class="fa-solid fa-phone"></i>
-                    <div>
-                        <h4>Call Me</h4>
-                        <p>+91 XXXXX XXXXX (Placeholder)</p>
-                    </div>
-                </div>
-                <div class="contact-item">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <div>
-                        <h4>Location</h4>
-                        <p>India</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-card reveal" style="text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                <h3 style="margin-bottom: 20px;">Scan to view this Portfolio</h3>
-                <div style="background: white; padding: 15px; border-radius: 12px; display: inline-block;">
-                    <img id="dynamic-qr" src="" alt="Portfolio QR Code" width="150" height="150">
-                </div>
-                <p style="margin-top: 15px; color: var(--text-muted);">Share my digital resume directly from your phone.</p>
-            </div>
-        </div>
-    </section>
-
-    <footer style="background: #06070a; padding: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 50px;">
-        <p style="color: var(--text-muted);">&copy; 2026 Developed by Manohar Lal. All rights reserved.</p>
-    </footer>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Generate QR Code dynamically
-            const currentUrl = encodeURIComponent(window.location.href);
-            document.getElementById('dynamic-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUrl}&color=000000&bgcolor=ffffff`;
-            
-            // Scroll Animation Observer
-            const reveals = document.querySelectorAll('.reveal');
-            const revealOnScroll = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
-
-            reveals.forEach(reveal => revealOnScroll.observe(reveal));
-            
-            // Initial trigger
-            setTimeout(() => {
-                document.querySelectorAll('.reveal').forEach((el) => {
-                    if(el.getBoundingClientRect().top < window.innerHeight) {
-                        el.classList.add('active');
-                    }
-                });
-            }, 100);
-        });
-    </script>
-
+    <div id="toast"></div>
+    <script src="/js/common.js?v=1.3"></script>
 </body>
+
 </html>

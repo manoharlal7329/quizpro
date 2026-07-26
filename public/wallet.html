@@ -391,9 +391,8 @@
 
                     <div id="upiFields">
                         <label
-                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">Reward
-                            UPI ID</label>
-                        <input type="text" id="withdrawUpi" placeholder="e.g. name@upi"
+                            style="font-size: 0.75rem; color: var(--muted); display: block; margin-bottom: 6px;">UPI ID / GPay / PhonePe Number</label>
+                        <input type="text" id="withdrawUpi" placeholder="e.g. name@upi or 9876543210"
                             style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; color: #fff; outline: none; margin-bottom: 16px;">
                     </div>
 
@@ -514,6 +513,16 @@
                         style="width: 100%; border-color: var(--gold); color: var(--gold); padding: 14px; font-weight: bold;">
                         Withdraw to Rewards Account
                     </button>
+                </div>
+
+                <!-- WITHDRAWAL HISTORY SECTION -->
+                <div class="card p-5 mb-8 mt-5" style="border-left: 4px solid var(--gold); background: linear-gradient(to right, rgba(0,0,0,0.4), rgba(30,41,59,0.3)); margin-top: 30px;">
+                    <div class="flex items-center gap-3 mb-4">
+                        <h2 class="text-xl font-bold" style="color: var(--gold);"><i class="fas fa-history"></i> Withdrawal History</h2>
+                    </div>
+                    <div id="wdHistoryWrap" style="overflow-x:auto;">
+                        <div style="padding:20px; text-align:center; color:var(--muted);">Loading history...</div>
+                    </div>
                 </div>
 
                 <!-- PIN SECURITY BOX -->
@@ -976,6 +985,7 @@
             if (!window.isAdmin) {
                 if (!amt || amt < 100) return toast('Min withdrawal limit is ₹100', 'error');
                 if (amt > 10000) return toast('Max withdrawal per request is ₹10,000', 'error');
+                if (amt > (window.withdrawableAmt - 100)) return toast(`Minimum ₹100 maintain karna hoga. Max withdraw: ₹${Math.max(0, window.withdrawableAmt - 100)}`, 'error');
             } else if (!amt || amt < 1) {
                 return toast('Please enter a valid amount', 'error');
             }
@@ -990,7 +1000,7 @@
 
             if (mode === 'UPI') {
                 const upi = document.getElementById('withdrawUpi').value;
-                if (!upi || !upi.includes('@')) return toast('Enter a valid UPI ID', 'error');
+                if (!upi) return toast('Enter a valid UPI ID or Number', 'error');
                 payload.upi = upi;
             } else if (mode === 'REFUND') {
                 const paymentId = document.getElementById('lastPaymentId').value;
@@ -1016,9 +1026,54 @@
 
         function logout() { localStorage.clear(); window.location.href = '/login.html'; }
 
+        async function loadWithdrawalHistory() {
+            try {
+                const res = await api('/api/wallet/withdrawals');
+                const wrap = document.getElementById('wdHistoryWrap');
+                if (!res.withdrawals || res.withdrawals.length === 0) {
+                    wrap.innerHTML = '<div style="padding:20px; text-align:center; color:var(--muted);">No withdrawals yet.</div>';
+                    return;
+                }
+                
+                wrap.innerHTML = `
+                    <table style="width:100%; text-align:left; border-collapse:collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                                <th style="padding:10px;">Amount</th>
+                                <th style="padding:10px;">Method</th>
+                                <th style="padding:10px;">Status</th>
+                                <th style="padding:10px;">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${res.withdrawals.map(w => `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding:10px; font-weight:bold; color:var(--gold);">₹${w.amount}</td>
+                                    <td style="padding:10px; color:var(--muted);">${w.payment_mode === 'UPI' ? (w.upi || 'UPI') : w.payment_mode}</td>
+                                    <td style="padding:10px;">
+                                        <span style="padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;
+                                            ${w.status === 'completed' ? 'background: rgba(16, 185, 129, 0.1); color: #10b981;' :
+                                            w.status === 'pending' ? 'background: rgba(245, 158, 11, 0.1); color: #f59e0b;' :
+                                            w.status === 'rejected' ? 'background: rgba(239, 68, 68, 0.1); color: #ef4444;' :
+                                            'background: rgba(139, 92, 246, 0.1); color: #8b5cf6;'}">
+                                            ${w.status}
+                                        </span>
+                                    </td>
+                                    <td style="padding:10px; color:var(--muted);">${new Date(w.created_at * 1000).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch(e) {
+                document.getElementById('wdHistoryWrap').innerHTML = '<div style="color:var(--red); padding:10px;">Failed to load history.</div>';
+            }
+        }
+
         updateWithdrawPreview();
         loadData();
         loadUpiConfig();
+        loadWithdrawalHistory();
         renderFooter();
     </script>
 </body>

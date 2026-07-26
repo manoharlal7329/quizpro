@@ -109,19 +109,12 @@ router.post('/withdrawals/:id/approve', authMiddleware, adminOnly, async (req, r
       return res.status(400).json({ error: 'Already processed or invalid status', status: wd.status });
     }
 
-    wd.status = 'approved';
+    wd.status = 'completed';
+    wd.paid_at = Math.floor(Date.now() / 1000);
     await wd.save();
 
-    // Trigger Razorpay Payout
-    const { processPayout } = require('../utils/razorpayPayout');
-    try {
-      console.log(`[Admin] Initializing Payout Transfer for WD: ${wdId} | Mode: ${wd.payment_mode}`);
-      await processPayout(wd.id);
-      res.json({ success: true, message: 'Withdrawal approved and payout initiated.' });
-    } catch (err) {
-      console.error(`[Admin] Payout trigger failed for ${wdId}:`, err.message);
-      res.status(500).json({ error: 'Approval semi-success', message: 'Marked as approved but Payout API failed. Check logs.', details: err.message });
-    }
+    console.log(`[Admin] Manual Payment Completed for WD: ${wdId} | Mode: ${wd.payment_mode}`);
+    res.json({ success: true, message: 'Withdrawal marked as PAID successfully.' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

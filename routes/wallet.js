@@ -307,6 +307,20 @@ router.post('/upi-deposit', authMiddleware, upload.single('screenshot'), async (
     }
 });
 
+// ─── GET /api/wallet/withdrawals (User Withdrawal History) ───────────────────
+router.get('/withdrawals', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const withdrawals = await Withdrawal.find({ user_id: Number(userId) })
+                                            .sort({ created_at: -1 })
+                                            .limit(50);
+        res.json({ success: true, withdrawals });
+    } catch (e) {
+        console.error('History Route Error:', e);
+        res.status(500).json({ error: 'SERVER_ERROR', message: e.message });
+    }
+});
+
 // ── GET /api/wallet/my-upi-deposits ───────────────────────────────────────────
 router.get('/my-upi-deposits', authMiddleware, async (req, res) => {
     try {
