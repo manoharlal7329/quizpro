@@ -1659,6 +1659,7 @@
                             <div style="display:flex; flex-direction:column; gap:6px;">
                                 <button class="btn btn-violet" style="padding:6px 12px; font-size:.72rem; border-radius:8px; font-weight:700; white-space:nowrap; width:100%;" onclick="openUserBioModal(${u.id})">👤 Bio Data</button>
                                 <button class="btn btn-gold" style="padding:6px 12px; font-size:.72rem; border-radius:8px; font-weight:700; white-space:nowrap; width:100%;" onclick="showPanel('wallets'); quickTopup('${u.id}', '${u.phone || u.email}')">💰 Topup</button>
+                                <button class="btn btn-outline" style="padding:6px 12px; font-size:.72rem; border-radius:8px; font-weight:700; white-space:nowrap; width:100%; color:var(--blue); border-color:var(--blue);" onclick="quickMessage(${u.id}, '${(u.full_name || u.name || 'User').replace(/'/g, "\\'")}')">💬 Message</button>
                                 ${u.id == 1 ? '' : `<button style="padding:6px 12px; font-size:.72rem; border-radius:8px; background:rgba(239,68,68,0.12); color:#fca5a5; border:1px solid rgba(239,68,68,0.25); cursor:pointer; font-weight:700; white-space:nowrap; width:100%;" onclick="deleteUser(${u.id})">🗑 Delete</button>`}
                             </div>
                         </td>
@@ -1667,6 +1668,22 @@
         }
 
         // ─── USER BIO DATA & TRANSACTIONS MODAL ──────────────────────────────────────
+        function quickMessage(userId, userName) {
+            const msg = prompt(`Enter message to send directly to ${userName} (User ID: ${userId}):`);
+            if (!msg || !msg.trim()) return;
+
+            api('/api/admin/notifications', 'POST', {
+                user_id: userId,
+                title: 'Message from Admin',
+                message: msg.trim(),
+                type: 'info'
+            }).then(() => {
+                toast(`Message sent successfully to ${userName}!`, 'success');
+            }).catch(e => {
+                toast(`Failed to send message: ${e.message}`, 'error');
+            });
+        }
+
         async function openUserBioModal(userId) {
             const modal = document.getElementById('userBioModal');
             const content = document.getElementById('userBioContent');
