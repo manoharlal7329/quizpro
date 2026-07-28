@@ -498,7 +498,6 @@
                             <h1 class="">🗂️ All Sessions</h1>
                             <div style="display:flex; gap:10px; align-items:center;">
                                 <button class="btn btn-outline" id="btn-toggle-all" onclick="toggleAllVisibility()">🙈/👁️ Toggle All Visibility</button>
-                                <button class="btn btn-gold" onclick="seedHindiGK()">🚀 Seed 10 Hindi GK</button>
                             </div>
                         </div>
                         <div id="sessionsList" class="glass-card" style="padding: 14px;"></div>
@@ -1437,24 +1436,7 @@
             }
         }
         
-        async function seedHindiGK() {
-            if (!confirm('This will create 10 new Hindi GK sessions with 200 questions total. Continue?')) return;
-            try {
-                const btn = event.target;
-                const oldText = btn.innerHTML;
-                btn.innerHTML = '⏳ Loading...';
-                btn.disabled = true;
-                const res = await api('/api/admin/sessions/seed-gk', 'POST');
-                toast(res.message);
-                loadSessions();
-                btn.innerHTML = oldText;
-                btn.disabled = false;
-            } catch (e) {
-                toast(e.message, 'error');
-                event.target.innerHTML = '🚀 Seed 10 Hindi GK';
-                event.target.disabled = false;
-            }
-        }
+
         async function deleteSession(id) {
             if (!confirm('⚠️ Permanently DELETE this session?\n\nYeh session aur uske saare questions/seats hamesha ke liye remove ho jayenge!')) return;
             try {
