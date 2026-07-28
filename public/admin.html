@@ -1672,12 +1672,10 @@
             const msg = prompt(`Enter message to send directly to ${userName} (User ID: ${userId}):`);
             if (!msg || !msg.trim()) return;
 
-            const finalMsg = msg.trim() + '<br><br><span style="color:var(--gold); font-size:0.75rem;">Regards,<br><b>CEO MANOHAR LAL PRAJAPATI</b><br>Support email id - quizproarena@gmail.com</span>';
-
             api('/api/admin/notifications', 'POST', {
                 user_id: userId,
                 title: 'Message from Admin',
-                message: finalMsg,
+                message: msg.trim(),
                 type: 'info'
             }).then(() => {
                 toast(`Message sent successfully to ${userName}!`, 'success');
@@ -2034,15 +2032,10 @@
         }
 
         async function sendNotif() {
-            let msgText = document.getElementById('notifMsg').value.trim();
-            if (!msgText) return toast('Title & Message required', 'error');
-
-            const finalMsg = msgText + '<br><br><span style="color:var(--gold); font-size:0.75rem;">Regards,<br><b>CEO MANOHAR LAL PRAJAPATI</b><br>Support email id - quizproarena@gmail.com</span>';
-
             const payload = {
                 user_id: Number(document.getElementById('notifTarget').value) || 0,
                 title: document.getElementById('notifTitle').value.trim(),
-                message: finalMsg,
+                message: document.getElementById('notifMsg').value.trim(),
                 type: document.getElementById('notifType').value
             };
             if (!payload.title || !payload.message) return toast('Title & Message required', 'error');
