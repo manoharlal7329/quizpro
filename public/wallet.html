@@ -561,7 +561,7 @@
     </div>
 
     <div id="toast"></div>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
     <script src="/js/common.js?v=1.3"></script>
 
     <script>
@@ -941,7 +941,7 @@
                 // Find last successful deposit
                 const lastDep = txns.find(t => t.type === 'credit' && t.payment_id && t.note && t.note.toLowerCase().includes('deposit'));
                 if (lastDep) {
-                    label.textContent = `Razorpay ID: ${lastDep.payment_id} (₹${lastDep.amount})`;
+                    label.textContent = `Transaction ID: ${lastDep.payment_id} (₹${lastDep.amount})`;
                     label.style.color = "var(--gold)";
                     hidden.value = lastDep.payment_id;
                 } else {

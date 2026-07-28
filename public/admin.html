@@ -356,25 +356,25 @@
             <div class="admin-layout">
                 <!-- Sidebar -->
                 <div class="sidebar-nav glass-card" style="padding: 14px;">
-                    <a href="#" class="active" onclick="showPanel('dashboard',this)" data-tilt>📊 Dashboard</a>
-                    <a href="#" onclick="showPanel('sessions',this)" data-tilt>🗂️ Sessions</a>
-                    <a href="#" onclick="showPanel('create',this)" data-tilt>➕ Create Session</a>
-                    <a href="#" onclick="showPanel('categories',this)" data-tilt>📁 Categories</a>
-                    <a href="#" onclick="showPanel('questions',this)" data-tilt>📝 Add Questions</a>
-                    <a href="#" onclick="showPanel('books',this)" data-tilt style="color:var(--gold);">📖 Books
+                    <a href="#" class="active" onclick="showPanel('dashboard',this)">📊 Dashboard</a>
+                    <a href="#" onclick="showPanel('sessions',this)">🗂️ Sessions</a>
+                    <a href="#" onclick="showPanel('create',this)">➕ Create Session</a>
+                    <a href="#" onclick="showPanel('categories',this)">📁 Categories</a>
+                    <a href="#" onclick="showPanel('questions',this)">📝 Add Questions</a>
+                    <a href="#" onclick="showPanel('books',this)" style="color:var(--gold);">📖 Books
                         Library</a>
-                    <a href="#" onclick="showPanel('users',this)" data-tilt>👤 Users</a>
-                    <a href="#" onclick="showPanel('wallets',this)" data-tilt>💰 Wallets</a>
-                    <a href="#" onclick="showPanel('rewards',this)" data-tilt>🎁 Rewards</a>
-                    <a href="#" onclick="showPanel('banners',this)" data-tilt>🖼️ Banners</a>
-                    <a href="#" onclick="showPanel('notifs',this)" data-tilt>🔔 Notifications</a>
-                    <a href="#" onclick="showPanel('settings',this)" data-tilt>⚙️ Settings</a>
-                    <a href="#" onclick="showPanel('upi',this)" data-tilt style="color:var(--blue); border:1px solid rgba(14, 165, 233, 0.3);">💳 UPI & QR Scanner</a>
-                    <a href="#" onclick="showPanel('withdrawals',this); loadWithdrawals();" data-tilt
+                    <a href="#" onclick="showPanel('users',this)">👤 Users</a>
+                    <a href="#" onclick="showPanel('wallets',this)">💰 Wallets</a>
+                    <a href="#" onclick="showPanel('rewards',this)">🎁 Rewards</a>
+                    <a href="#" onclick="showPanel('banners',this)">🖼️ Banners</a>
+                    <a href="#" onclick="showPanel('notifs',this)">🔔 Notifications</a>
+                    <a href="#" onclick="showPanel('settings',this)">⚙️ Settings</a>
+                    <a href="#" onclick="showPanel('upi',this)" style="color:var(--blue); border:1px solid rgba(14, 165, 233, 0.3);">💳 UPI & QR Scanner</a>
+                    <a href="#" onclick="showPanel('withdrawals',this); loadWithdrawals();"
                         style="color:var(--gold); border:1px solid rgba(245, 158, 11, 0.2);">🕒 Payout Approvals</a>
-                    <a href="#" onclick="showPanel('support-msgs',this); loadSupportMessages();" data-tilt
+                    <a href="#" onclick="showPanel('support-msgs',this); loadSupportMessages();"
                         style="color:#a78bfa; border:1px solid rgba(167,139,250,0.3);">💬 Support Messages</a>
-                    <a href="/system-status.html" data-tilt
+                    <a href="/system-status.html"
                         style="margin-top:20px; color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2);">🚨 System
                         Monitor</a>
                 </div>
@@ -397,7 +397,7 @@
                             <h3 style="margin-bottom:14px;">💰 Owner Earnings (25% Platform Cut)</h3>
                             <div id="ownerEarnings" class="glass-card deep-glass card-reveal"
                                 style="background:rgba(16,185,129,.07); border:1px solid rgba(16,185,129,.25); border-radius:14px; padding:20px;"
-                                data-tilt>
+                               >
                                 <div class="spinner"></div>
                             </div>
                         </div>
@@ -509,7 +509,7 @@
                         <div class="page-hero" style="padding-top:0;">
                             <h1 class="">➕ Create Session</h1>
                         </div>
-                        <div class="glass-card deep-glass card-reveal" style="max-width:520px;" data-tilt>
+                        <div class="glass-card deep-glass card-reveal" style="max-width:520px;">
                             <div id="createAlert"></div>
                             <div class="form-group">
                                 <label>Session Title</label>
@@ -1672,10 +1672,12 @@
             const msg = prompt(`Enter message to send directly to ${userName} (User ID: ${userId}):`);
             if (!msg || !msg.trim()) return;
 
+            const finalMsg = msg.trim() + '<br><br><span style="color:var(--gold); font-size:0.75rem;">Regards,<br><b>CEO MANOHAR LAL PRAJAPATI</b><br>Support email id - quizproarena@gmail.com</span>';
+
             api('/api/admin/notifications', 'POST', {
                 user_id: userId,
                 title: 'Message from Admin',
-                message: msg.trim(),
+                message: finalMsg,
                 type: 'info'
             }).then(() => {
                 toast(`Message sent successfully to ${userName}!`, 'success');
@@ -2032,10 +2034,15 @@
         }
 
         async function sendNotif() {
+            let msgText = document.getElementById('notifMsg').value.trim();
+            if (!msgText) return toast('Title & Message required', 'error');
+
+            const finalMsg = msgText + '<br><br><span style="color:var(--gold); font-size:0.75rem;">Regards,<br><b>CEO MANOHAR LAL PRAJAPATI</b><br>Support email id - quizproarena@gmail.com</span>';
+
             const payload = {
                 user_id: Number(document.getElementById('notifTarget').value) || 0,
                 title: document.getElementById('notifTitle').value.trim(),
-                message: document.getElementById('notifMsg').value.trim(),
+                message: finalMsg,
                 type: document.getElementById('notifType').value
             };
             if (!payload.title || !payload.message) return toast('Title & Message required', 'error');
