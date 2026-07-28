@@ -55,7 +55,7 @@ app.use('/api/platform', require('./routes/platform'));
 app.use('/api/marathon', require('./routes/marathon'));
 app.use('/api/team', require('./routes/team'));
 app.use('/api/support', require('./routes/support'));
-
+app.use('/api/siren', require('./routes/siren'));
 
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────

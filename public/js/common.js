@@ -372,8 +372,12 @@ function initSirenSystem() {
 
     evtSource.onmessage = function (e) {
         const data = JSON.parse(e.data);
-        if (data.message) {
+        if (data.type === 'alert' && data.message) {
             triggerSirenAlert(data.message);
+        } else if (data.type === 'stop') {
+            const modal = document.getElementById('sirenModalOverlay');
+            if (modal) modal.style.display = 'none';
+            window.speechSynthesis.cancel();
         }
     };
 }

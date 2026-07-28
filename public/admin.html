@@ -368,6 +368,7 @@
                     <a href="#" onclick="showPanel('rewards',this)">🎁 Rewards</a>
                     <a href="#" onclick="showPanel('banners',this)">🖼️ Banners</a>
                     <a href="#" onclick="showPanel('notifs',this)">🔔 Notifications</a>
+                    <a href="#" onclick="showPanel('siren',this)" style="color:var(--red); font-weight:bold;">🚨 Emergency Siren</a>
                     <a href="#" onclick="showPanel('settings',this)">⚙️ Settings</a>
                     <a href="#" onclick="showPanel('upi',this)" style="color:var(--blue); border:1px solid rgba(14, 165, 233, 0.3);">💳 UPI & QR Scanner</a>
                     <a href="#" onclick="showPanel('withdrawals',this); loadWithdrawals();"
@@ -769,6 +770,24 @@
                             <button class="btn btn-primary btn-full" onclick="sendNotif()">Push Message 📡</button>
                         </div>
                         <div id="notifsList"></div>
+                    </div>
+
+                    <!-- Global Siren -->
+                    <div class="panel" id="panel-siren">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1 style="color:var(--red);">🚨 Global Emergency Siren</h1>
+                            <p>Send a full-screen, loud flashing alert to all connected devices.</p>
+                        </div>
+                        <div class="card" style="max-width:500px; margin-bottom:28px; border: 1px solid var(--red);">
+                            <h3 style="margin-bottom:16px; color:var(--red);">Trigger Siren Broadcast</h3>
+                            <div class="form-group">
+                                <label>Message to Broadcast</label>
+                                <textarea id="sirenMsg" rows="3" placeholder="Enter emergency message here..."></textarea>
+                            </div>
+                            <button class="btn btn-full" style="background:var(--red); color:#fff; font-size:1.2rem; font-weight:bold;" onclick="triggerSiren()">🚨 TRIGGER SIREN</button>
+                            <br><br>
+                            <button class="btn btn-full" style="background:#444; color:#fff;" onclick="stopSiren()">⏹️ STOP SIREN FOR ALL</button>
+                        </div>
                     </div>
 
                     <!-- Platform Settings -->
@@ -2043,6 +2062,28 @@
             toast('Notification pushed! 📡', 'success');
             ['notifTitle', 'notifMsg'].forEach(id => document.getElementById(id).value = '');
             loadNotifs();
+        }
+
+        async function triggerSiren() {
+            const msg = document.getElementById('sirenMsg').value.trim();
+            if (!msg) return toast('Message is required', 'error');
+            if (!confirm('Are you SURE you want to trigger the siren for ALL users?')) return;
+            try {
+                const res = await api('/api/siren/trigger', 'POST', { message: msg });
+                toast(`Siren triggered for ${res.count} connected devices! 🚨`, 'success');
+            } catch(e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function stopSiren() {
+            if (!confirm('Stop siren for all users?')) return;
+            try {
+                await api('/api/siren/stop', 'POST');
+                toast('Stop command sent.', 'info');
+            } catch(e) {
+                toast('Error: ' + e.message, 'error');
+            }
         }
 
         async function loadSettings() {
