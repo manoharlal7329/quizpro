@@ -1227,7 +1227,7 @@
           <td>${s.seats_booked}/${s.seat_limit}</td>
           <td>
             <div style="display:flex; gap:6px;">
-              <button class="btn ${s.is_hidden ? 'btn-outline' : 'btn-violet'}" style="padding:4px 8px; font-size:.7rem;" onclick="toggleVisibility(${s.id})" title="Toggle Visibility">${s.is_hidden ? '🙈 Hidden' : '👁️ Visible'}</button>
+              <button class="btn ${s.is_hidden ? 'btn-outline' : 'btn-violet'}" style="padding:4px 8px; font-size:.7rem;" onclick="toggleVisibility(${s.id}, this)" title="Toggle Visibility">${s.is_hidden ? '🙈 Hidden' : '👁️ Visible'}</button>
               <button class="btn btn-gold" style="padding:4px 8px; font-size:.7rem;" onclick="forceStart(${s.id})" title="Start Quiz Now">Start🚀</button>
               <button class="btn btn-outline" style="padding:4px 8px; font-size:.7rem;" onclick="completeSess(${s.id})">Done</button>
               <button class="btn btn-success" style="padding:4px 8px; font-size:.7rem;" onclick="quickUpload(${s.id})">Upload 📤</button>
@@ -1401,13 +1401,21 @@
         async function completeSess(id) { await api(`/api/admin/sessions/${id}/complete`, 'POST'); toast('Completed!'); loadSessions(); }
         async function resetSeats(id) { if (confirm('Reset all seats?')) { await api(`/api/admin/sessions/${id}/reset-seats`, 'POST'); loadSessions(); } }
         
-        async function toggleVisibility(id) {
+        async function toggleVisibility(id, btn) {
             try {
+                if (btn) {
+                    btn.innerHTML = '⏳...';
+                    btn.disabled = true;
+                }
                 const res = await api(`/api/admin/sessions/${id}/visibility`, 'PATCH');
                 toast(res.message);
                 loadSessions();
             } catch (e) {
                 toast(e.message, 'error');
+                if (btn) {
+                    btn.innerHTML = 'Error';
+                    btn.disabled = false;
+                }
             }
         }
         
