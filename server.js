@@ -117,8 +117,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 const { Server } = require('socket.io');
 const io = new Server(server, { cors: { origin: '*' } });
 io.on('connection', (socket) => {
-    socket.on('audio-chunk', (chunk) => {
-        socket.broadcast.emit('audio-chunk', chunk);
+    socket.on('audio-pcm', (chunk) => {
+        socket.broadcast.emit('audio-pcm', chunk);
     });
 });
 

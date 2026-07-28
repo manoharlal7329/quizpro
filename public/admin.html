@@ -2090,13 +2090,24 @@
             }
         }
 
-        let mediaRecorder;
         let socket;
+        let pcmAudioCtx;
+        let pcmStream;
+        let pcmScriptNode;
+
         async function toggleLiveBroadcast() {
             const btn = document.getElementById('broadcastBtn');
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                if(socket) socket.disconnect();
+            if (pcmStream) {
+                // Stop broadcasting
+                if (pcmScriptNode) pcmScriptNode.disconnect();
+                if (pcmAudioCtx) pcmAudioCtx.close();
+                pcmStream.getTracks().forEach(t => t.stop());
+                if (socket) socket.disconnect();
+                
+                pcmStream = null;
+                pcmScriptNode = null;
+                pcmAudioCtx = null;
+                
                 btn.innerHTML = '🎤 Start Live Broadcast';
                 btn.style.background = '#3b82f6';
                 toast('Broadcast stopped', 'info');
@@ -2104,7 +2115,7 @@
             }
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                pcmStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 if(!window.io) {
                     await new Promise((resolve) => {
                         const script = document.createElement('script');
@@ -2115,15 +2126,27 @@
                 }
                 
                 socket = io();
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                 
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data.size > 0 && socket.connected) {
-                        socket.emit('audio-chunk', e.data);
+                // Set up PCM processing (Sample Rate 16000Hz for bandwidth efficiency)
+                pcmAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                const source = pcmAudioCtx.createMediaStreamSource(pcmStream);
+                pcmScriptNode = pcmAudioCtx.createScriptProcessor(4096, 1, 1);
+                
+                pcmScriptNode.onaudioprocess = (e) => {
+                    if (!socket.connected) return;
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    // Convert Float32 to Int16 to save 50% bandwidth
+                    const int16 = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        let s = Math.max(-1, Math.min(1, inputData[i]));
+                        int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
                     }
+                    socket.emit('audio-pcm', int16.buffer);
                 };
                 
-                mediaRecorder.start(250); // Send chunks every 250ms
+                source.connect(pcmScriptNode);
+                pcmScriptNode.connect(pcmAudioCtx.destination); // Needed for some browsers to fire events
+                
                 btn.innerHTML = '⏹ Stop Broadcast';
                 btn.style.background = '#ef4444';
                 toast('Live broadcast started! Everyone can hear you.', 'success');

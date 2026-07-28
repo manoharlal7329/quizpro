@@ -482,11 +482,11 @@ function stopSirenBeep() {
     sirenOscillators = [];
 }
 
-// --- LIVE BROADCAST LISTENER ---
-let liveAudioEl;
-let mediaSource;
-let sourceBuffer;
-let chunkQueue = [];
+
+
+// --- LIVE BROADCAST LISTENER (PCM) ---
+let liveAudioCtx;
+let nextStartTime = 0;
 let broadcastMuted = false;
 
 function initLiveBroadcast() {
@@ -499,53 +499,58 @@ function initLiveBroadcast() {
     script.onload = () => {
         const socket = io();
         
-        socket.on('audio-chunk', (chunk) => {
+        socket.on('audio-pcm', (arrayBuffer) => {
             if(broadcastMuted) return;
             
-            if(!liveAudioEl) {
-                liveAudioEl = new Audio();
-                mediaSource = new MediaSource();
-                liveAudioEl.src = URL.createObjectURL(mediaSource);
-                liveAudioEl.play().catch(e=>console.log('Audio autoplay blocked', e));
-                
-                mediaSource.addEventListener('sourceopen', () => {
-                    try {
-                        sourceBuffer = mediaSource.addSourceBuffer('audio/webm; codecs=opus');
-                        sourceBuffer.addEventListener('updateend', () => {
-                            if(chunkQueue.length > 0 && !sourceBuffer.updating) {
-                                sourceBuffer.appendBuffer(chunkQueue.shift());
-                            }
-                        });
-                    } catch(e) {}
-                });
+            if(!liveAudioCtx) liveAudioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            if(liveAudioCtx.state === 'suspended') liveAudioCtx.resume();
+            
+            const int16 = new Int16Array(arrayBuffer);
+            const float32 = new Float32Array(int16.length);
+            for(let i = 0; i < int16.length; i++) {
+                float32[i] = int16[i] / 0x8000;
             }
-
-            if(liveAudioEl && liveAudioEl.paused) {
-                liveAudioEl.play().catch(e=>{});
+            
+            const audioBuffer = liveAudioCtx.createBuffer(1, float32.length, 16000);
+            audioBuffer.getChannelData(0).set(float32);
+            
+            const source = liveAudioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(liveAudioCtx.destination);
+            
+            if (nextStartTime < liveAudioCtx.currentTime) {
+                nextStartTime = liveAudioCtx.currentTime + 0.05; // 50ms buffer
             }
-
-            if(sourceBuffer && !sourceBuffer.updating) {
-                sourceBuffer.appendBuffer(chunk);
-            } else {
-                chunkQueue.push(chunk);
-            }
+            source.start(nextStartTime);
+            nextStartTime += audioBuffer.duration;
         });
     };
     document.head.appendChild(script);
 
-    // Add UI Toggle for Mute
-    const muteBtn = document.createElement('button');
-    muteBtn.innerHTML = '?? Mute Admin';
-    muteBtn.style.cssText = 'position:fixed;bottom:20px;left:20px;z-index:9999;background:rgba(0,0,0,0.6);color:#fff;border:none;padding:10px 15px;border-radius:20px;font-size:0.8rem;cursor:pointer;backdrop-filter:blur(5px);';
-    muteBtn.onclick = () => {
-        broadcastMuted = !broadcastMuted;
-        muteBtn.innerHTML = broadcastMuted ? '?? Unmute Admin' : '?? Mute Admin';
-        if(broadcastMuted && liveAudioEl) {
-            liveAudioEl.pause();
-            chunkQueue = [];
-        }
-    };
-    document.body.appendChild(muteBtn);
+    // Add UI Toggle for Mute nicely in the navbar
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) {
+        const muteBtn = document.createElement('button');
+        muteBtn.className = 'btn btn-outline';
+        muteBtn.id = 'liveAudioMuteBtn';
+        // By default it is UNMUTED
+        muteBtn.innerHTML = '??';
+        muteBtn.title = 'Mute Admin Broadcast';
+        muteBtn.style.cssText = 'padding:6px; font-size:1.2rem; min-width:38px; border-radius:50%; margin-left: 10px; cursor:pointer;';
+        
+        muteBtn.onclick = () => {
+            broadcastMuted = !broadcastMuted;
+            muteBtn.innerHTML = broadcastMuted ? '??' : '??';
+            muteBtn.style.borderColor = broadcastMuted ? '#ef4444' : 'var(--border)';
+            if(broadcastMuted && liveAudioCtx) {
+                liveAudioCtx.suspend();
+                nextStartTime = 0;
+            } else if (!broadcastMuted && liveAudioCtx) {
+                liveAudioCtx.resume();
+            }
+        };
+        navLinks.appendChild(muteBtn);
+    }
 }
 
 document.addEventListener('click', initLiveBroadcast);
