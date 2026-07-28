@@ -2579,6 +2579,8 @@
                 alert('❌ ' + e.message);
                 btn.disabled = false; btn.textContent = '🌱 Seed 50 Demo Sessions';
             }
+        }
+
         async function loadWithdrawals() {
             try {
                 const list = await api('/api/admin/withdrawals');
