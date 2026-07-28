@@ -624,6 +624,7 @@ router.post('/test-session', authMiddleware, adminOnly, async (req, res) => {
     const seats = [];
     for (let i = 1; i <= 19; i++) {
         seats.push({
+            id: Date.now() + i, // Ensure unique ID for each seat
             session_id: session.id,
             user_id: 999000 + i, // Fake users
             status: 'active',
