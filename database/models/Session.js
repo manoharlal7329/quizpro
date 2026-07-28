@@ -14,7 +14,8 @@ const sessionSchema = new mongoose.Schema({
     pdf_at: Number,
     prize_pool: Number,
     platform_cut: Number,
-    prizes_paid: { type: Boolean, default: false }
+    prizes_paid: { type: Boolean, default: false },
+    is_hidden: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('Session', sessionSchema);

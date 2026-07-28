@@ -12,7 +12,8 @@ const sseClients = new Map();
 router.get('/', async (req, res) => {
     try {
         const sessionsRaw = await Session.find({
-            status: { $nin: ['completed', 'cancelled'] }
+            status: { $nin: ['completed', 'cancelled'] },
+            is_hidden: { $ne: true }
         }).sort({ created_at: -1 }).lean();
 
         const categories = await Category.find({}).lean();

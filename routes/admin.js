@@ -230,6 +230,34 @@ router.post('/sessions', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
+// ─── SESSIONS — VISIBILITY TOGGLE ──────────────────────────────────────────────
+router.patch('/sessions/:id/visibility', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const session = await Session.findOne({ id: Number(req.params.id) });
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    
+    session.is_hidden = !session.is_hidden;
+    await session.save();
+    res.json({ success: true, is_hidden: session.is_hidden, message: session.is_hidden ? 'Session hidden' : 'Session visible' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── SESSIONS — BULK VISIBILITY ────────────────────────────────────────────────
+router.patch('/sessions-bulk-visibility', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { action } = req.body; // 'hide' or 'unhide'
+    if (!['hide', 'unhide'].includes(action)) return res.status(400).json({ error: 'Invalid action' });
+
+    const is_hidden = action === 'hide';
+    await Session.updateMany({}, { is_hidden });
+    res.json({ success: true, message: `All sessions are now ${is_hidden ? 'hidden' : 'visible'}.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── SESSIONS — QUESTIONS LIST ────────────────────────────────────────────────
 router.get('/sessions/:id/questions', authMiddleware, adminOnly, async (req, res) => {
   try {

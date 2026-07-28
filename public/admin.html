@@ -494,8 +494,12 @@
 
                     <!-- Sessions List -->
                     <div class="panel" id="panel-sessions">
-                        <div class="page-hero" style="padding-top:0;">
+                        <div class="page-hero" style="padding-top:0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                             <h1 class="text-3d-float">🗂️ All Sessions</h1>
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn btn-outline" onclick="bulkToggleVisibility('hide')">🙈 Hide All</button>
+                                <button class="btn btn-violet" onclick="bulkToggleVisibility('unhide')">👁️ Show All</button>
+                            </div>
                         </div>
                         <div id="sessionsList" class="glass-card" style="padding: 14px;"></div>
                     </div>
@@ -1224,6 +1228,7 @@
           <td>${s.seats_booked}/${s.seat_limit}</td>
           <td>
             <div style="display:flex; gap:6px;">
+              <button class="btn ${s.is_hidden ? 'btn-outline' : 'btn-violet'}" style="padding:4px 8px; font-size:.7rem;" onclick="toggleVisibility(${s.id})" title="Toggle Visibility">${s.is_hidden ? '🙈 Hidden' : '👁️ Visible'}</button>
               <button class="btn btn-gold" style="padding:4px 8px; font-size:.7rem;" onclick="forceStart(${s.id})" title="Start Quiz Now">Start🚀</button>
               <button class="btn btn-outline" style="padding:4px 8px; font-size:.7rem;" onclick="completeSess(${s.id})">Done</button>
               <button class="btn btn-success" style="padding:4px 8px; font-size:.7rem;" onclick="quickUpload(${s.id})">Upload 📤</button>
@@ -1396,6 +1401,27 @@
         async function cancelSession(id) { if (confirm('Cancel?')) { await api(`/api/admin/sessions/${id}/cancel`, 'POST'); loadSessions(); } }
         async function completeSess(id) { await api(`/api/admin/sessions/${id}/complete`, 'POST'); toast('Completed!'); loadSessions(); }
         async function resetSeats(id) { if (confirm('Reset all seats?')) { await api(`/api/admin/sessions/${id}/reset-seats`, 'POST'); loadSessions(); } }
+        
+        async function toggleVisibility(id) {
+            try {
+                const res = await api(`/api/admin/sessions/${id}/visibility`, 'PATCH');
+                toast(res.message);
+                loadSessions();
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+        }
+        
+        async function bulkToggleVisibility(action) {
+            if (!confirm(`Are you sure you want to ${action} ALL sessions?`)) return;
+            try {
+                const res = await api('/api/admin/sessions-bulk-visibility', 'PATCH', { action });
+                toast(res.message);
+                loadSessions();
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+        }
         async function deleteSession(id) {
             if (!confirm('⚠️ Permanently DELETE this session?\n\nYeh session aur uske saare questions/seats hamesha ke liye remove ho jayenge!')) return;
             try {
