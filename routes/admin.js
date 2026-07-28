@@ -230,6 +230,94 @@ router.post('/sessions', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
+// ─── SESSIONS — SEED 10 HINDI GK SESSIONS ────────────────────────────────────
+router.post('/sessions/seed-gk', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const allQuestions = [
+      { question_text: 'भारत की राजधानी कौन सी है?', option_a: 'मुंबई', option_b: 'दिल्ली', option_c: 'कोलकाता', option_d: 'चेन्नई', correct: 'B', explanation: 'नई दिल्ली भारत की राजधानी है।' },
+      { question_text: 'भारत का राष्ट्रीय पशु कौन है?', option_a: 'शेर', option_b: 'हाथी', option_c: 'बाघ', option_d: 'गाय', correct: 'C', explanation: 'बंगाल टाइगर (बाघ) भारत का राष्ट्रीय पशु है।' },
+      { question_text: 'भारत का राष्ट्रीय पक्षी कौन है?', option_a: 'तोता', option_b: 'मोर', option_c: 'कोयल', option_d: 'हंस', correct: 'B', explanation: 'मोर भारत का राष्ट्रीय पक्षी है।' },
+      { question_text: 'भारत की सबसे लंबी नदी कौन सी है?', option_a: 'यमुना', option_b: 'गंगा', option_c: 'गोदावरी', option_d: 'नर्मदा', correct: 'B', explanation: 'गंगा नदी भारत की सबसे लंबी नदी है।' },
+      { question_text: 'भारत में कितने राज्य हैं?', option_a: '25', option_b: '27', option_c: '28', option_d: '29', correct: 'C', explanation: 'वर्तमान में भारत में 28 राज्य हैं।' },
+      { question_text: 'भारत का सर्वोच्च पुरस्कार कौन सा है?', option_a: 'पद्म भूषण', option_b: 'भारत रत्न', option_c: 'अर्जुन पुरस्कार', option_d: 'पद्म विभूषण', correct: 'B', explanation: 'भारत रत्न भारत का सर्वोच्च नागरिक पुरस्कार है।' },
+      { question_text: 'भारत का राष्ट्रीय फूल कौन सा है?', option_a: 'गुलाब', option_b: 'गेंदा', option_c: 'कमल', option_d: 'चमेली', correct: 'C', explanation: 'कमल भारत का राष्ट्रीय फूल है।' },
+      { question_text: 'भारत का राष्ट्रीय फल कौन सा है?', option_a: 'केला', option_b: 'सेब', option_c: 'आम', option_d: 'संतरा', correct: 'C', explanation: 'आम भारत का राष्ट्रीय फल है।' },
+      { question_text: 'राष्ट्रपिता महात्मा गांधी का जन्म कहाँ हुआ था?', option_a: 'मुंबई', option_b: 'पोरबंदर', option_c: 'अहमदाबाद', option_d: 'सूरत', correct: 'B', explanation: 'महात्मा गांधी का जन्म 2 अक्टूबर 1869 को गुजरात के पोरबंदर में हुआ था।' },
+      { question_text: 'भारत का संविधान कब लागू हुआ?', option_a: '15 अगस्त 1947', option_b: '26 नवम्बर 1949', option_c: '26 जनवरी 1950', option_d: '1 जनवरी 1952', correct: 'C', explanation: '26 जनवरी 1950 को भारत का संविधान लागू हुआ।' },
+      { question_text: 'भारत की पहली महिला प्रधानमंत्री कौन थीं?', option_a: 'सोनिया गांधी', option_b: 'इंदिरा गांधी', option_c: 'प्रतिभा पाटिल', option_d: 'सुषमा स्वराज', correct: 'B', explanation: 'इंदिरा गांधी भारत की पहली और एकमात्र महिला प्रधानमंत्री थीं।' },
+      { question_text: 'ताजमहल कहाँ स्थित है?', option_a: 'दिल्ली', option_b: 'जयपुर', option_c: 'आगरा', option_d: 'लखनऊ', correct: 'C', explanation: 'ताजमहल उत्तर प्रदेश के आगरा में स्थित है।' },
+      { question_text: 'भारत का सबसे बड़ा राज्य (क्षेत्रफल) कौन सा है?', option_a: 'उत्तर प्रदेश', option_b: 'मध्य प्रदेश', option_c: 'राजस्थान', option_d: 'महाराष्ट्र', correct: 'C', explanation: 'राजस्थान क्षेत्रफल की दृष्टि से भारत का सबसे बड़ा राज्य है।' },
+      { question_text: 'भारत का सर्वोच्च न्यायालय कहाँ है?', option_a: 'मुंबई', option_b: 'कोलकाता', option_c: 'नई दिल्ली', option_d: 'चेन्नई', correct: 'C', explanation: 'भारत का सर्वोच्च न्यायालय नई दिल्ली में स्थित है।' },
+      { question_text: 'भारत का सबसे बड़ा बंदरगाह कौन सा है?', option_a: 'मुंबई', option_b: 'कोच्चि', option_c: 'कोलकाता', option_d: 'विशाखापत्तनम', correct: 'A', explanation: 'मुंबई बंदरगाह भारत का सबसे बड़ा प्राकृतिक बंदरगाह है।' },
+      { question_text: 'प्रसिद्ध "गायत्री मंत्र" किस वेद में है?', option_a: 'ऋग्वेद', option_b: 'सामवेद', option_c: 'यजुर्वेद', option_d: 'अथर्ववेद', correct: 'A', explanation: 'गायत्री मंत्र ऋग्वेद में है।' },
+      { question_text: 'भारत का राष्ट्रीय गान किसने लिखा?', option_a: 'बंकिमचंद्र चटर्जी', option_b: 'रविंद्रनाथ टैगोर', option_c: 'महात्मा गांधी', option_d: 'जवाहरलाल नेहरू', correct: 'B', explanation: 'जन गण मन रविंद्रनाथ टैगोर द्वारा लिखा गया।' },
+      { question_text: 'भारत का राष्ट्रगीत कौन सा है?', option_a: 'जन गण मन', option_b: 'वंदे मातरम', option_c: 'सारे जहाँ से अच्छा', option_d: 'मेरा भारत महान', correct: 'B', explanation: 'वंदे मातरम भारत का राष्ट्रगीत है।' },
+      { question_text: 'भारत के प्रथम राष्ट्रपति कौन थे?', option_a: 'जवाहरलाल नेहरू', option_b: 'डॉ. राजेंद्र प्रसाद', option_c: 'सर्वपल्ली राधाकृष्णन', option_d: 'वी.वी. गिरि', correct: 'B', explanation: 'डॉ. राजेंद्र प्रसाद भारत के प्रथम राष्ट्रपति थे।' },
+      { question_text: 'भारत का सबसे ऊंचा पर्वत शिखर कौन सा है?', option_a: 'नंदादेवी', option_b: 'कंचनजंगा', option_c: 'K2', option_d: 'गॉडविन ऑस्टिन', correct: 'B', explanation: 'कंचनजंगा भारत का सबसे ऊंचा पर्वत शिखर है।' }
+    ];
+
+    let cat = await Category.findOne({ name: { $regex: /hindi.*gk/i } });
+    if (!cat) {
+      cat = new Category({
+        id: Date.now(), name: 'Hindi GK', level: 'easy', color: '#ff6b35', icon: '🇮🇳', description: 'Hindi General Knowledge Questions'
+      });
+      await cat.save();
+    }
+
+    const sessionTitles = [
+      'Hindi GK Challenge #1 - Bharat Parichay',
+      'Hindi GK Challenge #2 - Itihas Ki Duniya',
+      'Hindi GK Challenge #3 - Vigyan aur Prakriti',
+      'Hindi GK Challenge #4 - Bharat ka Samvidhan',
+      'Hindi GK Challenge #5 - Bhugol aur Nadi',
+      'Hindi GK Challenge #6 - Khel aur Puraskar',
+      'Hindi GK Challenge #7 - Prashidd Vyaktitv',
+      'Hindi GK Challenge #8 - Rashtriya Pratik',
+      'Hindi GK Challenge #9 - Vigyan aur Antariksh',
+      'Hindi GK Challenge #10 - Aadhunik Bharat',
+    ];
+
+    let count = 0;
+    for (let i = 0; i < 10; i++) {
+      const sessionId = Date.now() + i * 1000;
+      const session = new Session({
+        id: sessionId,
+        category_id: cat.id,
+        title: sessionTitles[i],
+        seat_limit: 30,
+        seats_booked: 0,
+        entry_fee: 20,
+        quiz_delay_minutes: 60,
+        status: 'open',
+        created_at: Math.floor(Date.now() / 1000) + i,
+        is_hidden: false
+      });
+      await session.save();
+
+      for (let j = 0; j < allQuestions.length; j++) {
+        const q = new Question({
+          id: Date.now() + i * 100 + j + Math.floor(Math.random() * 1000),
+          session_id: sessionId,
+          question_text: allQuestions[j].question_text,
+          option_a: allQuestions[j].option_a,
+          option_b: allQuestions[j].option_b,
+          option_c: allQuestions[j].option_c,
+          option_d: allQuestions[j].option_d,
+          correct: allQuestions[j].correct,
+          explanation: allQuestions[j].explanation
+        });
+        await q.save();
+      }
+      count++;
+    }
+
+    res.json({ success: true, message: `Successfully seeded ${count} Hindi GK Sessions with 20 questions each.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 // ─── SESSIONS — VISIBILITY TOGGLE ──────────────────────────────────────────────
 router.patch('/sessions/:id/visibility', authMiddleware, adminOnly, async (req, res) => {
   try {

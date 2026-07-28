@@ -496,9 +496,10 @@
                     <div class="panel" id="panel-sessions">
                         <div class="page-hero" style="padding-top:0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                             <h1 class="text-3d-float">🗂️ All Sessions</h1>
-                            <div style="display:flex; gap:10px;">
+                            <div style="display:flex; gap:10px; align-items:center;">
                                 <button class="btn btn-outline" onclick="bulkToggleVisibility('hide')">🙈 Hide All</button>
                                 <button class="btn btn-violet" onclick="bulkToggleVisibility('unhide')">👁️ Show All</button>
+                                <button class="btn btn-gold" onclick="seedHindiGK()">🚀 Seed 10 Hindi GK</button>
                             </div>
                         </div>
                         <div id="sessionsList" class="glass-card" style="padding: 14px;"></div>
@@ -1420,6 +1421,25 @@
                 loadSessions();
             } catch (e) {
                 toast(e.message, 'error');
+            }
+        }
+        
+        async function seedHindiGK() {
+            if (!confirm('This will create 10 new Hindi GK sessions with 200 questions total. Continue?')) return;
+            try {
+                const btn = event.target;
+                const oldText = btn.innerHTML;
+                btn.innerHTML = '⏳ Loading...';
+                btn.disabled = true;
+                const res = await api('/api/admin/sessions/seed-gk', 'POST');
+                toast(res.message);
+                loadSessions();
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            } catch (e) {
+                toast(e.message, 'error');
+                event.target.innerHTML = '🚀 Seed 10 Hindi GK';
+                event.target.disabled = false;
             }
         }
         async function deleteSession(id) {
