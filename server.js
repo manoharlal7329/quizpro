@@ -4,8 +4,12 @@ const cors = require('cors');
 const path = require('path');
 const connectDB = require('./mongodb');
 
-// 🔌 Connect DataBase
-connectDB();
+// 🚀 Connect DataBase
+connectDB().then(() => {
+    // Run the auto-seed script (creates the 20x 50Rs sessions if missing)
+    const autoSeed = require('./auto_seed');
+    autoSeed();
+});
 
 const app = express();
 app.use(cors());
