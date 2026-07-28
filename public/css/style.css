@@ -108,7 +108,7 @@ body {
 }
 
 .glass-card:hover::after {
-  transform: rotate(25deg) translate(10%, 10%);
+  
 }
 
 .deep-glass::before {
@@ -537,7 +537,7 @@ body {
 }
 
 .glass-card:active {
-  transform: translateY(-4px) scale(0.98);
+  
   box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.6);
   transition: transform 0.1s ease;
 }
@@ -713,7 +713,7 @@ body {
 }
 
 .vip-wallet:active {
-  transform: translateY(-2px) scale(0.97);
+  
 }
 
 /* ── LOADING SPINNER ────────────────────────────────────────── */
@@ -1143,7 +1143,7 @@ body {
 }
 
 .social-pill:hover {
-  transform: translateY(-5px) scale(1.05);
+  
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.3);
 }
