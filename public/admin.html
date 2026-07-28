@@ -372,6 +372,8 @@
                     <a href="#" onclick="showPanel('upi',this)" data-tilt style="color:var(--blue); border:1px solid rgba(14, 165, 233, 0.3);">💳 UPI & QR Scanner</a>
                     <a href="#" onclick="showPanel('withdrawals',this); loadWithdrawals();" data-tilt
                         style="color:var(--gold); border:1px solid rgba(245, 158, 11, 0.2);">🕒 Payout Approvals</a>
+                    <a href="#" onclick="showPanel('support-msgs',this); loadSupportMessages();" data-tilt
+                        style="color:#a78bfa; border:1px solid rgba(167,139,250,0.3);">💬 Support Messages</a>
                     <a href="/system-status.html" data-tilt
                         style="margin-top:20px; color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2);">🚨 System
                         Monitor</a>
@@ -875,6 +877,17 @@
                         </div>
                     </div>
 
+                    <!-- ═══════════ SUPPORT MESSAGES PANEL ═══════════ -->
+                    <div class="panel" id="panel-support-msgs">
+                        <div class="page-hero" style="padding-top:0;">
+                            <h1>💬 Support Messages</h1>
+                            <p>User queries submitted from the Contact page</p>
+                        </div>
+                        <div id="supportMsgsWrap" class="glass-card" style="padding: 16px;">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -900,6 +913,65 @@
             if (name === 'notifs') loadNotifs();
             if (name === 'settings') loadSettings();
             if (name === 'upi') { loadAdminUpiConfig(); loadAdminUpiDeposits(); }
+            if (name === 'support-msgs') loadSupportMessages();
+        }
+
+        // ─── SUPPORT MESSAGES ───────────────────────────────────────────────
+        async function loadSupportMessages() {
+            const wrap = document.getElementById('supportMsgsWrap');
+            wrap.innerHTML = '<div class="spinner"></div>';
+            try {
+                const data = await api('/api/admin/support-messages');
+                const msgs = data.messages || [];
+                if (!msgs.length) {
+                    wrap.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px;">No support messages yet.</p>';
+                    return;
+                }
+                wrap.innerHTML = msgs.map(m => {
+                    const statusColor = m.status === 'PENDING' ? '#f59e0b' : m.status === 'REPLIED' ? '#10b981' : '#6b7280';
+                    const statusLabel = m.status === 'PENDING' ? '⏳ Pending' : m.status === 'REPLIED' ? '✅ Replied' : '🔒 Closed';
+                    return `
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:18px;margin-bottom:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+                            <div>
+                                <div style="font-weight:700;font-size:0.95rem;">${m.name || 'Unknown'}</div>
+                                <div style="font-size:0.75rem;color:var(--muted);">${m.email || ''} • ${new Date(m.created_at * 1000).toLocaleString()}</div>
+                            </div>
+                            <span style="font-size:0.72rem;font-weight:bold;color:${statusColor};background:rgba(0,0,0,0.3);padding:4px 10px;border-radius:8px;">${statusLabel}</span>
+                        </div>
+                        <div style="background:rgba(0,0,0,0.2);padding:12px;border-radius:10px;margin-bottom:12px;font-size:0.88rem;line-height:1.5;">${m.message}</div>
+                        ${m.admin_reply ? `<div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:0.82rem;color:#6ee7b7;"><b>Your Reply:</b> ${m.admin_reply}</div>` : ''}
+                        ${m.status !== 'CLOSED' ? `
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <input type="text" id="reply-${m.id}" placeholder="Type your reply..." style="flex:1;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:#fff;outline:none;font-size:0.85rem;min-width:200px;">
+                            <button class="btn btn-primary" style="padding:8px 16px;font-size:0.82rem;" onclick="sendSupportReply(${m.id})">Send Reply</button>
+                            <button class="btn btn-outline" style="padding:8px 14px;font-size:0.82rem;color:var(--muted);" onclick="closeSupportMsg(${m.id})">Close</button>
+                        </div>` : `<div style="font-size:0.78rem;color:var(--muted);font-style:italic;">This ticket has been closed.</div>`}
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                wrap.innerHTML = `<p style="color:var(--red);text-align:center;padding:20px;">⚠️ Error: ${e.message}</p>`;
+            }
+        }
+
+        async function sendSupportReply(id) {
+            const input = document.getElementById('reply-' + id);
+            const reply = input ? input.value.trim() : '';
+            if (!reply) return toast('Reply cannot be empty', 'error');
+            try {
+                const res = await api('/api/admin/support-messages/' + id + '/reply', 'PATCH', { reply });
+                if (res.success) { toast('✅ Reply saved!', 'success'); loadSupportMessages(); }
+                else throw new Error(res.error);
+            } catch (e) { toast('Error: ' + e.message, 'error'); }
+        }
+
+        async function closeSupportMsg(id) {
+            if (!confirm('Mark this message as closed?')) return;
+            try {
+                const res = await api('/api/admin/support-messages/' + id + '/close', 'PATCH', {});
+                if (res.success) { toast('Ticket closed.', 'success'); loadSupportMessages(); }
+                else throw new Error(res.error);
+            } catch (e) { toast('Error: ' + e.message, 'error'); }
         }
 
         async function loadAdminUpiConfig() {

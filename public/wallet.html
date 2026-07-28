@@ -322,15 +322,10 @@
                         </p>
 
                         <div style="background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 10px; margin-top: 14px;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <span style="font-size: 0.75rem; color: var(--muted);">UPI ID:</span>
                                 <span id="displayUpiId" style="font-weight: bold; color: var(--gold); font-size: 0.85rem;">manoharlala02911-1@okaxis</span>
                                 <button class="btn btn-outline" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUpiId()">Copy 📋</button>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
-                                <span style="font-size: 0.75rem; color: var(--muted);">Phone Pay / GPay:</span>
-                                <span id="displayUpiPhone" style="font-weight: bold; color: var(--green); font-size: 0.85rem;">7976595645</span>
-                                <button class="btn btn-outline" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUpiPhone()">Copy 📋</button>
                             </div>
                         </div>
 
@@ -631,9 +626,6 @@
                 const conf = await api('/api/platform/upi-config');
                 window.platformUpi = conf;
                 document.getElementById('displayUpiId').textContent = conf.upi_id || 'manoharlala02911-1@okaxis';
-                if (document.getElementById('displayUpiPhone')) {
-                    document.getElementById('displayUpiPhone').textContent = conf.upi_phone || '7976595645';
-                }
                 updateUpiQr();
             } catch (e) {
                 console.error('UPI Config Load Error:', e);
@@ -644,9 +636,6 @@
                     upi_phone: '7976595645'
                 };
                 document.getElementById('displayUpiId').textContent = 'manoharlala02911-1@okaxis';
-                if (document.getElementById('displayUpiPhone')) {
-                    document.getElementById('displayUpiPhone').textContent = '7976595645';
-                }
                 updateUpiQr();
             }
         }
@@ -682,15 +671,6 @@
                 toast('✅ UPI ID copied to clipboard: ' + id, 'success');
             }).catch(() => {
                 toast('Manual copy: ' + id, 'info');
-            });
-        }
-
-        function copyUpiPhone() {
-            const phone = window.platformUpi?.upi_phone || '7976595645';
-            navigator.clipboard.writeText(phone).then(() => {
-                toast('✅ Phone Number copied: ' + phone, 'success');
-            }).catch(() => {
-                toast('Manual copy: ' + phone, 'info');
             });
         }
 

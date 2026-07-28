@@ -49,6 +49,8 @@ app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/books', require('./routes/books'));
 app.use('/api/platform', require('./routes/platform'));
 app.use('/api/marathon', require('./routes/marathon'));
+app.use('/api/team', require('./routes/team'));
+app.use('/api/support', require('./routes/support'));
 
 
 

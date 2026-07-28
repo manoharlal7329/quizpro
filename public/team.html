@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>My Team — QuizPro Arena</title>
+    <link rel="stylesheet" href="/css/style.css?v=1.1" />
+    <style>
+        .team-hero {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 48px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(16, 185, 129, .2);
+        }
+
+        .team-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .team-grid {
+            max-width: 1000px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+
+        .level-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+        }
+
+        .level-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .level-count {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .team-member {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .05);
+        }
+
+        .team-member:last-child {
+            border-bottom: none;
+        }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .member-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .member-date {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/dashboard.html" class="logo">← Dashboard</a>
+
+        <div style="display:flex;gap:12px;align-items:center;">
+            <a href="/team.html" class="nav-link" style="color:var(--green);font-weight:700;">👥 My Team</a>
+            <span id="navName" style="color:var(--muted);font-size:.85rem;"></span>
+            <button onclick="logout()" id="logoutBtn" style="display:none;" class="btn btn-outline"
+                style="padding:6px 14px;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="team-hero">
+        <div style="font-size:3rem;margin-bottom:8px;">👥</div>
+        <h1 class="gradient-text">My Network Team</h1>
+        <p style="color:var(--muted);">View your referrals up to 6 levels deep. Total Team Size: <span id="totalTeam" style="color:var(--gold);font-weight:bold;">0</span></p>
+    </div>
+
+    <div class="team-grid" id="teamContainer">
+        <div class="empty-state">Loading team data...</div>
+    </div>
+
+    <div id="toast"></div>
+    <script src="/js/common.js?v=1.2"></script>
+
+    <script>
+        requireLogin();
+        
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        if (u.name) {
+            document.getElementById('navName').textContent = u.name;
+            document.getElementById('logoutBtn').style.display = 'inline-flex';
+        }
+        function logout() { localStorage.clear(); location.href = '/login.html'; }
+
+        async function loadTeam() {
+            try {
+                const data = await api('/api/team/me');
+                if (!data.success) throw new Error(data.error || 'Failed to load');
+
+                document.getElementById('totalTeam').textContent = data.total || 0;
+                
+                const container = document.getElementById('teamContainer');
+                if (data.total === 0) {
+                    container.innerHTML = '<div class="empty-state card" style="padding:40px;">You haven\\'t referred anyone yet. Share your referral link to build your team!</div>';
+                    return;
+                }
+
+                let html = '';
+                for (let i = 1; i <= 6; i++) {
+                    const members = data.levels[i] || [];
+                    if (members.length > 0 || i === 1) {
+                        html += `
+                        <div class="level-card">
+                            <div class="level-header">
+                                <div class="level-title">Level ${i} ${i === 1 ? '(Direct)' : ''}</div>
+                                <div class="level-count">${members.length} Members</div>
+                            </div>
+                            <div class="level-list">
+                                ${members.length > 0 ? members.map(m => `
+                                    <div class="team-member">
+                                        <div class="member-info">
+                                            <div class="member-avatar">${m.name.charAt(0).toUpperCase()}</div>
+                                            <div>
+                                                <div class="member-name">${m.name}</div>
+                                                <div class="member-date">Joined: ${new Date(m.joined * 1000).toLocaleDateString()}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('') : '<div class="empty-state">No members in this level yet.</div>'}
+                            </div>
+                        </div>`;
+                    }
+                }
+                container.innerHTML = html;
+            } catch (e) {
+                document.getElementById('teamContainer').innerHTML = '<div class="empty-state card">⚠️ Unable to load team data</div>';
+            }
+        }
+
+        loadTeam();
+    </script>
+</body>
+
+</html>

@@ -21,6 +21,7 @@ const Withdrawal = require('../database/models/Withdrawal');
 const Notification = require('../database/models/Notification');
 const Banner = require('../database/models/Banner');
 const PlatformConfig = require('../database/models/PlatformConfig');
+const SupportMessage = require('../database/models/SupportMessage');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -1126,6 +1127,54 @@ router.post('/upi-deposits/:id/reject', authMiddleware, adminOnly, async (req, r
     await notif.save();
 
     res.json({ success: true, message: `Deposit #${depId} rejected.` });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── SUPPORT MESSAGES ─────────────────────────────────────────────────────────
+
+// GET /api/admin/support-messages - Fetch all support messages
+router.get('/support-messages', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const messages = await SupportMessage.find({}).sort({ created_at: -1 }).limit(100).lean();
+    res.json({ success: true, messages });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PATCH /api/admin/support-messages/:id/reply - Admin reply to a support message
+router.patch('/support-messages/:id/reply', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { reply } = req.body;
+    const msgId = Number(req.params.id);
+    if (!reply || reply.trim().length < 2) return res.status(400).json({ error: 'Reply is required.' });
+
+    const msg = await SupportMessage.findOne({ id: msgId });
+    if (!msg) return res.status(404).json({ error: 'Message not found.' });
+
+    msg.admin_reply = reply.trim();
+    msg.status = 'REPLIED';
+    await msg.save();
+
+    res.json({ success: true, message: 'Reply saved.' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PATCH /api/admin/support-messages/:id/close - Mark message as resolved
+router.patch('/support-messages/:id/close', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const msgId = Number(req.params.id);
+    const msg = await SupportMessage.findOne({ id: msgId });
+    if (!msg) return res.status(404).json({ error: 'Message not found.' });
+
+    msg.status = 'CLOSED';
+    await msg.save();
+
+    res.json({ success: true, message: 'Marked as closed.' });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
