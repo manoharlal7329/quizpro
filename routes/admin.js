@@ -1054,6 +1054,19 @@ router.post('/upi-config', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
+// ── ADMIN UPI DEPOSITS - SEARCH UTR ──────────────────────────────────────────
+router.get('/upi-deposits/search', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const UpiDeposit = require('../database/models/UpiDeposit');
+    const { utr } = req.query;
+    if (!utr) return res.json([]);
+    const list = await UpiDeposit.find({ utr: new RegExp(utr, 'i') }).sort({ created_at: -1 }).lean();
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── ADMIN UPI DEPOSITS — LIST ────────────────────────────────────────────────
 router.get('/upi-deposits', authMiddleware, adminOnly, async (req, res) => {
   try {

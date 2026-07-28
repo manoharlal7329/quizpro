@@ -825,6 +825,16 @@
                             <button class="btn btn-primary" onclick="saveAdminUpiConfig()">Save UPI Settings 💾</button>
                         </div>
 
+                        <!-- UTR Search Panel -->
+                        <div class="glass-card" style="margin-bottom:28px;">
+                            <h3 style="margin-bottom:14px;">🔍 Search UTR / Ref Number</h3>
+                            <div class="flex-row" style="gap:10px;">
+                                <input type="text" id="adminUtrSearch" placeholder="Enter 12-Digit UTR..." style="flex:1;">
+                                <button class="btn btn-primary" onclick="searchUtrHistory()">Search UTR</button>
+                            </div>
+                            <div id="utrSearchResults" style="margin-top: 16px;"></div>
+                        </div>
+
                         <!-- Pending UPI Deposit Approvals Table -->
                         <h3 style="margin-bottom:14px;">📥 UPI Deposit Requests</h3>
                         <div id="upiDepositsList" class="glass-card" style="padding: 14px;">
@@ -1134,6 +1144,62 @@
             
             document.body.appendChild(modal);
             setTimeout(() => { modal.style.opacity = '1'; }, 50);
+        }
+
+        async function searchUtrHistory() {
+            const utr = document.getElementById('adminUtrSearch').value.trim();
+            const box = document.getElementById('utrSearchResults');
+            if (!utr) return toast('Please enter a UTR to search', 'error');
+
+            box.innerHTML = '<div style="color:var(--muted);text-align:center;">Searching...</div>';
+            try {
+                const res = await api(`/api/admin/upi-deposits/search?utr=${utr}`);
+                if (!res || res.length === 0) {
+                    box.innerHTML = '<div style="color:var(--red);text-align:center;">No deposit found with this UTR.</div>';
+                    return;
+                }
+
+                let html = `
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Screenshot</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                res.forEach(d => {
+                    let statusHtml = '';
+                    if(d.status === 'APPROVED') statusHtml = `<span style="color:var(--green);font-weight:bold;">APPROVED</span>`;
+                    else if(d.status === 'REJECTED') statusHtml = `<span style="color:var(--red);font-weight:bold;">REJECTED</span><br><small style="color:var(--muted)">${d.admin_note||''}</small>`;
+                    else statusHtml = `<span style="color:var(--gold);font-weight:bold;">PENDING</span>`;
+
+                    const dateStr = d.created_at ? new Date(d.created_at * 1000).toLocaleString() : 'N/A';
+                    
+                    html += `
+                        <tr>
+                            <td>#${d.user_id}</td>
+                            <td>₹${d.amount}</td>
+                            <td>${statusHtml}</td>
+                            <td style="font-size:0.75rem; color:var(--muted);">${dateStr}</td>
+                            <td>
+                                ${d.screenshot_url ? `<a href="${d.screenshot_url}" target="_blank" style="color:var(--gold);text-decoration:none;">View Image 📸</a>` : 'No Image'}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+                box.innerHTML = html;
+            } catch (e) {
+                box.innerHTML = `<div style="color:var(--red);text-align:center;">Error: ${e.message}</div>`;
+            }
         }
 
         async function approveUpiDeposit(id) {

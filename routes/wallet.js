@@ -267,7 +267,15 @@ router.post('/confirm-deposit', authMiddleware, async (req, res) => {
 
 // ── POST /api/wallet/upi-deposit ──────────────────────────────────────────────
 // Submit direct UPI payment deposit request with UTR and Screenshot
-router.post('/upi-deposit', authMiddleware, upload.single('screenshot'), async (req, res) => {
+router.post('/upi-deposit', authMiddleware, (req, res, next) => {
+    upload.single('screenshot')(req, res, function (err) {
+        if (err) {
+            console.error('[Wallet] upload error:', err);
+            return res.status(400).json({ error: 'Upload failed: ' + err.message });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         const UpiDeposit = require('../database/models/UpiDeposit');
         const { amount, utr } = req.body;
