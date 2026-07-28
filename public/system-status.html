@@ -284,6 +284,12 @@
                             style="font-size:0.8rem; border-color:var(--red); color:var(--red);"
                             onclick="actionRequest('/api/admin/actions/clear-sessions', 'This will delete all unstarted sessions. Proceed?')">🚮
                             Clear Active Sessions</button>
+
+                        <button class="btn btn-outline"
+                            style="font-size:0.8rem; border-color:var(--gold); color:var(--gold);"
+                            onclick="actionRequest('/api/admin/emergency-seed', 'This will recreate the 20 auto-generated sessions (50rs). Proceed?')">🔁
+                            Restore Auto Sessions</button>
+
                         <button class="btn btn-outline"
                             style="font-size:0.8rem; border-color:var(--blue); color:var(--blue);"
                             onclick="actionRequest('/api/admin/actions/sync-wallets', 'Verify all wallet structures?')">🔄

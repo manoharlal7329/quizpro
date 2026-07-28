@@ -639,7 +639,18 @@ router.post('/test-session', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// ─── ADMIN WALLET: TOPUP / DEDUCT ─────────────────────────────────────────────────────────────
+// ── ADMIN: EMERGENCY SEED ───────────────────────────────────────────────
+router.post('/emergency-seed', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const autoSeed = require('../auto_seed');
+    await autoSeed();
+    res.json({ success: true, message: 'Emergency seed completed! 20 sessions restored.' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── ADMIN WALLET: TOPUP / DEDUCT ─────────────────────────────────────────────
 router.post('/wallet/topup', authMiddleware, adminOnly, async (req, res) => {
   try {
     const { user_id, wallet_type, amount, note } = req.body;
