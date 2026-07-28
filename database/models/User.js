@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
     name: String,
     is_admin: { type: Number, default: 0 },
     referral_code: { type: String, unique: true },
-    referred_by: String,
+    referred_by: { type: String, index: true },
     quizzes_solved: { type: Number, default: 0 },
     blocked: { type: Boolean, default: false },
     created_at: { type: Number, default: () => Math.floor(Date.now() / 1000) }
