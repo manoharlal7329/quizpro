@@ -63,7 +63,16 @@ router.get('/me', authMiddleware, async (req, res) => {
             }
         }
 
-        res.json({ success: true, levels: team, total });
+        // Calculate total earnings from referrals
+        const WalletTxn = require('../database/models/WalletTxn');
+        const txns = await WalletTxn.find({ 
+            user_id: userId, 
+            type: 'credit', 
+            note: { $regex: /Ref (Join|Comm)/i } 
+        });
+        const total_earnings = txns.reduce((sum, t) => sum + (t.amount || 0), 0);
+
+        res.json({ success: true, levels: team, total, total_earnings });
     } catch (e) {
         console.error('[Team API] error:', e.message);
         res.status(500).json({ error: e.message });

@@ -121,7 +121,15 @@
     <div class="team-hero">
         <div style="font-size:3rem;margin-bottom:8px;">👥</div>
         <h1 class="gradient-text">My Network Team</h1>
-        <p style="color:var(--muted);">View your referrals up to 6 levels deep. Total Team Size: <span id="totalTeam" style="color:var(--gold);font-weight:bold;">0</span></p>
+        <p style="color:var(--muted); margin-bottom: 5px;">View your referrals up to 6 levels deep.</p>
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <div style="background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                Total Team Size: <span id="totalTeam" style="color:var(--gold);font-weight:bold; font-size: 1.1rem;">0</span>
+            </div>
+            <div style="background: rgba(16,185,129,0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(16,185,129,0.2);">
+                Team Earnings: <span id="teamEarnings" style="color:var(--green);font-weight:bold; font-size: 1.1rem;">₹0</span>
+            </div>
+        </div>
     </div>
 
     <div class="team-grid" id="teamContainer">
@@ -147,10 +155,11 @@
                 if (!data.success) throw new Error(data.error || 'Failed to load');
 
                 document.getElementById('totalTeam').textContent = data.total || 0;
+                document.getElementById('teamEarnings').textContent = '₹' + (data.total_earnings || 0).toFixed(2);
                 
                 const container = document.getElementById('teamContainer');
                 if (data.total === 0) {
-                    container.innerHTML = '<div class="empty-state card" style="padding:40px;">You haven\\'t referred anyone yet. Share your referral link to build your team!</div>';
+                    container.innerHTML = '<div class="empty-state card" style="padding:40px;">You have not referred anyone yet. Share your referral link to build your team!</div>';
                     return;
                 }
 
