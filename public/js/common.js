@@ -373,52 +373,15 @@ function initSirenSystem() {
     evtSource.onmessage = function (e) {
         const data = JSON.parse(e.data);
         if (data.type === 'alert' && data.message) {
-            triggerSirenAlert(data.message);
+            playLoudBeep();
+            showSirenModal(data.message);
         } else if (data.type === 'stop') {
             const modal = document.getElementById('sirenModalOverlay');
             if (modal) modal.style.display = 'none';
             window.speechSynthesis.cancel();
+            stopSirenBeep();
         }
     };
-}
-
-function triggerSirenAlert(msg) {
-    // 1. Play Siren sound (base64 simple alarm or browser beep via AudioContext)
-    playLoudBeep();
-
-    // 2. Show full screen red warning modal
-    showSirenModal(msg);
-
-    // 3. Speak the text out loud in Hindi/English
-    if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(msg);
-        utterance.lang = 'hi-IN'; // Hindi/English mix
-        utterance.rate = 0.9;
-        utterance.pitch = 1.2;
-        window.speechSynthesis.speak(utterance);
-    }
-}
-
-function playLoudBeep() {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        oscillator.type = 'square';
-        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // High pitch
-        oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.5);
-        oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 1);
-
-        gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
-
-        oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 2);
-    } catch(e) { console.log('Audio error:', e); }
 }
 
 function showSirenModal(msg) {
@@ -460,7 +423,11 @@ function showSirenModal(msg) {
         const btn = document.createElement('button');
         btn.innerText = 'DISMISS';
         btn.style.cssText = 'margin-top:40px;padding:12px 30px;background:#fff;color:#dc2626;border:none;border-radius:30px;font-weight:900;font-size:1.1rem;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.4);';
-        btn.onclick = () => { modal.style.display = 'none'; window.speechSynthesis.cancel(); };
+        btn.onclick = () => { 
+            modal.style.display = 'none'; 
+            window.speechSynthesis.cancel();
+            stopSirenBeep(); 
+        };
         modal.appendChild(btn);
 
         document.body.appendChild(modal);
@@ -472,3 +439,114 @@ function showSirenModal(msg) {
 
 // Auto-init
 setTimeout(initSirenSystem, 1000);
+
+let globalAudioCtx = null;
+function initAudioCtx() {
+    if(!globalAudioCtx) {
+        globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (globalAudioCtx.state === 'suspended') globalAudioCtx.resume();
+}
+document.addEventListener('click', initAudioCtx);
+document.addEventListener('touchstart', initAudioCtx);
+
+let sirenOscillators = [];
+function playLoudBeep() {
+    try {
+        initAudioCtx();
+        const oscillator = globalAudioCtx.createOscillator();
+        const gainNode = globalAudioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(globalAudioCtx.destination);
+
+        oscillator.type = 'square';
+        const now = globalAudioCtx.currentTime;
+        gainNode.gain.setValueAtTime(0.5, now);
+        
+        for (let i = 0; i < 60; i++) { 
+            oscillator.frequency.setValueAtTime(800, now + i);
+            oscillator.frequency.linearRampToValueAtTime(1200, now + i + 0.5);
+            oscillator.frequency.linearRampToValueAtTime(800, now + i + 1);
+        }
+
+        oscillator.start(now);
+        sirenOscillators.push(oscillator);
+    } catch(e) { console.log('Audio error:', e); }
+}
+
+function stopSirenBeep() {
+    sirenOscillators.forEach(osc => {
+        try { osc.stop(); } catch(e){}
+    });
+    sirenOscillators = [];
+}
+
+// --- LIVE BROADCAST LISTENER ---
+let liveAudioEl;
+let mediaSource;
+let sourceBuffer;
+let chunkQueue = [];
+let broadcastMuted = false;
+
+function initLiveBroadcast() {
+    if(window.liveBroadcastInitDone) return;
+    window.liveBroadcastInitDone = true;
+
+    // Load socket.io
+    const script = document.createElement('script');
+    script.src = '/socket.io/socket.io.js';
+    script.onload = () => {
+        const socket = io();
+        
+        socket.on('audio-chunk', (chunk) => {
+            if(broadcastMuted) return;
+            
+            if(!liveAudioEl) {
+                liveAudioEl = new Audio();
+                mediaSource = new MediaSource();
+                liveAudioEl.src = URL.createObjectURL(mediaSource);
+                liveAudioEl.play().catch(e=>console.log('Audio autoplay blocked', e));
+                
+                mediaSource.addEventListener('sourceopen', () => {
+                    try {
+                        sourceBuffer = mediaSource.addSourceBuffer('audio/webm; codecs=opus');
+                        sourceBuffer.addEventListener('updateend', () => {
+                            if(chunkQueue.length > 0 && !sourceBuffer.updating) {
+                                sourceBuffer.appendBuffer(chunkQueue.shift());
+                            }
+                        });
+                    } catch(e) {}
+                });
+            }
+
+            if(liveAudioEl && liveAudioEl.paused) {
+                liveAudioEl.play().catch(e=>{});
+            }
+
+            if(sourceBuffer && !sourceBuffer.updating) {
+                sourceBuffer.appendBuffer(chunk);
+            } else {
+                chunkQueue.push(chunk);
+            }
+        });
+    };
+    document.head.appendChild(script);
+
+    // Add UI Toggle for Mute
+    const muteBtn = document.createElement('button');
+    muteBtn.innerHTML = '?? Mute Admin';
+    muteBtn.style.cssText = 'position:fixed;bottom:20px;left:20px;z-index:9999;background:rgba(0,0,0,0.6);color:#fff;border:none;padding:10px 15px;border-radius:20px;font-size:0.8rem;cursor:pointer;backdrop-filter:blur(5px);';
+    muteBtn.onclick = () => {
+        broadcastMuted = !broadcastMuted;
+        muteBtn.innerHTML = broadcastMuted ? '?? Unmute Admin' : '?? Mute Admin';
+        if(broadcastMuted && liveAudioEl) {
+            liveAudioEl.pause();
+            chunkQueue = [];
+        }
+    };
+    document.body.appendChild(muteBtn);
+}
+
+document.addEventListener('click', initLiveBroadcast);
+document.addEventListener('touchstart', initLiveBroadcast);

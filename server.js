@@ -97,20 +97,29 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     const ip = require('os').networkInterfaces();
     const localIP = Object.values(ip).flat().find(i => i.family === 'IPv4' && !i.internal)?.address || 'localhost';
     const rzpKey = process.env.RAZORPAY_KEY_ID || '';
-    const rzpStatus = rzpKey.startsWith('rzp_') ? (rzpKey.startsWith('rzp_live') ? '✅ LIVE' : '🧪 TEST') : '⚠️ NOT SET';
+    const rzpStatus = rzpKey.startsWith('rzp_') ? (rzpKey.startsWith('rzp_live') ? '✅ LIVE' : '🧪 TEST') : '❌ NOT SET';
     let rzpPkg = '✅ Installed';
     try { require.resolve('razorpay'); } catch (e) { rzpPkg = '❌ Missing (npm install razorpay)'; }
 
     console.log(`\n🚀 QuizPro Winner LIVE!`);
-    console.log(`🖥️  Local:   http://localhost:${PORT}`);
-    console.log(`📱  Network: http://${localIP}:${PORT}  ← Phone ke liye`);
-    console.log(`👤  Admin:   http://localhost:${PORT}/admin.html`);
-    console.log(`🔒  Legal:   /privacy | /terms | /refund | /contact`);
+    console.log(`📱  Local:   http://localhost:${PORT}`);
+    console.log(`🌐  Network: http://${localIP}:${PORT}  (Phone ke liye)`);
+    console.log(`⚙   Admin:   http://${localIP}:${PORT}/admin.html`);
+    console.log(`📜  Legal:   /privacy | /terms | /refund | /contact`);
     console.log(`💳  Gateway:  ${process.env.PAYMENT_GATEWAY || 'RAZORPAY'} | Razorpay: ${rzpStatus} | Pkg: ${rzpPkg}`);
-    console.log(`📲  OTP: ${process.env.OTP_PROVIDER || 'console'} | Demo: ${process.env.DEMO_OTP_MODE === 'true' ? 'ON (1234)' : 'OFF'}\n`);
+    console.log(`🔑  OTP: ${process.env.OTP_PROVIDER || 'console'} | Demo: ${process.env.DEMO_OTP_MODE === 'true' ? 'ON (1234)' : 'OFF'}\n`);
 
-    // ─── START AI AUTO ADMIN ──────────────────────────────────────────────────
+    // 🤖 START AI AUTO ADMIN
     require('./services/autoAdmin').start();
+});
+
+// 🎤 SOCKET.IO FOR LIVE AUDIO BROADCAST
+const { Server } = require('socket.io');
+const io = new Server(server, { cors: { origin: '*' } });
+io.on('connection', (socket) => {
+    socket.on('audio-chunk', (chunk) => {
+        socket.broadcast.emit('audio-chunk', chunk);
+    });
 });
 
 server.on('error', (e) => {

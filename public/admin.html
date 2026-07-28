@@ -787,6 +787,10 @@
                             <button class="btn btn-full" style="background:var(--red); color:#fff; font-size:1.2rem; font-weight:bold;" onclick="triggerSiren()">🚨 TRIGGER SIREN</button>
                             <br><br>
                             <button class="btn btn-full" style="background:#444; color:#fff;" onclick="stopSiren()">⏹️ STOP SIREN FOR ALL</button>
+                            <hr style="opacity:0.2; margin:20px 0;">
+                            <h3 style="margin-bottom:16px; color:var(--blue);">Live Audio Broadcast</h3>
+                            <p style="font-size:0.9rem; color:var(--muted); margin-bottom:15px;">Speak into your microphone and broadcast live audio to all connected users.</p>
+                            <button id="broadcastBtn" class="btn btn-full" style="background:var(--blue); color:#fff; font-size:1.2rem;" onclick="toggleLiveBroadcast()">🎤 Start Live Broadcast</button>
                         </div>
                     </div>
 
@@ -2083,6 +2087,49 @@
                 toast('Stop command sent.', 'info');
             } catch(e) {
                 toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        let mediaRecorder;
+        let socket;
+        async function toggleLiveBroadcast() {
+            const btn = document.getElementById('broadcastBtn');
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                if(socket) socket.disconnect();
+                btn.innerHTML = '🎤 Start Live Broadcast';
+                btn.style.background = '#3b82f6';
+                toast('Broadcast stopped', 'info');
+                return;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                if(!window.io) {
+                    await new Promise((resolve) => {
+                        const script = document.createElement('script');
+                        script.src = '/socket.io/socket.io.js';
+                        script.onload = resolve;
+                        document.head.appendChild(script);
+                    });
+                }
+                
+                socket = io();
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0 && socket.connected) {
+                        socket.emit('audio-chunk', e.data);
+                    }
+                };
+                
+                mediaRecorder.start(250); // Send chunks every 250ms
+                btn.innerHTML = '⏹ Stop Broadcast';
+                btn.style.background = '#ef4444';
+                toast('Live broadcast started! Everyone can hear you.', 'success');
+            } catch (err) {
+                toast('Microphone access denied or error.', 'error');
+                console.error(err);
             }
         }
 
