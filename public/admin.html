@@ -1224,7 +1224,7 @@
                 sessions.map(s => `<tr>
           <td>#${s.id}</td>
           <td><div style="font-weight:600;">${s.title}</div><div style="font-size:.75rem;color:var(--muted);">₹${s.entry_fee} • ${s.category_name}</div></td>
-          <td><span class="badge badge-${s.status === 'open' ? 'blue' : s.status === 'confirmed' ? 'green' : s.status === 'live' ? 'red' : 'violet'}">${s.status === 'live' ? 'STARTED' : s.status.toUpperCase()}</span></td>
+          <td><span class="badge badge-${s.status === 'open' ? 'blue' : s.status === 'confirmed' ? 'green' : s.status === 'live' ? 'red' : 'violet'}">${s.status === 'live' ? 'STARTED' : (s.status || 'OPEN').toUpperCase()}</span></td>
           <td>${s.seats_booked}/${s.seat_limit}</td>
           <td>
             <div style="display:flex; gap:6px;">
