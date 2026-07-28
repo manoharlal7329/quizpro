@@ -495,9 +495,10 @@
                     <!-- Sessions List -->
                     <div class="panel" id="panel-sessions">
                         <div class="page-hero" style="padding-top:0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                            <h1 class="">🗂️ All Sessions</h1>
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                <button class="btn btn-outline" id="btn-toggle-all" onclick="toggleAllVisibility()">🙈/👁️ Toggle All Visibility</button>
+                            <h1 class="">🎮 All Sessions</h1>
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <button class="btn btn-outline" id="btn-toggle-all" onclick="toggleAllVisibility()">👁️/🙈 Toggle All Visibility</button>
+                                <button class="btn btn-primary" onclick="createTestSession()">🧪 Create Demo Session (19/20)</button>
                             </div>
                         </div>
                         <div id="sessionsList" class="glass-card" style="padding: 14px;"></div>
@@ -1275,6 +1276,20 @@
             } catch (e) {
                 document.getElementById('statsBar').innerHTML = `<p style="color:var(--red);">⚠️ Dashboard load failed. Server chal raha hai? (${e.message})</p>`;
                 document.getElementById('ownerEarnings').innerHTML = `<p style="color:var(--muted);">Server se data nahi aaya. Refresh karo.</p>`;
+            }
+        }
+
+        async function createTestSession() {
+            if (!confirm('Are you sure you want to create a Demo Session with 19/20 seats booked?')) return;
+            try {
+                toast('Creating test session... Please wait', 'info');
+                const res = await api('/api/admin/test-session', 'POST');
+                if (res.success) {
+                    toast(res.message, 'success');
+                    loadSessions();
+                }
+            } catch (e) {
+                toast(e.message, 'error');
             }
         }
 

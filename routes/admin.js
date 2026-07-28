@@ -599,7 +599,46 @@ router.post('/categories', authMiddleware, adminOnly, async (req, res) => {
   }
 });
 
-// ─── WALLET TOPUP ─────────────────────────────────────────────────────────────
+// ── ADMIN: CREATE TEST SESSION (19/20 BOOKED) ─────────────────────────
+router.post('/test-session', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const Session = require('../database/models/Session');
+    const Seat = require('../database/models/Seat');
+    
+    // Delete old test sessions to avoid clutter
+    await Session.deleteMany({ title: 'Special Demo Quiz (19/20)' });
+
+    const session = new Session({
+      id: Date.now(),
+      category_id: 1,
+      title: 'Special Demo Quiz (19/20)',
+      seat_limit: 20,
+      seats_booked: 19,
+      entry_fee: 10,
+      quiz_delay_minutes: 2, // Starts 2 mins after full
+      status: 'open',
+      is_hidden: false
+    });
+    await session.save();
+
+    const seats = [];
+    for (let i = 1; i <= 19; i++) {
+        seats.push({
+            session_id: session.id,
+            user_id: 999000 + i, // Fake users
+            status: 'active',
+            payment_id: 'fake_' + i
+        });
+    }
+    await Seat.insertMany(seats);
+
+    res.json({ success: true, message: 'Test Session (19/20) created successfully!' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── ADMIN WALLET: TOPUP / DEDUCT ─────────────────────────────────────────────────────────────
 router.post('/wallet/topup', authMiddleware, adminOnly, async (req, res) => {
   try {
     const { user_id, wallet_type, amount, note } = req.body;
