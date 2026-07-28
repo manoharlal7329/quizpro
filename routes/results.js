@@ -7,6 +7,8 @@ const Category = require('../database/models/Category');
 const QuizAttempt = require('../database/models/QuizAttempt');
 const Question = require('../database/models/Question');
 const User = require('../database/models/User');
+const { sendMailHTML } = require('../utils/mailer');
+const { broadcastSession } = require('./sessions');
 
 const PRIZE_DIST = [
     { rank: 1, pct: 25.0 },
@@ -131,6 +133,9 @@ router.post('/:id/publish', authMiddleware, async (req, res) => {
         session.prizes_paid = true;
         session.status = 'completed';
         await session.save();
+
+        broadcastSession(sessId, { type: 'alert', message: 'Results are out! Prizes have been credited to winners.' });
+        broadcastSession(sessId, { status: 'completed' });
 
         // Fast2SMS (background-ish)
         const FAST2SMS_KEY = process.env.FAST2SMS_KEY;

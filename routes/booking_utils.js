@@ -33,7 +33,7 @@ async function finalizeBooking(userId, sessionId, paymentId) {
 
         let confirmed = false;
         if (session.seats_booked >= session.seat_limit) {
-            const delaySeconds = (session.quiz_delay_minutes || 60) * 60;
+            const delaySeconds = (session.quiz_delay_minutes || 31) * 60;
             session.status = 'confirmed';
             session.quiz_start_at = Math.floor(Date.now() / 1000) + delaySeconds;
             session.pdf_at = session.quiz_start_at - 1800;

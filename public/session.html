@@ -404,37 +404,64 @@
                 evtSource = new EventSource(`/api/sessions/${sessionId}/events`);
                 evtSource.onmessage = (e) => {
                     const update = JSON.parse(e.data);
+                    
+                    // Handle Targeted Alerts
+                    if (update.type === 'alert' && update.message && hasSeat) {
+                        if(typeof window.playLoudBeep === 'function') window.playLoudBeep();
+                        if(typeof window.showSirenModal === 'function') window.showSirenModal(update.message);
+                        return;
+                    }
+
+                    // Handle Countdown
+                    if (update.type === 'countdown' && hasSeat) {
+                        let cd = update.seconds;
+                        document.body.innerHTML = `
+                          <div style="position:fixed;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
+                            <div style="font-size:4rem; margin-bottom:16px; animation:pulse 1s infinite;">⏳</div>
+                            <h1 style="color:#f59e0b;font-size:2rem;margin-bottom:8px;">🔥 QUIZ STARTING SOON!</h1>
+                            <p style="color:#94a3b8;margin-bottom:24px;">Redirecting in <span id="cdCount">${cd}</span> seconds...</p>
+                            <a href="/quiz.html?id=${sessionId}" class="btn btn-gold" style="padding:14px 32px;font-size:1.1rem;">🚀 START QUIZ</a>
+                          </div>`;
+                        const cdEl = document.getElementById('cdCount');
+                        const cdInt = setInterval(() => {
+                            cd--;
+                            if (cdEl) cdEl.innerText = cd;
+                            if (cd <= 0) {
+                                clearInterval(cdInt);
+                                window.location.href = `/quiz.html?id=${sessionId}`;
+                            }
+                        }, 1000);
+                        return;
+                    }
+
                     const oldStatus = sessionData.status;
-                    sessionData.seats_booked = update.seats_booked;
-                    sessionData.status = update.status;
+                    if(update.seats_booked !== undefined) sessionData.seats_booked = update.seats_booked;
+                    if(update.status) sessionData.status = update.status;
                     if (update.quiz_start_at) sessionData.quiz_start_at = update.quiz_start_at;
 
-                    // 🎊 SHOW CONFIRMED POPUP if status changed to confirmed
-                    if (oldStatus === 'open' && update.status === 'confirmed' && hasSeat) {
-                        showConfirmedPopup(update);
+                    // 💥 SHOW CONFIRMED POPUP if status changed to confirmed
+                    if (oldStatus === 'open' && sessionData.status === 'confirmed' && hasSeat) {
+                        showConfirmedPopup(sessionData);
                     }
 
                     // 🚀 AUTO-REDIRECT when quiz goes LIVE
-                    if (update.status === 'live') {
-                        if (hasSeat) {
-                            // Show countdown and redirect
-                            document.body.innerHTML = `
+                    if (sessionData.status === 'live' && hasSeat) {
+                        // Show countdown and redirect
+                        document.body.innerHTML = `
                           <div style="position:fixed;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
                             <div style="font-size:4rem; margin-bottom:16px; animation:pulse 1s infinite;">⚡</div>
                             <h1 style="color:#f59e0b;font-size:2rem;margin-bottom:8px;">🔥 QUIZ STARTED!</h1>
                             <p style="color:#94a3b8;margin-bottom:24px;">Redirecting in <span id="cdCount">3</span> seconds...</p>
                             <a href="/quiz.html?id=${sessionId}" class="btn btn-gold" style="padding:14px 32px;font-size:1.1rem;">🔥 START QUIZ</a>
                           </div>`;
-                            let cd = 3;
-                            const cdInt = setInterval(() => {
-                                const el = document.getElementById('cdCount');
-                                if (el) el.textContent = --cd;
-                                if (cd <= 0) { clearInterval(cdInt); window.location.href = `/quiz.html?id=${sessionId}`; }
-                            }, 1000);
-                        } else {
-                            toast('🔥 Quiz has STARTED! Book a seat to participate.', 'error');
-                            render();
-                        }
+                        let cd = 3;
+                        const cdInt = setInterval(() => {
+                            const el = document.getElementById('cdCount');
+                            if (el) el.textContent = --cd;
+                            if (cd <= 0) { clearInterval(cdInt); window.location.href = `/quiz.html?id=${sessionId}`; }
+                        }, 1000);
+                    } else if (sessionData.status === 'completed') {
+                        window.location.href = `/results.html?id=${sessionId}`;
                     } else {
                         render();
                     }

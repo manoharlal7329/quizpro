@@ -219,7 +219,7 @@ router.post('/sessions', authMiddleware, adminOnly, async (req, res) => {
       seat_limit: Number(seat_limit),
       seats_booked: 0,
       entry_fee: Number(entry_fee),
-      quiz_delay_minutes: Number(quiz_delay_minutes) || 60,
+      quiz_delay_minutes: Number(quiz_delay_minutes) || 31,
       status: 'open',
       created_at: Math.floor(Date.now() / 1000)
     });
