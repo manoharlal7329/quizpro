@@ -20,8 +20,15 @@ router.get('/:id', authMiddleware, async (req, res) => {
         if (!seat) return res.status(403).json({ error: 'No seat booked. Please book your seat first.' });
 
         const now = Math.floor(Date.now() / 1000);
-        if (!session.quiz_start_at || now < session.quiz_start_at) {
+        // Add 15 seconds grace period for clock skew between client and server
+        if (!session.quiz_start_at || now < (session.quiz_start_at - 15)) {
             return res.status(403).json({ error: 'Quiz not started yet', starts_in: session.quiz_start_at ? session.quiz_start_at - now : null });
+        }
+
+        // Auto-change status to live if it hasn't been changed yet
+        if (session.status === 'confirmed') {
+            session.status = 'live';
+            await session.save();
         }
 
         const checkAttempt = await QuizAttempt.findOne({ session_id: Number(sessId), user_id: Number(req.user.id) }).lean();
