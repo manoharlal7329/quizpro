@@ -798,11 +798,22 @@
         async function loadSessions() {
             try {
                 allSessions = await api('/api/sessions');
-                const btn = document.querySelector('.tab-btn[data-cat="all"]');
-                if(btn) {
-                    filterSessions('all', btn);
+                const activeBtn = document.querySelector('.tab-btn.active');
+                if (activeBtn) {
+                    const catId = activeBtn.getAttribute('data-cat');
+                    if (catId === 'completed') {
+                        // Already handled by loadCompletedSessions, but we can re-call it if needed
+                        loadCompletedSessions(activeBtn);
+                    } else {
+                        filterSessions(catId, activeBtn);
+                    }
                 } else {
-                    renderSessions(allSessions.filter(s => !s.is_demo));
+                    const btn = document.querySelector('.tab-btn[data-cat="all"]');
+                    if(btn) {
+                        filterSessions('all', btn);
+                    } else {
+                        renderSessions(allSessions.filter(s => !s.is_demo));
+                    }
                 }
             } catch (e) {
                 document.getElementById('sessionsGrid').innerHTML =
