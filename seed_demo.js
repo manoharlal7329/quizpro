@@ -49,7 +49,8 @@ async function seedDemoSessions() {
                 entry_fee: entryFee,
                 quiz_delay_minutes: 60,
                 status: 'open',
-                is_demo: true
+                is_demo: true,
+                seats_booked: seatLimit - 1
             });
             await session.save();
 
