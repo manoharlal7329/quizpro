@@ -281,8 +281,8 @@
         <div class="info-box">
           <div style="font-size:.85rem; color:var(--blue); font-weight:600; margin-bottom:8px;">👁️ Questions visible FREE — Answers locked until payment</div>
           <p style="font-size:.82rem; color:var(--muted); line-height:1.5;">
-            Study the questions below. After booking your seat, you'll get access to answers + explanations 30 minutes before the quiz.<br>
-            <strong style="color:var(--gold);">⚠️ Quiz shuru hone se 30 min pehle aapko FULL SCREEN popups aana shuru ho jayenge.</strong>
+            Study the questions below. After booking your seat, you'll get access to answers + explanations 28 minutes before the quiz.<br>
+            <strong style="color:var(--gold);">⚠️ Quiz shuru hone se 28 min pehle aapko FULL SCREEN popups aana shuru ho jayenge.</strong>
           </p>
         </div>
         <h3 style="margin-bottom:16px; font-weight:700;">📋 Quiz Questions (${s.questions?.length || 0})</h3>`;
@@ -355,7 +355,7 @@
 
         <div style="margin:12px 0; padding:10px 12px; border-radius:10px; background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.2); font-size:.8rem; color:var(--muted);">
           🔒 Session starts only when ALL seats are filled<br>
-          📘 Study material access 30 min before quiz<br>
+          📘 Study material access 28 min before quiz<br>
           ✅ Ranking by Score → Speed (no luck!)
         </div>
 
@@ -364,13 +364,13 @@
           ${(() => {
                             const now = Math.floor(Date.now() / 1000);
                             const isConfirmed = s.status === 'confirmed' || s.status === 'live';
-                            const pdfAvailable = s.quiz_start_at && (now >= (s.quiz_start_at - 1800));
+                            const pdfAvailable = s.quiz_start_at && (now >= (s.quiz_start_at - 1680));
 
                             let pdfBtnAction = '';
                             if (isConfirmed && pdfAvailable) {
                                 pdfBtnAction = `window.location='/study.html?id=${sessionId}'`;
                             } else if (isConfirmed) {
-                                const waitRem = (s.quiz_start_at - 1800) - now;
+                                const waitRem = (s.quiz_start_at - 1680) - now;
                                 const waitMin = Math.ceil(waitRem / 60);
                                 pdfBtnAction = `toast('📘 PDF opens in ${waitMin} minutes! Stay alert.', 'info')`;
                             } else {
@@ -476,9 +476,9 @@
                 const remaining = sessionData.quiz_start_at - now;
 
                 // Trigger 30 minutes before
-                if (remaining <= 1800 && remaining > 0) {
+                if (remaining <= 1680 && remaining > 0) {
                     _notified30 = true;
-                    showConfirmedPopup(sessionData, "30_MIN_WARNING");
+                    showConfirmedPopup(sessionData, "28_MIN_WARNING");
                 }
             }
             setInterval(checkAdvanceNotifications, 30000); // Check every 30s
@@ -578,7 +578,7 @@
 
             function showConfirmedPopup(data, type = "SESSION_READY") {
                 const quizTime = new Date(data.quiz_start_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const pdfTime = new Date((data.quiz_start_at - 1800) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const pdfTime = new Date((data.quiz_start_at - 1680) * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 let popupCount = 0;
                 const MAX_POPUPS = 10;
 
@@ -605,8 +605,12 @@
                 function showPopup() {
                     if (popupCount >= MAX_POPUPS) return;
                     popupCount++;
-                    playBeep();
-                    if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+                    if (typeof window.playLoudBeep === 'function') {
+                        window.playLoudBeep();
+                    } else {
+                        playBeep();
+                    }
+                    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 500, 1000]);
 
                     // Build full-screen aggressive popup
                     const overlay = document.createElement('div');
@@ -618,9 +622,9 @@
                     animation: flashBg 0.5s ease;
                 `;
 
-                    const title = type === "30_MIN_WARNING" ? "STUDY NOW! (30m Left)" : "SESSION CONFIRMED!";
-                    const subTxt = type === "30_MIN_WARNING"
-                        ? "Quiz shuru hone mein sirf 30 min bache hain! Study material open ho gaya hai."
+                    const title = type === "28_MIN_WARNING" ? "STUDY NOW! (28m Left)" : "SESSION CONFIRMED!";
+                    const subTxt = type === "28_MIN_WARNING"
+                        ? "Quiz shuru hone mein sirf 28 min bache hain! Study material open ho gaya hai."
                         : "Saari seats bhar gayi! Quiz & Study Material ready hai!";
 
                     overlay.innerHTML = `
@@ -635,7 +639,7 @@
                         box-shadow: 0 0 60px rgba(245,158,11,0.6);
                         animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
                     ">
-                        <div style="font-size:3.5rem; animation:pulse 0.8s infinite;">${type === "30_MIN_WARNING" ? '🔥' : '🔔'}</div>
+                        <div style="font-size:3.5rem; animation:pulse 0.8s infinite;">${type === "28_MIN_WARNING" ? '🔥' : '🔔'}</div>
                         <h2 style="color:#f59e0b; font-size:1.5rem; margin:12px 0 6px;">${title}</h2>
                         <p style="color:#e2e8f0; font-size:1rem; margin-bottom:16px;">
                             ${subTxt}

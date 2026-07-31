@@ -14,7 +14,7 @@ const { sendMailHTML } = require('../utils/mailer');
 router.get('/:id', authMiddleware, async (req, res) => {
     const sessId = req.params.id;
     try {
-        const session = await Session.findOne({ id: Number(sessId) }).lean();
+        const session = await Session.findOne({ id: Number(sessId) });
         if (!session) return res.status(404).json({ error: 'Session not found' });
 
         const seat = await Seat.findOne({ session_id: Number(sessId), user_id: Number(req.user.id) }).lean();
@@ -183,7 +183,7 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
     const { answers, timings } = req.body;
 
     try {
-        const session = await Session.findOne({ id: Number(sessId) }).lean();
+        const session = await Session.findOne({ id: Number(sessId) });
         if (!session) return res.status(404).json({ error: 'Session not found' });
 
         const existing = await QuizAttempt.findOne({ session_id: Number(sessId), user_id: Number(req.user.id) }).lean();
