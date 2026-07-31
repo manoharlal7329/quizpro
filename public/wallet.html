@@ -213,7 +213,7 @@
             </div>
 
             <div class="wallet-card" style="margin-bottom: 24px;">
-                <div class="balance-group">
+                <div class="balance-group" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="balance-item">
                         <div class="label">💳 Deposit Account</div>
                         <div class="value" id="depBal" style="color: #fff;">₹0</div>
@@ -224,6 +224,11 @@
                         <div class="label">🏆 Reward Account</div>
                         <div class="value real-val" id="winBal">₹0</div>
                         <p style="font-size: 0.7rem; color: var(--muted); margin-top: 4px;">Withdrawable winnings</p>
+                    </div>
+                    <div class="balance-item">
+                        <div class="label">🧪 Demo Account</div>
+                        <div class="value demo-val" id="demoBal">₹0</div>
+                        <p style="font-size: 0.7rem; color: var(--muted); margin-top: 4px;">Points for demo quizzes</p>
                     </div>
                 </div>
                 <div
@@ -575,6 +580,7 @@
                 if (document.getElementById('realBal')) document.getElementById('realBal').textContent = '₹' + (w.real || 0);
                 if (document.getElementById('depBal')) document.getElementById('depBal').textContent = '₹' + (w.deposit || 0);
                 if (document.getElementById('winBal')) document.getElementById('winBal').textContent = '₹' + (w.winnings || 0);
+                if (document.getElementById('demoBal')) document.getElementById('demoBal').textContent = '₹' + (w.demo || 0);
                 if (document.getElementById('totalWithdrawn')) document.getElementById('totalWithdrawn').textContent = '₹' + (w.withdrawn || 0);
 
                 const refInput = document.getElementById('myReferralCode');

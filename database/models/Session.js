@@ -16,6 +16,8 @@ const sessionSchema = new mongoose.Schema({
     platform_cut: Number,
     prizes_paid: { type: Boolean, default: false },
     is_hidden: { type: Boolean, default: false },
+    is_demo: { type: Boolean, default: false },
+    cloned_from: { type: Number },
     alert_30m: { type: Boolean, default: false },
     alert_10m: { type: Boolean, default: false },
     alert_5m: { type: Boolean, default: false },
@@ -23,4 +25,3 @@ const sessionSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Session', sessionSchema);
-

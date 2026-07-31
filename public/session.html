@@ -773,7 +773,11 @@
 
                     closeModal('pinModal');
                     showSuccess(res);
-                    setTimeout(() => { render(); }, 1500);
+                    if (res.cloned_session_id) {
+                        setTimeout(() => { window.location.href = `/session.html?id=${res.cloned_session_id}`; }, 1500);
+                    } else {
+                        setTimeout(() => { render(); }, 1500);
+                    }
                 } catch (e) {
                     toast('❌ Access Denied: ' + e.message, 'error');
                     btn.disabled = false;

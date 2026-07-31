@@ -85,8 +85,6 @@ body {
 
 .glass-card {
   background: rgba(255, 255, 255, 0.03);
-  
-  -webkit-
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow-premium);
   position: relative;
@@ -107,9 +105,6 @@ body {
   pointer-events: none;
 }
 
-.glass-card:hover::after {
-  
-}
 
 .deep-glass::before {
   content: '';
@@ -241,9 +236,6 @@ body {
   box-shadow: 0 4px 20px rgba(16, 185, 129, .25);
 }
 
-.btn-success:hover {
-  
-}
 
 .btn-gold {
   background: linear-gradient(135deg, var(--gold), #d97706);
@@ -251,9 +243,6 @@ body {
   font-weight: 700;
 }
 
-.btn-gold:hover {
-  
-}
 
 .btn-danger {
   background: linear-gradient(135deg, var(--red), #dc2626);
@@ -521,8 +510,6 @@ body {
 /* ── LUXURY ELEVATION ───────────────────────────────────────── */
 .glass-card {
   background: var(--glass);
-  
-  -webkit-
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-premium);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
@@ -708,12 +695,7 @@ body {
 }
 
 .vip-wallet:hover {
-  
   box-shadow: 0 35px 70px -15px rgba(59, 130, 246, 0.3);
-}
-
-.vip-wallet:active {
-  
 }
 
 /* ── LOADING SPINNER ────────────────────────────────────────── */

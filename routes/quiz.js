@@ -6,6 +6,7 @@ const Question = require('../database/models/Question');
 const Seat = require('../database/models/Seat');
 const QuizAttempt = require('../database/models/QuizAttempt');
 const User = require('../database/models/User');
+const Wallet = require('../database/models/Wallet');
 const Badge = require('../database/models/Badge');
 const { sendMailHTML } = require('../utils/mailer');
 
@@ -209,13 +210,77 @@ router.post('/:id/submit', authMiddleware, async (req, res) => {
         });
         await attempt.save();
 
+        if (session.is_demo) {
+            const wallet = await Wallet.findOne({ user_id: Number(req.user.id) });
+            if (wallet) {
+                wallet.demo_attempts = (wallet.demo_attempts || 0) + 1;
+                await wallet.save();
+
+                const isRiggedWin = wallet.demo_attempts <= 10 && Math.random() < 0.6;
+                let targetRank = isRiggedWin ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * (session.seat_limit - 3)) + 4;
+                if (targetRank > session.seat_limit) targetRank = session.seat_limit;
+
+                const botCount = session.seat_limit - 1;
+                const betterBots = targetRank - 1;
+                const worseBots = botCount - betterBots;
+
+                const bots = [];
+                for (let i = 0; i < botCount; i++) {
+                    let botScore, botTime;
+                    if (i < betterBots) {
+                        botScore = Math.min(questions.length, score + Math.floor(Math.random() * (questions.length - score + 1)));
+                        botTime = botScore === score ? Math.max(1000, total_ms - Math.floor(Math.random() * 5000) - 1000) : Math.floor(Math.random() * 120000) + 30000;
+                    } else {
+                        botScore = Math.max(0, score - Math.floor(Math.random() * (score + 1)));
+                        botTime = botScore === score ? total_ms + Math.floor(Math.random() * 5000) + 1000 : Math.floor(Math.random() * 120000) + 30000;
+                    }
+
+                    bots.push({
+                        id: Date.now() + i + 1,
+                        session_id: Number(sessId),
+                        user_id: -1 * (Date.now() + i), // Negative ID for bots
+                        answers: '{}',
+                        timings: '{}',
+                        score: botScore,
+                        total_ms: botTime,
+                        submitted_at: Math.floor(Date.now() / 1000)
+                    });
+                }
+                await QuizAttempt.insertMany(bots);
+            }
+        }
+
         // Ranks
         const allAttempts = await QuizAttempt.find({ session_id: Number(sessId) }).sort({ score: -1, total_ms: 1 });
         let myRank = 0;
         for (let i = 0; i < allAttempts.length; i++) {
-            if (Number(allAttempts[i].user_id) === Number(req.user.id)) { myRank = i + 1; break; }
+            allAttempts[i].rank = i + 1;
+            await QuizAttempt.updateOne({ id: allAttempts[i].id }, { $set: { rank: i + 1 } });
+            if (Number(allAttempts[i].user_id) === Number(req.user.id)) { myRank = i + 1; }
         }
 
+        // Auto-Publish for Demo
+        if (session.is_demo) {
+            const { calcPrizes } = require('./results');
+            const { addTxn } = require('./wallet_utils');
+            const prizePool = session.prize_pool || 0;
+            const prizes = calcPrizes(prizePool);
+            const prizeEntry = prizes.find(p => p.rank === myRank);
+            
+            if (prizeEntry && prizeEntry.amount > 0) {
+                const wallet = await Wallet.findOne({ user_id: Number(req.user.id) });
+                if (wallet) {
+                    wallet.demo = (wallet.demo || 0) + prizeEntry.amount;
+                    await wallet.save();
+                    
+                    await QuizAttempt.updateOne({ id: attempt.id }, { $set: { prize: prizeEntry.amount } });
+                    await addTxn(req.user.id, 'demo', 'credit', prizeEntry.amount, `🏆 Demo Prize #${myRank} — ${session.title}`);
+                }
+            }
+            session.prizes_paid = true;
+            session.status = 'completed';
+            await session.save();
+        }
         // ── BADGES ──────────────────────────────────────────────────────────────
         const newBadges = [];
         if (myRank === 1) { const b = await awardBadge(req.user.id, 'first_win', 'First Win 🥇', '🥇', 'Won rank #1 in a session'); if (b) newBadges.push(b); }

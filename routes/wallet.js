@@ -114,6 +114,63 @@ router.post('/pay', authMiddleware, async (req, res) => {
         const type = wallet_type === 'real' ? 'real' : 'demo';
         const fee = session.entry_fee;
 
+        if (session.is_demo) {
+            if (wallet.demo < fee) return res.status(400).json({ error: `Insufficient demo balance` });
+            wallet.demo -= fee;
+
+            // Generate clone
+            const cloneId = Date.now() + Math.floor(Math.random() * 1000);
+            
+            const clonedSession = new Session({
+                ...session.toObject(),
+                _id: undefined,
+                id: cloneId,
+                cloned_from: session.id,
+                seats_booked: session.seat_limit,
+                status: 'confirmed',
+                quiz_start_at: Math.floor(Date.now() / 1000),
+                pdf_at: Math.floor(Date.now() / 1000) - 1800,
+                prize_pool: Math.floor(session.entry_fee * session.seat_limit * 0.75),
+                platform_cut: Math.floor(session.entry_fee * session.seat_limit * 0.25)
+            });
+            await clonedSession.save();
+
+            const Question = require('../database/models/Question');
+            const questions = await Question.find({ session_id: session.id }).lean();
+            for (let i = 0; i < questions.length; i++) {
+                const q = new Question({
+                    ...questions[i],
+                    _id: undefined,
+                    id: Date.now() + Math.floor(Math.random() * 100000) + i,
+                    session_id: cloneId
+                });
+                await q.save();
+            }
+
+            const Seat = require('../database/models/Seat');
+            const seat = new Seat({
+                id: Date.now(),
+                session_id: cloneId,
+                user_id: Number(userId),
+                paid_at: Math.floor(Date.now() / 1000),
+                payment_id: `DEMO_${Date.now()}`
+            });
+            await seat.save();
+
+            await wallet.save();
+            const { addTxn } = require('./wallet_utils');
+            await addTxn(userId, 'demo', 'debit', fee, `Demo Seat booked: ${session.title}`);
+
+            return res.json({
+                success: true,
+                seat_id: seat.id,
+                wallet_type: 'demo',
+                balance_after: wallet.demo,
+                session_confirmed: true,
+                cloned_session_id: cloneId
+            });
+        }
+
         if (type === 'real') {
             if (!wallet.pin) return res.status(400).json({ error: 'Please set your Wallet PIN first.' });
             if (String(wallet.pin) !== String(pin)) return res.status(403).json({ error: 'Incorrect Wallet PIN' });
@@ -134,6 +191,7 @@ router.post('/pay', authMiddleware, async (req, res) => {
         }
 
         await wallet.save();
+        const { addTxn } = require('./wallet_utils');
         await addTxn(userId, type, 'debit', fee, `Seat booked: ${session.title}`);
 
         const { finalizeBooking } = require('./booking_utils');
